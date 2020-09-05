@@ -17,9 +17,21 @@
 
 package org.apache.spark.ml.tree.impl
 
+import it.unimi.dsi.fastutil.ints
+import it.unimi.dsi.fastutil.ints.Int2CharOpenHashMap
 import org.apache.spark.ml.feature.LabeledPoint
 import org.apache.spark.ml.tree.{ContinuousSplit, Split}
+import org.apache.spark.ml.tree.impl
 import org.apache.spark.rdd.RDD
+
+
+/**
+ * Enum for selecting the data type of binned features of training samples
+ */
+object BinnedFeaturesDataType extends Enumeration {
+  type BinnedFeaturesDataType = Value
+  val array, fasthashmap = Value()
+}
 
 
 /**
@@ -37,24 +49,40 @@ import org.apache.spark.rdd.RDD
  * @param binnedFeatures  Binned feature values.
  *                        Same length as LabeledPoint.features, but values are bin indices.
  */
-private[spark] class TreePoint(val label: Double, val binnedFeatures: Array[Int])
+private[spark] class TreePointX(val label: Double, val binnedFeatures: BinnedFeature)
   extends Serializable {
 }
 
-private[spark] object TreePoint {
+private[spark] object TreePointX {
 
   /**
-   * Convert an input dataset into its TreePoint representation,
+   * Convert an input dataset into its TreePointX representation,
    * binning feature values in preparation for DecisionTree training.
    * @param input     Input dataset.
    * @param splits    Splits for features, of size (numFeatures, numSplits).
    * @param metadata  Learning and dataset metadata
-   * @return  TreePoint dataset representation
+   * @return  TreePointX dataset representation
    */
   def convertToTreeRDD(
       input: RDD[LabeledPoint],
       splits: Array[Array[Split]],
-      metadata: DecisionTreeMetadata): RDD[TreePoint] = {
+      metadata: DecisionTreeMetadata): RDD[TreePointX] = {
+    convertToTreeRDD(input, splits, metadata, BinnedFeaturesDataType.array)
+  }
+
+  /**
+   * Convert an input dataset into its TreePointX representation,
+   * binning feature values in preparation for DecisionTree training.
+   * @param input     Input dataset.
+   * @param splits    Splits for features, of size (numFeatures, numSplits).
+   * @param metadata  Learning and dataset metadata
+   * @return  TreePointX dataset representation
+   */
+  def convertToTreeRDD(
+                        input: RDD[LabeledPoint],
+                        splits: Array[Array[Split]],
+                        metadata: DecisionTreeMetadata,
+                        binnedFeaturesType: BinnedFeaturesDataType): RDD[TreePointX] = {
     // Construct arrays for featureArity for efficiency in the inner loop.
     val featureArity: Array[Int] = new Array[Int](metadata.numFeatures)
     var featureIndex = 0
@@ -69,31 +97,68 @@ private[spark] object TreePoint {
         Array.empty[Double]
       }
     }
-    input.map { x =>
-      TreePoint.labeledPointToTreePoint(x, thresholds, featureArity)
+    val useArrayType = (binnedFeaturesType == BinnedFeaturesDataType.array)
+    if (useArrayType) {
+      input.map { x =>
+        TreePointX.labeledPointToTreePointByArray(x, thresholds, featureArity)
+      }
+    } else {
+      input.map { x =>
+        TreePointX.labeledPointToTreePointByFastHashMap(x, thresholds, featureArity)
+      }
     }
   }
 
   /**
-   * Convert one LabeledPoint into its TreePoint representation.
+   * Convert one LabeledPoint into its TreePointX representation.
    * @param thresholds  For each feature, split thresholds for continuous features,
    *                    empty for categorical features.
    * @param featureArity  Array indexed by feature, with value 0 for continuous and numCategories
    *                      for categorical features.
    */
-  private def labeledPointToTreePoint(
+  private def labeledPointToTreePointByArray(
       labeledPoint: LabeledPoint,
       thresholds: Array[Array[Double]],
-      featureArity: Array[Int]): TreePoint = {
+      featureArity: Array[Int]): TreePointX = {
     val numFeatures = labeledPoint.features.size
-    val arr = new Array[Int](numFeatures)
+    val arr = new Array[Char](numFeatures)
     var featureIndex = 0
     while (featureIndex < numFeatures) {
       arr(featureIndex) =
         findBin(featureIndex, labeledPoint, featureArity(featureIndex), thresholds(featureIndex))
+            .toChar
       featureIndex += 1
     }
-    new TreePoint(labeledPoint.label, arr)
+    new TreePointX(labeledPoint.label, new BinnedFeatureArray(arr))
+  }
+
+  /**
+   * Convert one LabeledPoint into its TreePointX representation.
+   * @param thresholds  For each feature, split thresholds for continuous features,
+   *                    empty for categorical features.
+   * @param featureArity  Array indexed by feature, with value 0 for continuous and numCategories
+   *                      for categorical features.
+   */
+  private def labeledPointToTreePointByFastHashMap(
+                                              labeledPoint: LabeledPoint,
+                                              thresholds: Array[Array[Double]],
+                                              featureArity: Array[Int]): TreePointX = {
+    val numFeatures = labeledPoint.features.size
+    // val arr = new Array[Char](numFeatures)
+    val binnedFeaturesMap = new Int2CharOpenHashMap()
+    var featureIndex = 0
+    while (featureIndex < numFeatures) {
+      val binFeature =
+        findBin(featureIndex, labeledPoint, featureArity(featureIndex), thresholds(featureIndex))
+          .toChar
+      if (binFeature != '\u0000') {
+        binnedFeaturesMap.put(featureIndex, binFeature)
+      }
+      featureIndex += 1
+    }
+    val binFeatures = new BinnedFeaturesFastHashMap(binnedFeaturesMap)
+    // binFeatures.defaultReturnValue('\u0000)
+    new TreePointX(labeledPoint.label, binFeatures)
   }
 
   /**
@@ -131,3 +196,30 @@ private[spark] object TreePoint {
     }
   }
 }
+
+private [spark] class SparseFeatureArray(val indies: Array[Int], val binnedFeatures: Array[Char])
+  extends Serializable {
+  def get(index: Int): Char = {
+    val i = java.util.Arrays.binarySearch(indies, index)
+    if (i < 0) {
+      '\u0000'
+    } else {
+      binnedFeatures(i)
+    }
+  }
+}
+
+private[spark] trait BinnedFeature {
+  def get(index: Int): Char
+}
+
+private[spark] class BinnedFeatureArrary(val features: Array[Char])
+  extends Serializable with BinnedFeature{
+  override def get(index: Int): Char = features(index)
+}
+
+private[spark] class BinnedFeatureFastHashMap(val featureMfap: Int2CharOpenHashMap)
+  extends Serializable with  BinnedFeature {
+  override def get(index: Int): Char = featureMfap.get(index)
+}
+

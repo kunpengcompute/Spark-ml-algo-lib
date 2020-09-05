@@ -104,7 +104,7 @@ private[spark] class DTStatsAggregator(
   /**
    * Update the stats for a given (feature, bin) for ordered features, using the given label.
    */
-  def update(featureIndex: Int, binIndex: Int, label: Double, instanceWeight: Double): Unit = {
+  def update(featureIndex: Int, binIndex: Int, label: Double, instanceWeight: Int): Unit = {
     val i = featureOffsets(featureIndex) + binIndex * statsSize
     impurityAggregator.update(allStats, i, label, instanceWeight)
   }
@@ -112,7 +112,7 @@ private[spark] class DTStatsAggregator(
   /**
    * Update the parent node stats using the given label.
    */
-  def updateParent(label: Double, instanceWeight: Double): Unit = {
+  def updateParent(label: Double, instanceWeight: Int): Unit = {
     impurityAggregator.update(parentStats, 0, label, instanceWeight)
   }
 
@@ -127,7 +127,7 @@ private[spark] class DTStatsAggregator(
       featureOffset: Int,
       binIndex: Int,
       label: Double,
-      instanceWeight: Double): Unit = {
+      instanceWeight: Int): Unit = {
     impurityAggregator.update(allStats, featureOffset + binIndex * statsSize,
       label, instanceWeight)
   }

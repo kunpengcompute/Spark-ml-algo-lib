@@ -29,11 +29,21 @@ import org.apache.spark.mllib.tree.model.{Split => OldSplit}
  * Interface for a "Split," which specifies a test made at a decision tree node
  * to choose the left or right path.
  */
-sealed trait Split extends Serializable {
+sealed trait SplitBase extends Serializable {
 
   /** Index of feature which this split tests */
   def featureIndex: Int
 
+  /**
+   * Return true (split to left) or false (split to right).
+   *
+   * @param binnedFeature Binned feature value.
+   * @param splits        All splits for the given feature.
+   */
+  private[tree] def shouldGoLeft(binnedFeature: Char, Splits: Array[SplitBase]): Boolean
+}
+
+sealed trait Split extends SplitBase {
   /**
    * Return true (split to left) or false (split to right).
    * @param features  Vector of features (original values, not binned).
@@ -60,6 +70,27 @@ private[tree] object Split {
           _leftCategories = oldSplit.categories.toArray, categoricalFeatures(oldSplit.feature))
       case OldFeatureType.Continuous =>
         new ContinuousSplit(featureIndex = oldSplit.feature, threshold = oldSplit.threshold)
+    }
+  }
+  def toBase(split: Split, binIdx: Int): SplitBase = {
+    split match {
+      case value: CategoricalSplit =>
+        value
+      case value: ContinuousSplit =>
+        new ContinuousSplitLearning(value.featureIndex, binIdx)
+    }
+  }
+
+  def fromBase(baseSplit: SplitBase, splits: Array[Array[Split]]): Split = {
+    baseSplit match {
+      case value: CategoricalSplit =>
+        value
+      case value: ContinuousSplit =>
+        new ContinuousSplitLearning(value.featureIndex, binIdx)
+      case value: ContinuousSplitLearning =>
+        val thresh =
+          splits(value.featureIndex)(value.binIndex).asInstanceOf[ContinuousSplit].threshold
+        new ContinuousSplit(value.featureIndex, thresh)
     }
   }
 }
@@ -103,6 +134,16 @@ class CategoricalSplit private[ml] (
   }
 
   override private[tree] def shouldGoLeft(binnedFeature: Int, splits: Array[Split]): Boolean = {
+    if (isLeft) {
+      categories.contains(binnedFeature.toDouble)
+    } else {
+      !categories.contains(binnedFeature.toDouble)
+    }
+  }
+
+  override private[tree] def shouldGoLeft(
+      binnedFeature: Char,
+      splits: Array[SplitBase]): Boolean = {
     if (isLeft) {
       categories.contains(binnedFeature.toDouble)
     } else {
@@ -171,6 +212,19 @@ class ContinuousSplit private[ml] (override val featureIndex: Int, val threshold
     }
   }
 
+  override private[tree] def shouldGoLeft(
+       binnedFeature: Char,
+       splits: Array[SplitBase]): Boolean = {
+
+    if (binnedFeature == splits.length) {
+      // > last split, so split right
+      false
+    } else {
+      val featureValueUpperBound = splits(binnedFeature).asInstanceOf[ContinuousSplit].threshold
+      featureValueUpperBound <= threshold
+    }
+  }
+
   override def equals(o: Any): Boolean = {
     o match {
       case other: ContinuousSplit =>
@@ -188,4 +242,27 @@ class ContinuousSplit private[ml] (override val featureIndex: Int, val threshold
   override private[tree] def toOld: OldSplit = {
     OldSplit(featureIndex, threshold, OldFeatureType.Continuous, List.empty[Double])
   }
+}
+
+/**
+ * Split which tests a continuous feature.
+ * @param featureIndex  Index of the feature to test
+ * @param binIndex  If the binned feature value is less than or equal to this bin index, then the
+ *                   split goes left. Otherwise, it goes right.
+ */
+class ContinuousSplitLearning private[ml] (override val featureIndex: Int, val binIndex: Int)
+  extends SplitBase {
+
+  override private[tree] def shouldGoLeft(
+                                           binnedFeature: Char,
+                                          splits: Array[SplitBase]): Boolean = {
+
+    if (binnedFeature == splits.length) {
+      // > last split, so split right
+      false
+    } else {
+      binnedFeature <= binIndex
+    }
+  }
+
 }

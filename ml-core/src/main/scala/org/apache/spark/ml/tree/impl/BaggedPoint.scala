@@ -34,11 +34,15 @@ import org.apache.spark.util.random.XORShiftRandom
  *
  * @param datum  Data instance
  * @param subsampleWeights  Weight of this instance in each subsampled dataset.
+ * @param sampleId ID of sample
  *
  * TODO: This does not currently support (Double) weighted instances.  Once MLlib has weighted
  *       dataset support, update.  (We store subsampleWeights as Double for this future extension.)
  */
-private[spark] class BaggedPoint[Datum](val datum: Datum, val subsampleWeights: Array[Double])
+private[spark] class BaggedPoint[Datum](
+                                         val datum: Datum,
+                                         val subsampleWeights: Array[Int],
+                                         val sampleId: Short = 0)
   extends Serializable
 
 private[spark] object BaggedPoint {
@@ -82,12 +86,12 @@ private[spark] object BaggedPoint {
       val rng = new XORShiftRandom
       rng.setSeed(seed + partitionIndex + 1)
       instances.map { instance =>
-        val subsampleWeights = new Array[Double](numSubsamples)
+        val subsampleWeights = new Array[Int](numSubsamples)
         var subsampleIndex = 0
         while (subsampleIndex < numSubsamples) {
           val x = rng.nextDouble()
           subsampleWeights(subsampleIndex) = {
-            if (x < subsamplingRate) 1.0 else 0.0
+            if (x < subsamplingRate) 1 else 0
           }
           subsampleIndex += 1
         }
@@ -106,7 +110,7 @@ private[spark] object BaggedPoint {
       val poisson = new PoissonDistribution(subsample)
       poisson.reseedRandomGenerator(seed + partitionIndex + 1)
       instances.map { instance =>
-        val subsampleWeights = new Array[Double](numSubsamples)
+        val subsampleWeights = new Array[Int](numSubsamples)
         var subsampleIndex = 0
         while (subsampleIndex < numSubsamples) {
           subsampleWeights(subsampleIndex) = poisson.sample()
@@ -119,7 +123,7 @@ private[spark] object BaggedPoint {
 
   private def convertToBaggedRDDWithoutSampling[Datum] (
       input: RDD[Datum]): RDD[BaggedPoint[Datum]] = {
-    input.map(datum => new BaggedPoint(datum, Array(1.0)))
+    input.map(datum => new BaggedPoint(datum, Array(1)))
   }
 
 }
