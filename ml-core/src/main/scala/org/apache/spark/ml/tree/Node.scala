@@ -18,6 +18,7 @@
 package org.apache.spark.ml.tree
 
 import org.apache.spark.ml.linalg.Vector
+import org.apache.spark.ml.tree.impl.BinnedFeature
 import org.apache.spark.mllib.tree.impurity.ImpurityCalculator
 import org.apache.spark.mllib.tree.model.{ImpurityStats,
   InformationGainStats => OldInformationGainStats, Node => OldNode, Predict => OldPredict}
@@ -45,6 +46,8 @@ sealed abstract class Node extends Serializable {
 
   /** Recursive prediction helper method */
   private[ml] def predictImpl(features: Vector): LeafNode
+
+  private[ml] def predictImplX(binnedFeature: Array[Int], splits: Array[Array[Split]]): LeafNode
 
   /**
    * Get the number of nodes in tree below this node, including leaf nodes.
@@ -120,6 +123,9 @@ class LeafNode private[ml] (
 
   override private[ml] def predictImpl(features: Vector): LeafNode = this
 
+  override private[ml] def predictImplX(binnedFeature: Array[Int], splits: Array[Array[Split]]
+                                       ): LeafNode = this
+
   override private[tree] def numDescendants: Int = 0
 
   override private[tree] def subtreeToString(indentFactor: Int = 0): String = {
@@ -172,6 +178,15 @@ class InternalNode private[ml] (
       leftChild.predictImpl(features)
     } else {
       rightChild.predictImpl(features)
+    }
+  }
+
+  private[ml] def predictImplX(binnedFeatures: Array[Int], splits: Array[Array[Spilt]]
+                              ): LeafNode = {
+    if (split.shouldGoLeft(binnedFeatures(split.featureIndex).toChar, splits(split.featureIndex))) {
+      leftChild.predictImplX(binnedFeatures, splits)
+    } else {
+      rightChild.predictImplX(binnedFeatures, splits)
     }
   }
 
@@ -258,23 +273,25 @@ private object InternalNode {
  *                so that we do not need to consider splitting it further.
  * @param stats  Impurity statistics for this node.
  */
-private[tree] class LearningNode(
+private[tree] class LearningNodeX(
     var id: Int,
-    var leftChild: Option[LearningNode],
-    var rightChild: Option[LearningNode],
-    var split: Option[Split],
+    var leftChild: Option[LearningNodeX],
+    var rightChild: Option[LearningNodeX],
+    var split: Option[SplitBase],
     var isLeaf: Boolean,
     var stats: ImpurityStats) extends Serializable {
 
   /**
-   * Convert this [[LearningNode]] to a regular [[Node]], and recurse on any children.
+   * Convert this [[LearningNodeX]] to a regular [[Node]], and recurse on any children.
    */
-  def toNode: Node = {
+  def toNode(splits: Array[Array[Split]]): Node = {
     if (leftChild.nonEmpty) {
       assert(rightChild.nonEmpty && split.nonEmpty && stats != null,
-        "Unknown error during Decision Tree learning.  Could not convert LearningNode to Node.")
+        "Unknown error during Decision Tree learning.  Could not convert LearningNodeX to Node.")
+      val normalSplit = Split.fromBase(split.get, splits)
       new InternalNode(stats.impurityCalculator.predict, stats.impurity, stats.gain,
-        leftChild.get.toNode, rightChild.get.toNode, split.get, stats.impurityCalculator)
+        leftChild.get.toNode(splits), rightChild.get.toNode(splits),
+        normalSplit, stats.impurityCalculator)
     } else {
       if (stats.valid) {
         new LeafNode(stats.impurityCalculator.predict, stats.impurity,
@@ -301,19 +318,19 @@ private[tree] class LearningNode(
    *         group of nodes on one call to
    *         [[org.apache.spark.ml.tree.impl.RandomForest.findBestSplits()]].
    */
-  def predictImpl(binnedFeatures: Array[Int], splits: Array[Array[Split]]): Int = {
+  def predictImpl(binnedFeatures:BinnedFeature, splits: Array[Array[SplitBase]]): Int = {
     if (this.isLeaf || this.split.isEmpty) {
       this.id
     } else {
       val split = this.split.get
       val featureIndex = split.featureIndex
-      val splitLeft = split.shouldGoLeft(binnedFeatures(featureIndex), splits(featureIndex))
+      val splitLeft = split.shouldGoLeft(binnedFeatures.get(featureIndex), splits(featureIndex))
       if (this.leftChild.isEmpty) {
         // Not yet split. Return next layer of nodes to train
         if (splitLeft) {
-          LearningNode.leftChildIndex(this.id)
+          LearningNodeX.leftChildIndex(this.id)
         } else {
-          LearningNode.rightChildIndex(this.id)
+          LearningNodeX.rightChildIndex(this.id)
         }
       } else {
         if (splitLeft) {
@@ -327,19 +344,19 @@ private[tree] class LearningNode(
 
 }
 
-private[tree] object LearningNode {
+private[tree] object LearningNodeX {
 
   /** Create a node with some of its fields set. */
   def apply(
       id: Int,
       isLeaf: Boolean,
-      stats: ImpurityStats): LearningNode = {
-    new LearningNode(id, None, None, None, false, stats)
+      stats: ImpurityStats): LearningNodeX = {
+    new LearningNodeX(id, None, None, None, false, stats)
   }
 
   /** Create an empty node with the given node index.  Values must be set later on. */
-  def emptyNode(nodeIndex: Int): LearningNode = {
-    new LearningNode(nodeIndex, None, None, None, false, null)
+  def emptyNode(nodeIndex: Int): LearningNodeX = {
+    new LearningNodeX(nodeIndex, None, None, None, false, null)
   }
 
   // The below indexing methods were copied from spark.mllib.tree.model.Node
@@ -390,8 +407,8 @@ private[tree] object LearningNode {
    * Traces down from a root node to get the node with the given node index.
    * This assumes the node exists.
    */
-  def getNode(nodeIndex: Int, rootNode: LearningNode): LearningNode = {
-    var tmpNode: LearningNode = rootNode
+  def getNode(nodeIndex: Int, rootNode: LearningNodeX): LearningNodeX = {
+    var tmpNode: LearningNodeX = rootNode
     var levelsToGo = indexToLevel(nodeIndex)
     while (levelsToGo > 0) {
       if ((nodeIndex & (1 << levelsToGo - 1)) == 0) {
