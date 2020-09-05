@@ -19,17 +19,16 @@ package org.apache.spark.ml.classification
 
 import scala.collection.mutable
 
-import breeze.linalg.{DenseVector => BDV}
-import breeze.optimize.{CachedDiffFunction, OWLQN => BreezeOWLQN}
-import org.apache.hadoop.fs.Path
+import breeze.linalg.{norm, DenseVector => BDV}
+import breeze.optimize.{CachedDiffFunction, OWLQNX => BreezeOWLQN}
 
 import org.apache.spark.SparkException
 import org.apache.spark.annotation.{Experimental, Since}
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.feature.Instance
 import org.apache.spark.ml.linalg._
-import org.apache.spark.ml.optim.aggregator.HingeAggregator
-import org.apache.spark.ml.optim.loss.{L2Regularization, RDDLossFunction}
+import org.apache.spark.ml.optim.aggregator.{HingeAggregator,HingeAggregatorX}
+import org.apache.spark.ml.optim.loss.{L2Regularization, RDDLossFunction,RDDLossFunctionX}
 import org.apache.spark.ml.param._
 import org.apache.spark.ml.param.shared._
 import org.apache.spark.ml.util._
@@ -39,23 +38,6 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Dataset, Row}
 import org.apache.spark.sql.functions.{col, lit}
 
-/** Params for linear SVM Classifier. */
-private[classification] trait LinearSVCParams extends ClassifierParams with HasRegParam
-  with HasMaxIter with HasFitIntercept with HasTol with HasStandardization with HasWeightCol
-  with HasAggregationDepth with HasThreshold {
-
-  /**
-   * Param for threshold in binary classification prediction.
-   * For LinearSVC, this threshold is applied to the rawPrediction, rather than a probability.
-   * This threshold can be any real number, where Inf will make all predictions 0.0
-   * and -Inf will make all predictions 1.0.
-   * Default: 0.0
-   *
-   * @group param
-   */
-  final override val threshold: DoubleParam = new DoubleParam(this, "threshold",
-    "threshold in binary classification prediction applied to rawPrediction")
-}
 
 /**
  * :: Experimental ::
@@ -83,6 +65,13 @@ class LinearSVC @Since("2.2.0") (
    *
    * @group setParam
    */
+
+  var ic = 0.5
+  var iters = -1
+  def setIc(a: Double): Unit = {
+    this.ic = a
+  }
+
   @Since("2.2.0")
   def setRegParam(value: Double): this.type = set(regParam, value)
   setDefault(regParam -> 0.0)
@@ -116,7 +105,7 @@ class LinearSVC @Since("2.2.0") (
    */
   @Since("2.2.0")
   def setTol(value: Double): this.type = set(tol, value)
-  setDefault(tol -> 1E-6)
+  setDefault(tol -> 0.0)
 
   /**
    * Whether to standardize the training features before fitting the model.
@@ -216,7 +205,7 @@ class LinearSVC @Since("2.2.0") (
       val featuresStd = summarizer.variance.toArray.map(math.sqrt)
       val getFeaturesStd = (j: Int) => featuresStd(j)
       val regParamL2 = $(regParam)
-      val bcFeaturesStd = instances.context.broadcast(featuresStd)
+      val bcFeaturesStd = instances.context.broadcast(featuresStd.map{t => if (t!=0.0)1/t else 0.0})
       val regularization = if (regParamL2 != 0.0) {
         val shouldApply = (idx: Int) => idx >= 0 && idx < numFeatures
         Some(new L2Regularization(regParamL2, shouldApply,
@@ -225,12 +214,23 @@ class LinearSVC @Since("2.2.0") (
         None
       }
 
-      val getAggregatorFunc = new HingeAggregator(bcFeaturesStd, $(fitIntercept))(_)
-      val costFun = new RDDLossFunction(instances, getAggregatorFunc, regularization,
+      val getAggregatorFunc = new HingeAggregatorX(bcFeaturesStd, $(fitIntercept))(_)
+      val costFun = new RDDLossFunctionX(instances, getAggregatorFunc, regularization,
         $(aggregationDepth))
 
       def regParamL1Fun = (index: Int) => 0D
       val optimizer = new BreezeOWLQN[Int, BDV[Double]]($(maxIter), 10, regParamL1Fun, $(tol))
+      val u = instances.sparkContext.getConf.getOption("spark.sophon.LinearSVC.inertiaCoefficient")
+      val icOld = ic
+      try {
+        this.ic = u.get.toDouble
+      }
+      catch {
+        case x : Exception =>
+          this.ic = icOld
+      }
+
+      optimizer.setInertiaCoefficient(ic)
       val initialCoefWithIntercept = Vectors.zeros(numFeaturesPlusIntercept)
 
       val states = optimizer.iterations(new CachedDiffFunction(costFun),
@@ -241,6 +241,7 @@ class LinearSVC @Since("2.2.0") (
       while (states.hasNext) {
         state = states.next()
         scaledObjectiveHistory += state.adjustedValue
+        iters += 1
       }
 
       bcFeaturesStd.destroy(blocking = false)
@@ -277,6 +278,8 @@ class LinearSVC @Since("2.2.0") (
     instr.logSuccess(model)
     model
   }
+
+  def getIters: Int = iters
 }
 
 @Since("2.2.0")
@@ -284,101 +287,4 @@ object LinearSVC extends DefaultParamsReadable[LinearSVC] {
 
   @Since("2.2.0")
   override def load(path: String): LinearSVC = super.load(path)
-}
-
-/**
- * :: Experimental ::
- * Linear SVM Model trained by [[LinearSVC]]
- */
-@Since("2.2.0")
-@Experimental
-class LinearSVCModel private[classification] (
-    @Since("2.2.0") override val uid: String,
-    @Since("2.2.0") val coefficients: Vector,
-    @Since("2.2.0") val intercept: Double)
-  extends ClassificationModel[Vector, LinearSVCModel]
-  with LinearSVCParams with MLWritable {
-
-  @Since("2.2.0")
-  override val numClasses: Int = 2
-
-  @Since("2.2.0")
-  override val numFeatures: Int = coefficients.size
-
-  @Since("2.2.0")
-  def setThreshold(value: Double): this.type = set(threshold, value)
-  setDefault(threshold, 0.0)
-
-  @Since("2.2.0")
-  def setWeightCol(value: Double): this.type = set(threshold, value)
-
-  private val margin: Vector => Double = (features) => {
-    BLAS.dot(features, coefficients) + intercept
-  }
-
-  override protected def predict(features: Vector): Double = {
-    if (margin(features) > $(threshold)) 1.0 else 0.0
-  }
-
-  override protected def predictRaw(features: Vector): Vector = {
-    val m = margin(features)
-    Vectors.dense(-m, m)
-  }
-
-  override protected def raw2prediction(rawPrediction: Vector): Double = {
-    if (rawPrediction(1) > $(threshold)) 1.0 else 0.0
-  }
-
-  @Since("2.2.0")
-  override def copy(extra: ParamMap): LinearSVCModel = {
-    copyValues(new LinearSVCModel(uid, coefficients, intercept), extra).setParent(parent)
-  }
-
-  @Since("2.2.0")
-  override def write: MLWriter = new LinearSVCModel.LinearSVCWriter(this)
-
-}
-
-
-@Since("2.2.0")
-object LinearSVCModel extends MLReadable[LinearSVCModel] {
-
-  @Since("2.2.0")
-  override def read: MLReader[LinearSVCModel] = new LinearSVCReader
-
-  @Since("2.2.0")
-  override def load(path: String): LinearSVCModel = super.load(path)
-
-  /** [[MLWriter]] instance for [[LinearSVCModel]] */
-  private[LinearSVCModel]
-  class LinearSVCWriter(instance: LinearSVCModel)
-    extends MLWriter with Logging {
-
-    private case class Data(coefficients: Vector, intercept: Double)
-
-    override protected def saveImpl(path: String): Unit = {
-      // Save metadata and Params
-      DefaultParamsWriter.saveMetadata(instance, path, sc)
-      val data = Data(instance.coefficients, instance.intercept)
-      val dataPath = new Path(path, "data").toString
-      sparkSession.createDataFrame(Seq(data)).repartition(1).write.parquet(dataPath)
-    }
-  }
-
-  private class LinearSVCReader extends MLReader[LinearSVCModel] {
-
-    /** Checked against metadata when loading model */
-    private val className = classOf[LinearSVCModel].getName
-
-    override def load(path: String): LinearSVCModel = {
-      val metadata = DefaultParamsReader.loadMetadata(path, sc, className)
-      val dataPath = new Path(path, "data").toString
-      val data = sparkSession.read.format("parquet").load(dataPath)
-      val Row(coefficients: Vector, intercept: Double) =
-        data.select("coefficients", "intercept").head()
-      val model = new LinearSVCModel(metadata.uid, coefficients, intercept)
-      DefaultParamsReader.getAndSetParams(model, metadata)
-      model
-    }
-  }
 }

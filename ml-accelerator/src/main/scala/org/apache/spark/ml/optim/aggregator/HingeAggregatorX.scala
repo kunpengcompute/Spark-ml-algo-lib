@@ -17,8 +17,12 @@
 
 package org.apache.spark.ml.optim.aggregator
 
+import java.util.Date
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList
+
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.ml.feature.Instance
+import org.apache.spark.ml.linalg
 import org.apache.spark.ml.linalg._
 
 /**
@@ -34,10 +38,10 @@ import org.apache.spark.ml.linalg._
  * @param fitIntercept Whether to fit an intercept term.
  * @param bcFeaturesStd The standard deviation values of the features.
  */
-private[ml] class HingeAggregator(
+private[ml] class HingeAggregatorX(
     bcFeaturesStd: Broadcast[Array[Double]],
     fitIntercept: Boolean)(bcCoefficients: Broadcast[Vector])
-  extends DifferentiableLossAggregator[Instance, HingeAggregator] {
+  extends DifferentiableLossAggregatorX[Instance, HingeAggregatorX] {
 
   private val numFeatures: Int = bcFeaturesStd.value.length
   private val numFeaturesPlusIntercept: Int = if (fitIntercept) numFeatures + 1 else numFeatures
@@ -62,18 +66,16 @@ private[ml] class HingeAggregator(
       require(weight >= 0.0, s"instance weight, $weight has to be >= 0.0")
 
       if (weight == 0.0) return this
-      val localFeaturesStd = bcFeaturesStd.value
-      val localCoefficients = coefficientsArray
+      val localFeaturesStd = DoubleArrayList.wrap(bcFeaturesStd.value)
+      val localCoefficients = DoubleArrayList.wrap(coefficientsArray)
       val localGradientSumArray = gradientSumArray
 
       val dotProduct = {
         var sum = 0.0
         features.foreachActive { (index, value) =>
-          if (localFeaturesStd(index) != 0.0 && value != 0.0) {
-            sum += localCoefficients(index) * value / localFeaturesStd(index)
-          }
+            sum += localCoefficients.getDouble(index) * value * localFeaturesStd.getDouble(index)
         }
-        if (fitIntercept) sum += localCoefficients(numFeaturesPlusIntercept - 1)
+        if (fitIntercept) sum += localCoefficients.getDouble(numFeaturesPlusIntercept - 1)
         sum
       }
       // Our loss function with {0, 1} labels is max(0, 1 - (2y - 1) (f_w(x)))
@@ -88,12 +90,12 @@ private[ml] class HingeAggregator(
       if (1.0 > labelScaled * dotProduct) {
         val gradientScale = -labelScaled * weight
         features.foreachActive { (index, value) =>
-          if (localFeaturesStd(index) != 0.0 && value != 0.0) {
-            localGradientSumArray(index) += value * gradientScale / localFeaturesStd(index)
-          }
+          val e = localGradientSumArray.getDouble(index)
+          localGradientSumArray.set(index, e += value * gradientScale * localFeaturesStd.getDouble(index))
         }
         if (fitIntercept) {
-          localGradientSumArray(localGradientSumArray.length - 1) += gradientScale
+          val e = localGradientSumArray.getDouble(localGradientSumArray.size() - 1)
+          localGradientSumArray.set(localGradientSumArray.size() - 1), e + gradientScale)
         }
       }
 

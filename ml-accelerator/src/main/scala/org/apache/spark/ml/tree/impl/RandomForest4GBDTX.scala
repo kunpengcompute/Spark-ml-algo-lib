@@ -17,17 +17,19 @@
 
 package org.apache.spark.ml.tree.impl
 
-import java.io.IOException
-
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList
+import it.unimi.dsi.fastutil.ints.{Int2ObjectOpenHashMap, IntArrayList}
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import scala.collection.mutable
 import scala.util.Random
 
+import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.classification.DecisionTreeClassificationModel
 import org.apache.spark.ml.feature.LabeledPoint
 import org.apache.spark.ml.regression.DecisionTreeRegressionModel
 import org.apache.spark.ml.tree._
-import org.apache.spark.ml.util.Instrumentation
+import org.apache.spark.ml.tree.impl.GradientBoostedTreesCore.NodeIndexInfo
 import org.apache.spark.mllib.tree.configuration.{Algo => OldAlgo, Strategy => OldStrategy}
 import org.apache.spark.mllib.tree.impurity.ImpurityCalculator
 import org.apache.spark.mllib.tree.model.ImpurityStats
@@ -77,7 +79,7 @@ import org.apache.spark.util.random.{SamplingUtils, XORShiftRandom}
  * the heaviest part of the computation.  In general, this implementation is bound by either
  * the cost of statistics computation on workers or by communicating the sufficient statistics.
  */
-private[spark] object RandomForest extends Logging {
+private[spark] object RandomForest4GBDTX extends Logging {
 
   /**
    * Train a random forest.
@@ -85,13 +87,16 @@ private[spark] object RandomForest extends Logging {
    * @param input Training data: RDD of `LabeledPoint`
    * @return an unweighted set of trees
    */
-  def run(
-      input: RDD[LabeledPoint],
+  def runX(
+      labelArrayBc: Broadcast[DoubleArrayList],
+      processedInput: RDD[(Int, (IntArrayList, ObjectArrayList[Split]))],
+      metadata: DecisionTreeMetadata,
+      splits: Array[Array[Split]],
       strategy: OldStrategy,
       numTrees: Int,
-      featureSubsetStrategy: String,
       seed: Long,
-      instr: Option[Instrumentation[_]],
+      input: RDD[TreePoint],
+      rawPartInfoBc: Broadcast[Int2ObjectOpenHashMap[IntArrayList]],
       parentUID: Option[String] = None): Array[DecisionTreeModel] = {
 
     val timer = new TimeTracker()
@@ -99,38 +104,6 @@ private[spark] object RandomForest extends Logging {
     timer.start("total")
 
     timer.start("init")
-
-    val retaggedInput = input.retag(classOf[LabeledPoint])
-    val metadata =
-      DecisionTreeMetadata.buildMetadata(retaggedInput, strategy, numTrees, featureSubsetStrategy)
-    instr match {
-      case Some(instrumentation) =>
-        instrumentation.logNumFeatures(metadata.numFeatures)
-        instrumentation.logNumClasses(metadata.numClasses)
-      case None =>
-        logInfo("numFeatures: " + metadata.numFeatures)
-        logInfo("numClasses: " + metadata.numClasses)
-    }
-
-    // Find the splits and the corresponding bins (interval between the splits) using a sample
-    // of the input data.
-    timer.start("findSplits")
-    val splits = findSplits(retaggedInput, metadata, seed)
-    timer.stop("findSplits")
-    logDebug("numBins: feature: number of bins")
-    logDebug(Range(0, metadata.numFeatures).map { featureIndex =>
-      s"\t$featureIndex\t${metadata.numBins(featureIndex)}"
-    }.mkString("\n"))
-
-    // Bin feature values (TreePoint representation).
-    // Cache input RDD for speedup during multiple passes.
-    val treeInput = TreePoint.convertToTreeRDD(retaggedInput, splits, metadata)
-
-    val withReplacement = numTrees > 1
-
-    val baggedInput = BaggedPoint
-      .convertToBaggedRDD(treeInput, strategy.subsamplingRate, numTrees, withReplacement, seed)
-      .persist(StorageLevel.MEMORY_AND_DISK)
 
     // depth of the decision tree
     val maxDepth = strategy.maxDepth
@@ -141,25 +114,6 @@ private[spark] object RandomForest extends Logging {
     // TODO: Calculate memory usage more precisely.
     val maxMemoryUsage: Long = strategy.maxMemoryInMB * 1024L * 1024L
     logDebug("max memory usage for aggregates = " + maxMemoryUsage + " bytes.")
-
-    /*
-     * The main idea here is to perform group-wise training of the decision tree nodes thus
-     * reducing the passes over the data from (# nodes) to (# nodes / maxNumberOfNodesPerGroup).
-     * Each data sample is handled by a particular node (or it reaches a leaf and is not used
-     * in lower levels).
-     */
-
-    // Create an RDD of node Id cache.
-    // At first, all the rows belong to the root nodes (node Id == 1).
-    val nodeIdCache = if (strategy.useNodeIdCache) {
-      Some(NodeIdCache.init(
-        data = baggedInput,
-        numTrees = numTrees,
-        checkpointInterval = strategy.checkpointInterval,
-        initVal = 1))
-    } else {
-      None
-    }
 
     /*
       Stack of nodes to train: (treeIndex, node)
@@ -178,13 +132,14 @@ private[spark] object RandomForest extends Logging {
     val topNodes = Array.fill[LearningNode](numTrees)(LearningNode.emptyNode(nodeIndex = 1))
     Range(0, numTrees).foreach(treeIndex => nodeStack.push((treeIndex, topNodes(treeIndex))))
 
+    val nodeIdCacheX = GradientBoostedTreesUtil.nodeIdCacheXConstruction(topNodes, rawPartInfoBc)
     timer.stop("init")
 
     while (nodeStack.nonEmpty) {
       // Collect some nodes to split, and choose features for each node (if subsampling).
       // Each group of nodes may come from one or multiple trees, and at multiple levels.
       val (nodesForGroup, treeToNodeToIndexInfo) =
-        RandomForest.selectNodesToSplit(nodeStack, maxMemoryUsage, metadata, rng)
+        RandomForest4GBDTX.selectNodesToSplit(nodeStack, maxMemoryUsage, metadata, rng)
       // Sanity check (should never occur):
       assert(nodesForGroup.nonEmpty,
         s"RandomForest selected empty nodesForGroup.  Error for unknown reason.")
@@ -195,28 +150,16 @@ private[spark] object RandomForest extends Logging {
 
       // Choose node splits, and enqueue new nodes as needed.
       timer.start("findBestSplits")
-      RandomForest.findBestSplits(baggedInput, metadata, topNodesForGroup, nodesForGroup,
-        treeToNodeToIndexInfo, splits, nodeStack, timer, nodeIdCache)
+      RandomForest4GBDTX.findBestSplitsX(labelArrayBc, processedInput, metadata,
+        (nodesForGroup, treeToNodeToIndexInfo), splits, nodeStack, timer, nodeIdCacheX, input, rawPartInfoBc, timer)
       timer.stop("findBestSplits")
     }
-
-    baggedInput.unpersist()
 
     timer.stop("total")
 
     logInfo("Internal timing for DecisionTree:")
     logInfo(s"$timer")
-
-    // Delete any remaining checkpoints used for node Id cache.
-    if (nodeIdCache.nonEmpty) {
-      try {
-        nodeIdCache.get.deleteAllCheckpoints()
-      } catch {
-        case e: IOException =>
-          logWarning(s"delete all checkpoints failed. Error reason: ${e.getMessage}")
-      }
-    }
-
+    
     val numFeatures = metadata.numFeatures
 
     parentUID match {
@@ -244,103 +187,6 @@ private[spark] object RandomForest extends Logging {
   }
 
   /**
-   * Helper for binSeqOp, for data which can contain a mix of ordered and unordered features.
-   *
-   * For ordered features, a single bin is updated.
-   * For unordered features, bins correspond to subsets of categories; either the left or right bin
-   * for each subset is updated.
-   *
-   * @param agg  Array storing aggregate calculation, with a set of sufficient statistics for
-   *             each (feature, bin).
-   * @param treePoint  Data point being aggregated.
-   * @param splits possible splits indexed (numFeatures)(numSplits)
-   * @param unorderedFeatures  Set of indices of unordered features.
-   * @param instanceWeight  Weight (importance) of instance in dataset.
-   */
-  private def mixedBinSeqOp(
-      agg: DTStatsAggregator,
-      treePoint: TreePoint,
-      splits: Array[Array[Split]],
-      unorderedFeatures: Set[Int],
-      instanceWeight: Double,
-      featuresForNode: Option[Array[Int]]): Unit = {
-    val numFeaturesPerNode = if (featuresForNode.nonEmpty) {
-      // Use subsampled features
-      featuresForNode.get.length
-    } else {
-      // Use all features
-      agg.metadata.numFeatures
-    }
-    // Iterate over features.
-    var featureIndexIdx = 0
-    while (featureIndexIdx < numFeaturesPerNode) {
-      val featureIndex = if (featuresForNode.nonEmpty) {
-        featuresForNode.get.apply(featureIndexIdx)
-      } else {
-        featureIndexIdx
-      }
-      if (unorderedFeatures.contains(featureIndex)) {
-        // Unordered feature
-        val featureValue = treePoint.binnedFeatures(featureIndex)
-        val leftNodeFeatureOffset = agg.getFeatureOffset(featureIndexIdx)
-        // Update the left or right bin for each split.
-        val numSplits = agg.metadata.numSplits(featureIndex)
-        val featureSplits = splits(featureIndex)
-        var splitIndex = 0
-        while (splitIndex < numSplits) {
-          if (featureSplits(splitIndex).shouldGoLeft(featureValue, featureSplits)) {
-            agg.featureUpdate(leftNodeFeatureOffset, splitIndex, treePoint.label, instanceWeight)
-          }
-          splitIndex += 1
-        }
-      } else {
-        // Ordered feature
-        val binIndex = treePoint.binnedFeatures(featureIndex)
-        agg.update(featureIndexIdx, binIndex, treePoint.label, instanceWeight)
-      }
-      featureIndexIdx += 1
-    }
-  }
-
-  /**
-   * Helper for binSeqOp, for regression and for classification with only ordered features.
-   *
-   * For each feature, the sufficient statistics of one bin are updated.
-   *
-   * @param agg  Array storing aggregate calculation, with a set of sufficient statistics for
-   *             each (feature, bin).
-   * @param treePoint  Data point being aggregated.
-   * @param instanceWeight  Weight (importance) of instance in dataset.
-   */
-  private def orderedBinSeqOp(
-      agg: DTStatsAggregator,
-      treePoint: TreePoint,
-      instanceWeight: Double,
-      featuresForNode: Option[Array[Int]]): Unit = {
-    val label = treePoint.label
-
-    // Iterate over features.
-    if (featuresForNode.nonEmpty) {
-      // Use subsampled features
-      var featureIndexIdx = 0
-      while (featureIndexIdx < featuresForNode.get.length) {
-        val binIndex = treePoint.binnedFeatures(featuresForNode.get.apply(featureIndexIdx))
-        agg.update(featureIndexIdx, binIndex, label, instanceWeight)
-        featureIndexIdx += 1
-      }
-    } else {
-      // Use all features
-      val numFeatures = agg.metadata.numFeatures
-      var featureIndex = 0
-      while (featureIndex < numFeatures) {
-        val binIndex = treePoint.binnedFeatures(featureIndex)
-        agg.update(featureIndex, binIndex, label, instanceWeight)
-        featureIndex += 1
-      }
-    }
-  }
-
-  /**
    * Given a group of nodes, this finds the best split for each node.
    *
    * @param input Training data: RDD of [[TreePoint]]
@@ -361,15 +207,17 @@ private[spark] object RandomForest extends Logging {
    *                    the node stat aggregation phase.
    */
   private[tree] def findBestSplits(
-      input: RDD[BaggedPoint[TreePoint]],
+      labelArrayBc: Broadcast[DoubleArrayList],
+      processedInput: RDD[(Int, (IntArrayList, ObjectArrayList[Split]))],
       metadata: DecisionTreeMetadata,
-      topNodesForGroup: Map[Int, LearningNode],
+      packagedNodeInfo: (Map[Int, Array[LearningNode]], Map[Int, Map[Int, NodeIndexInfo]]),
       nodesForGroup: Map[Int, Array[LearningNode]],
-      treeToNodeToIndexInfo: Map[Int, Map[Int, NodeIndexInfo]],
       splits: Array[Array[Split]],
       nodeStack: mutable.ArrayStack[(Int, LearningNode)],
-      timer: TimeTracker = new TimeTracker,
-      nodeIdCache: Option[NodeIdCache] = None): Unit = {
+      nodeIdCache: Int2ObjectOpenHashMap[Int2ObjectOpenHashMap[IntArrayList]],
+      input: RDD[TreePoint],
+      rawPartInfoBc: Broadcast[Int2ObjectOpenHashMap[IntArrayList]],
+      timer: TimeTracker = new TimeTracker): Unit = {
 
     /*
      * The high-level descriptions of the best split optimizations are noted here.
@@ -392,7 +240,8 @@ private[spark] object RandomForest extends Logging {
      * indices) in a single array for all bins and rely upon the RDD aggregate method to
      * drastically reduce the communication overhead.
      */
-
+     
+    var (nodesForGroup, treeToNodeToIndexInfo) = packageNodeInfo
     // numNodes:  Number of nodes in this group
     val numNodes = nodesForGroup.values.map(_.length).sum
     logDebug("numNodes = " + numNodes)
@@ -401,96 +250,6 @@ private[spark] object RandomForest extends Logging {
     logDebug("isMulticlass = " + metadata.isMulticlass)
     logDebug("isMulticlassWithCategoricalFeatures = " +
       metadata.isMulticlassWithCategoricalFeatures)
-    logDebug("using nodeIdCache = " + nodeIdCache.nonEmpty.toString)
-
-    /**
-     * Performs a sequential aggregation over a partition for a particular tree and node.
-     *
-     * For each feature, the aggregate sufficient statistics are updated for the relevant
-     * bins.
-     *
-     * @param treeIndex Index of the tree that we want to perform aggregation for.
-     * @param nodeInfo The node info for the tree node.
-     * @param agg Array storing aggregate calculation, with a set of sufficient statistics
-     *            for each (node, feature, bin).
-     * @param baggedPoint Data point being aggregated.
-     */
-    def nodeBinSeqOp(
-        treeIndex: Int,
-        nodeInfo: NodeIndexInfo,
-        agg: Array[DTStatsAggregator],
-        baggedPoint: BaggedPoint[TreePoint]): Unit = {
-      if (nodeInfo != null) {
-        val aggNodeIndex = nodeInfo.nodeIndexInGroup
-        val featuresForNode = nodeInfo.featureSubset
-        val instanceWeight = baggedPoint.subsampleWeights(treeIndex)
-        if (metadata.unorderedFeatures.isEmpty) {
-          orderedBinSeqOp(agg(aggNodeIndex), baggedPoint.datum, instanceWeight, featuresForNode)
-        } else {
-          mixedBinSeqOp(agg(aggNodeIndex), baggedPoint.datum, splits,
-            metadata.unorderedFeatures, instanceWeight, featuresForNode)
-        }
-        agg(aggNodeIndex).updateParent(baggedPoint.datum.label, instanceWeight)
-      }
-    }
-
-    /**
-     * Performs a sequential aggregation over a partition.
-     *
-     * Each data point contributes to one node. For each feature,
-     * the aggregate sufficient statistics are updated for the relevant bins.
-     *
-     * @param agg  Array storing aggregate calculation, with a set of sufficient statistics for
-     *             each (node, feature, bin).
-     * @param baggedPoint   Data point being aggregated.
-     * @return  agg
-     */
-    def binSeqOp(
-        agg: Array[DTStatsAggregator],
-        baggedPoint: BaggedPoint[TreePoint]): Array[DTStatsAggregator] = {
-      treeToNodeToIndexInfo.foreach { case (treeIndex, nodeIndexToInfo) =>
-        val nodeIndex =
-          topNodesForGroup(treeIndex).predictImpl(baggedPoint.datum.binnedFeatures, splits)
-        nodeBinSeqOp(treeIndex, nodeIndexToInfo.getOrElse(nodeIndex, null), agg, baggedPoint)
-      }
-      agg
-    }
-
-    /**
-     * Do the same thing as binSeqOp, but with nodeIdCache.
-     */
-    def binSeqOpWithNodeIdCache(
-        agg: Array[DTStatsAggregator],
-        dataPoint: (BaggedPoint[TreePoint], Array[Int])): Array[DTStatsAggregator] = {
-      treeToNodeToIndexInfo.foreach { case (treeIndex, nodeIndexToInfo) =>
-        val baggedPoint = dataPoint._1
-        val nodeIdCache = dataPoint._2
-        val nodeIndex = nodeIdCache(treeIndex)
-        nodeBinSeqOp(treeIndex, nodeIndexToInfo.getOrElse(nodeIndex, null), agg, baggedPoint)
-      }
-
-      agg
-    }
-
-    /**
-     * Get node index in group --> features indices map,
-     * which is a short cut to find feature indices for a node given node index in group.
-     */
-    def getNodeToFeatures(
-        treeToNodeToIndexInfo: Map[Int, Map[Int, NodeIndexInfo]]): Option[Map[Int, Array[Int]]] = {
-      if (!metadata.subsamplingFeatures) {
-        None
-      } else {
-        val mutableNodeToFeatures = new mutable.HashMap[Int, Array[Int]]()
-        treeToNodeToIndexInfo.values.foreach { nodeIdToNodeInfo =>
-          nodeIdToNodeInfo.values.foreach { nodeIndexInfo =>
-            assert(nodeIndexInfo.featureSubset.isDefined)
-            mutableNodeToFeatures(nodeIndexInfo.nodeIndexInGroup) = nodeIndexInfo.featureSubset.get
-          }
-        }
-        Some(mutableNodeToFeatures.toMap)
-      }
-    }
 
     // array of nodes to train indexed by node index in group
     val nodes = new Array[LearningNode](numNodes)
@@ -500,76 +259,18 @@ private[spark] object RandomForest extends Logging {
       }
     }
 
+    timer.start("broadcast")
+    val nodeIdCacheBc = processedInput.sparkContext.broadcast(nodeIdCache)
+    timer.stop("broadcast")
+
     // Calculate best splits for all nodes in the group
     timer.start("chooseSplits")
 
-    // In each partition, iterate all instances and compute aggregate stats for each node,
-    // yield a (nodeIndex, nodeAggregateStats) pair for each node.
-    // After a `reduceByKey` operation,
-    // stats of a node will be shuffled to a particular partition and be combined together,
-    // then best splits for nodes are found there.
-    // Finally, only best Splits for nodes are collected to driver to construct decision tree.
-    val nodeToFeatures = getNodeToFeatures(treeToNodeToIndexInfo)
-    val nodeToFeaturesBc = input.sparkContext.broadcast(nodeToFeatures)
-
-    val partitionAggregates: RDD[(Int, DTStatsAggregator)] = if (nodeIdCache.nonEmpty) {
-      input.zip(nodeIdCache.get.nodeIdsForInstances).mapPartitions { points =>
-        // Construct a nodeStatsAggregators array to hold node aggregate stats,
-        // each node will have a nodeStatsAggregator
-        val nodeStatsAggregators = Array.tabulate(numNodes) { nodeIndex =>
-          val featuresForNode = nodeToFeaturesBc.value.map { nodeToFeatures =>
-            nodeToFeatures(nodeIndex)
-          }
-          new DTStatsAggregator(metadata, featuresForNode)
-        }
-
-        // iterator all instances in current partition and update aggregate stats
-        points.foreach(binSeqOpWithNodeIdCache(nodeStatsAggregators, _))
-
-        // transform nodeStatsAggregators array to (nodeIndex, nodeAggregateStats) pairs,
-        // which can be combined with other partition using `reduceByKey`
-        nodeStatsAggregators.view.zipWithIndex.map(_.swap).iterator
-      }
-    } else {
-      input.mapPartitions { points =>
-        // Construct a nodeStatsAggregators array to hold node aggregate stats,
-        // each node will have a nodeStatsAggregator
-        val nodeStatsAggregators = Array.tabulate(numNodes) { nodeIndex =>
-          val featuresForNode = nodeToFeaturesBc.value.flatMap { nodeToFeatures =>
-            Some(nodeToFeatures(nodeIndex))
-          }
-          new DTStatsAggregator(metadata, featuresForNode)
-        }
-
-        // iterator all instances in current partition and update aggregate stats
-        points.foreach(binSeqOp(nodeStatsAggregators, _))
-
-        // transform nodeStatsAggregators array to (nodeIndex, nodeAggregateStats) pairs,
-        // which can be combined with other partition using `reduceByKey`
-        nodeStatsAggregators.view.zipWithIndex.map(_.swap).iterator
-      }
-    }
-
-    val nodeToBestSplits = partitionAggregates.reduceByKey((a, b) => a.merge(b)).map {
-      case (nodeIndex, aggStats) =>
-        val featuresForNode = nodeToFeaturesBc.value.flatMap { nodeToFeatures =>
-          Some(nodeToFeatures(nodeIndex))
-        }
-
-        // find best split for each node
-        val (split: Split, stats: ImpurityStats) =
-          binsToBestSplit(aggStats, splits, featuresForNode, nodes(nodeIndex))
-        (nodeIndex, (split, stats))
-    }.collectAsMap()
+    val nodeToBestSplits = GradientBoostedTreeUtil.chooseBestSplits(processedInput, 
+      treeToNodeToIndexInfo, metadata, nodeIdCacheBc, labelArrayBc, nodes)
 
     timer.stop("chooseSplits")
-
-    val nodeIdUpdaters = if (nodeIdCache.nonEmpty) {
-      Array.fill[mutable.Map[Int, NodeIndexUpdater]](
-        metadata.numTrees)(mutable.Map[Int, NodeIndexUpdater]())
-    } else {
-      null
-    }
+    
     // Iterate over all nodes in this group.
     nodesForGroup.foreach { case (treeIndex, nodesForTree) =>
       nodesForTree.foreach { node =>
@@ -577,7 +278,7 @@ private[spark] object RandomForest extends Logging {
         val nodeInfo = treeToNodeToIndexInfo(treeIndex)(nodeIndex)
         val aggNodeIndex = nodeInfo.nodeIndexInGroup
         val (split: Split, stats: ImpurityStats) =
-          nodeToBestSplits(aggNodeIndex)
+          nodeToBestSplits(nodeIndex)
         logDebug("best split = " + split)
 
         // Extract info for this node.  Create children if not leaf.
@@ -597,13 +298,6 @@ private[spark] object RandomForest extends Logging {
           node.rightChild = Some(LearningNode(LearningNode.rightChildIndex(nodeIndex),
             rightChildIsLeaf, ImpurityStats.getEmptyImpurityStats(stats.rightImpurityCalculator)))
 
-          if (nodeIdCache.nonEmpty) {
-            val nodeIndexUpdater = NodeIndexUpdater(
-              split = split,
-              nodeIndex = nodeIndex)
-            nodeIdUpdaters(treeIndex).put(nodeIndex, nodeIndexUpdater)
-          }
-
           // enqueue left child and right child if they are not leaves
           if (!leftChildIsLeaf) {
             nodeStack.push((treeIndex, node.leftChild.get))
@@ -620,235 +314,8 @@ private[spark] object RandomForest extends Logging {
       }
     }
 
-    if (nodeIdCache.nonEmpty) {
-      // Update the cache if needed.
-      nodeIdCache.get.updateNodeIndices(input, nodeIdUpdaters, splits)
-    }
-  }
-
-  /**
-   * Calculate the impurity statistics for a given (feature, split) based upon left/right
-   * aggregates.
-   *
-   * @param stats the recycle impurity statistics for this feature's all splits,
-   *              only 'impurity' and 'impurityCalculator' are valid between each iteration
-   * @param leftImpurityCalculator left node aggregates for this (feature, split)
-   * @param rightImpurityCalculator right node aggregate for this (feature, split)
-   * @param metadata learning and dataset metadata for DecisionTree
-   * @return Impurity statistics for this (feature, split)
-   */
-  private def calculateImpurityStats(
-      stats: ImpurityStats,
-      leftImpurityCalculator: ImpurityCalculator,
-      rightImpurityCalculator: ImpurityCalculator,
-      metadata: DecisionTreeMetadata): ImpurityStats = {
-
-    val parentImpurityCalculator: ImpurityCalculator = if (stats == null) {
-      leftImpurityCalculator.copy.add(rightImpurityCalculator)
-    } else {
-      stats.impurityCalculator
-    }
-
-    val impurity: Double = if (stats == null) {
-      parentImpurityCalculator.calculate()
-    } else {
-      stats.impurity
-    }
-
-    val leftCount = leftImpurityCalculator.count
-    val rightCount = rightImpurityCalculator.count
-
-    val totalCount = leftCount + rightCount
-
-    // If left child or right child doesn't satisfy minimum instances per node,
-    // then this split is invalid, return invalid information gain stats.
-    if ((leftCount < metadata.minInstancesPerNode) ||
-      (rightCount < metadata.minInstancesPerNode)) {
-      return ImpurityStats.getInvalidImpurityStats(parentImpurityCalculator)
-    }
-
-    val leftImpurity = leftImpurityCalculator.calculate() // Note: This equals 0 if count = 0
-    val rightImpurity = rightImpurityCalculator.calculate()
-
-    val leftWeight = leftCount / totalCount.toDouble
-    val rightWeight = rightCount / totalCount.toDouble
-
-    val gain = impurity - leftWeight * leftImpurity - rightWeight * rightImpurity
-
-    // if information gain doesn't satisfy minimum information gain,
-    // then this split is invalid, return invalid information gain stats.
-    if (gain < metadata.minInfoGain) {
-      return ImpurityStats.getInvalidImpurityStats(parentImpurityCalculator)
-    }
-
-    new ImpurityStats(gain, impurity, parentImpurityCalculator,
-      leftImpurityCalculator, rightImpurityCalculator)
-  }
-
-  /**
-   * Find the best split for a node.
-   *
-   * @param binAggregates Bin statistics.
-   * @return tuple for best split: (Split, information gain, prediction at node)
-   */
-  private[tree] def binsToBestSplit(
-      binAggregates: DTStatsAggregator,
-      splits: Array[Array[Split]],
-      featuresForNode: Option[Array[Int]],
-      node: LearningNode): (Split, ImpurityStats) = {
-
-    // Calculate InformationGain and ImpurityStats if current node is top node
-    val level = LearningNode.indexToLevel(node.id)
-    var gainAndImpurityStats: ImpurityStats = if (level == 0) {
-      null
-    } else {
-      node.stats
-    }
-
-    val validFeatureSplits =
-      Range(0, binAggregates.metadata.numFeaturesPerNode).view.map { featureIndexIdx =>
-        featuresForNode.map(features => (featureIndexIdx, features(featureIndexIdx)))
-          .getOrElse((featureIndexIdx, featureIndexIdx))
-      }.withFilter { case (_, featureIndex) =>
-        binAggregates.metadata.numSplits(featureIndex) != 0
-      }
-
-    // For each (feature, split), calculate the gain, and select the best (feature, split).
-    val splitsAndImpurityInfo =
-      validFeatureSplits.map { case (featureIndexIdx, featureIndex) =>
-        val numSplits = binAggregates.metadata.numSplits(featureIndex)
-        if (binAggregates.metadata.isContinuous(featureIndex)) {
-          // Cumulative sum (scanLeft) of bin statistics.
-          // Afterwards, binAggregates for a bin is the sum of aggregates for
-          // that bin + all preceding bins.
-          val nodeFeatureOffset = binAggregates.getFeatureOffset(featureIndexIdx)
-          var splitIndex = 0
-          while (splitIndex < numSplits) {
-            binAggregates.mergeForFeature(nodeFeatureOffset, splitIndex + 1, splitIndex)
-            splitIndex += 1
-          }
-          // Find best split.
-          val (bestFeatureSplitIndex, bestFeatureGainStats) =
-            Range(0, numSplits).map { case splitIdx =>
-              val leftChildStats = binAggregates.getImpurityCalculator(nodeFeatureOffset, splitIdx)
-              val rightChildStats =
-                binAggregates.getImpurityCalculator(nodeFeatureOffset, numSplits)
-              rightChildStats.subtract(leftChildStats)
-              gainAndImpurityStats = calculateImpurityStats(gainAndImpurityStats,
-                leftChildStats, rightChildStats, binAggregates.metadata)
-              (splitIdx, gainAndImpurityStats)
-            }.maxBy(_._2.gain)
-          (splits(featureIndex)(bestFeatureSplitIndex), bestFeatureGainStats)
-        } else if (binAggregates.metadata.isUnordered(featureIndex)) {
-          // Unordered categorical feature
-          val leftChildOffset = binAggregates.getFeatureOffset(featureIndexIdx)
-          val (bestFeatureSplitIndex, bestFeatureGainStats) =
-            Range(0, numSplits).map { splitIndex =>
-              val leftChildStats = binAggregates.getImpurityCalculator(leftChildOffset, splitIndex)
-              val rightChildStats = binAggregates.getParentImpurityCalculator()
-                .subtract(leftChildStats)
-              gainAndImpurityStats = calculateImpurityStats(gainAndImpurityStats,
-                leftChildStats, rightChildStats, binAggregates.metadata)
-              (splitIndex, gainAndImpurityStats)
-            }.maxBy(_._2.gain)
-          (splits(featureIndex)(bestFeatureSplitIndex), bestFeatureGainStats)
-        } else {
-          // Ordered categorical feature
-          val nodeFeatureOffset = binAggregates.getFeatureOffset(featureIndexIdx)
-          val numCategories = binAggregates.metadata.numBins(featureIndex)
-
-          /* Each bin is one category (feature value).
-           * The bins are ordered based on centroidForCategories, and this ordering determines which
-           * splits are considered.  (With K categories, we consider K - 1 possible splits.)
-           *
-           * centroidForCategories is a list: (category, centroid)
-           */
-          val centroidForCategories = Range(0, numCategories).map { case featureValue =>
-            val categoryStats =
-              binAggregates.getImpurityCalculator(nodeFeatureOffset, featureValue)
-            val centroid = if (categoryStats.count != 0) {
-              if (binAggregates.metadata.isMulticlass) {
-                // multiclass classification
-                // For categorical variables in multiclass classification,
-                // the bins are ordered by the impurity of their corresponding labels.
-                categoryStats.calculate()
-              } else if (binAggregates.metadata.isClassification) {
-                // binary classification
-                // For categorical variables in binary classification,
-                // the bins are ordered by the count of class 1.
-                categoryStats.stats(1)
-              } else {
-                // regression
-                // For categorical variables in regression and binary classification,
-                // the bins are ordered by the prediction.
-                categoryStats.predict
-              }
-            } else {
-              Double.MaxValue
-            }
-            (featureValue, centroid)
-          }
-
-          logDebug("Centroids for categorical variable: " + centroidForCategories.mkString(","))
-
-          // bins sorted by centroids
-          val categoriesSortedByCentroid = centroidForCategories.toList.sortBy(_._2)
-
-          logDebug("Sorted centroids for categorical variable = " +
-            categoriesSortedByCentroid.mkString(","))
-
-          // Cumulative sum (scanLeft) of bin statistics.
-          // Afterwards, binAggregates for a bin is the sum of aggregates for
-          // that bin + all preceding bins.
-          var splitIndex = 0
-          while (splitIndex < numSplits) {
-            val currentCategory = categoriesSortedByCentroid(splitIndex)._1
-            val nextCategory = categoriesSortedByCentroid(splitIndex + 1)._1
-            binAggregates.mergeForFeature(nodeFeatureOffset, nextCategory, currentCategory)
-            splitIndex += 1
-          }
-          // lastCategory = index of bin with total aggregates for this (node, feature)
-          val lastCategory = categoriesSortedByCentroid.last._1
-          // Find best split.
-          val (bestFeatureSplitIndex, bestFeatureGainStats) =
-            Range(0, numSplits).map { splitIndex =>
-              val featureValue = categoriesSortedByCentroid(splitIndex)._1
-              val leftChildStats =
-                binAggregates.getImpurityCalculator(nodeFeatureOffset, featureValue)
-              val rightChildStats =
-                binAggregates.getImpurityCalculator(nodeFeatureOffset, lastCategory)
-              rightChildStats.subtract(leftChildStats)
-              gainAndImpurityStats = calculateImpurityStats(gainAndImpurityStats,
-                leftChildStats, rightChildStats, binAggregates.metadata)
-              (splitIndex, gainAndImpurityStats)
-            }.maxBy(_._2.gain)
-          val categoriesForSplit =
-            categoriesSortedByCentroid.map(_._1.toDouble).slice(0, bestFeatureSplitIndex + 1)
-          val bestFeatureSplit =
-            new CategoricalSplit(featureIndex, categoriesForSplit.toArray, numCategories)
-          (bestFeatureSplit, bestFeatureGainStats)
-        }
-      }
-
-    val (bestSplit, bestSplitStats) =
-      if (splitsAndImpurityInfo.isEmpty) {
-        // If no valid splits for features, then this split is invalid,
-        // return invalid information gain stats.  Take any split and continue.
-        // Splits is empty, so arbitrarily choose to split on any threshold
-        val dummyFeatureIndex = featuresForNode.map(_.head).getOrElse(0)
-        val parentImpurityCalculator = binAggregates.getParentImpurityCalculator()
-        if (binAggregates.metadata.isContinuous(dummyFeatureIndex)) {
-          (new ContinuousSplit(dummyFeatureIndex, 0),
-            ImpurityStats.getInvalidImpurityStats(parentImpurityCalculator))
-        } else {
-          val numCategories = binAggregates.metadata.featureArity(dummyFeatureIndex)
-          (new CategoricalSplit(dummyFeatureIndex, Array(), numCategories),
-            ImpurityStats.getInvalidImpurityStats(parentImpurityCalculator))
-        }
-      } else {
-        splitsAndImpurityInfo.maxBy(_._2.gain)
-      }
-    (bestSplit, bestSplitStats)
+    GradientBoostedTreesUtil.updateNodeIdCache(nodeIdCache, nodeIdCacheBc, input, nodesForGroup,
+      treeToNodeToIndexInfo, splits, rawPartInfoBc, metadata, timer)
   }
 
   /**
@@ -1054,10 +521,6 @@ private[spark] object RandomForest extends Logging {
     splits
   }
 
-  private[tree] class NodeIndexInfo(
-      val nodeIndexInGroup: Int,
-      val featureSubset: Option[Array[Int]]) extends Serializable
-
   /**
    * Pull nodes off of the queue, and collect a group of nodes to be split on this iteration.
    * This tracks the memory usage for aggregates and stops adding nodes when too much memory
@@ -1075,7 +538,7 @@ private[spark] object RandomForest extends Logging {
    *           index in [0, numNodesInGroup) of the node in this group.
    *          The feature indices are None if not subsampling features.
    */
-  private[tree] def selectNodesToSplit(
+  private[tree] def selectNodesToSplitX(
       nodeStack: mutable.ArrayStack[(Int, LearningNode)],
       maxMemoryUsage: Long,
       metadata: DecisionTreeMetadata,
@@ -1099,15 +562,20 @@ private[spark] object RandomForest extends Logging {
       } else {
         None
       }
+      val featureSubsetHashSetX: Option[mutable.HashSet[Int]] = if (metadata.subsamplingFeatures) {
+        Some(scala.collection.mutable.HashSet(featureSubset.get: _*))
+      } else {
+        None
+      }
       // Check if enough memory remains to add this node to the group.
-      val nodeMemUsage = RandomForest.aggregateSizeForNode(metadata, featureSubset) * 8L
+      val nodeMemUsage = RandomForest4GBDTX.aggregateSizeForNode(metadata, featureSubset) * 8L
       if (memUsage + nodeMemUsage <= maxMemoryUsage || memUsage == 0) {
         nodeStack.pop()
         mutableNodesForGroup.getOrElseUpdate(treeIndex, new mutable.ArrayBuffer[LearningNode]()) +=
           node
         mutableTreeToNodeToIndexInfo
           .getOrElseUpdate(treeIndex, new mutable.HashMap[Int, NodeIndexInfo]())(node.id)
-          = new NodeIndexInfo(numNodesInGroup, featureSubset)
+          = new NodeIndexInfo(numNodesInGroup, featureSubset, featureSubsetHashSetX)
         numNodesInGroup += 1
         memUsage += nodeMemUsage
       } else {

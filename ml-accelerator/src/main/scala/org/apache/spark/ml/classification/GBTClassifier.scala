@@ -176,8 +176,14 @@ class GBTClassifier @Since("1.4.0") (
     instr.logNumFeatures(numFeatures)
     instr.logNumClasses(numClasses)
 
-    val (baseLearners, learnerWeights) = GradientBoostedTrees.run(oldDataset, boostingStrategy,
-      $(seed), $(featureSubsetStrategy))
+    val (doUseAcc,setUseAccFlag) = super.getDoUseAcc
+    val (baseLearners,learnerWeights) = if (setUseAccFlag) {
+      GradientBoostedTrees.run(oldDataset, boostingStrategy,
+        $(seed), $(featureSubsetStrategy),doUseAcc)
+    } else {
+      GradientBoostedTrees.run(oldDataset, boostingStrategy,
+        $(seed), $(featureSubsetStrategy))
+    }
     val m = new GBTClassificationModel(uid, baseLearners, learnerWeights, numFeatures)
     instr.logSuccess(m)
     m
