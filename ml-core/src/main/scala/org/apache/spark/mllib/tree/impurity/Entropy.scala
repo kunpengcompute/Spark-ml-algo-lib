@@ -90,7 +90,7 @@ private[spark] class EntropyAggregator(numClasses: Int)
    * @param allStats  Flat stats array, with stats for this (node, feature, bin) contiguous.
    * @param offset    Start index of stats for this (node, feature, bin).
    */
-  def update(allStats: Array[Double], offset: Int, label: Double, instanceWeight: Double): Unit = {
+  def update(allStats: Array[Double], offset: Int, label: Double, instanceWeight: Int): Unit = {
     if (label >= statsSize) {
       throw new IllegalArgumentException(s"EntropyAggregator given label $label" +
         s" but requires label < numClasses (= $statsSize).")

@@ -77,7 +77,7 @@ import org.apache.spark.util.random.{SamplingUtils, XORShiftRandom}
  * the heaviest part of the computation.  In general, this implementation is bound by either
  * the cost of statistics computation on workers or by communicating the sufficient statistics.
  */
-private[spark] object RandomForest extends Logging {
+private[spark] object RandomForestRaw extends Logging {
 
   /**
    * Train a random forest.
@@ -184,7 +184,7 @@ private[spark] object RandomForest extends Logging {
       // Collect some nodes to split, and choose features for each node (if subsampling).
       // Each group of nodes may come from one or multiple trees, and at multiple levels.
       val (nodesForGroup, treeToNodeToIndexInfo) =
-        RandomForest.selectNodesToSplit(nodeStack, maxMemoryUsage, metadata, rng)
+        RandomForestRaw.selectNodesToSplit(nodeStack, maxMemoryUsage, metadata, rng)
       // Sanity check (should never occur):
       assert(nodesForGroup.nonEmpty,
         s"RandomForest selected empty nodesForGroup.  Error for unknown reason.")
@@ -195,7 +195,7 @@ private[spark] object RandomForest extends Logging {
 
       // Choose node splits, and enqueue new nodes as needed.
       timer.start("findBestSplits")
-      RandomForest.findBestSplits(baggedInput, metadata, topNodesForGroup, nodesForGroup,
+      RandomForestRaw.findBestSplits(baggedInput, metadata, topNodesForGroup, nodesForGroup,
         treeToNodeToIndexInfo, splits, nodeStack, timer, nodeIdCache)
       timer.stop("findBestSplits")
     }
@@ -289,14 +289,14 @@ private[spark] object RandomForest extends Logging {
         var splitIndex = 0
         while (splitIndex < numSplits) {
           if (featureSplits(splitIndex).shouldGoLeft(featureValue, featureSplits)) {
-            agg.featureUpdate(leftNodeFeatureOffset, splitIndex, treePoint.label, instanceWeight)
+            agg.featureUpdate(leftNodeFeatureOffset, splitIndex, treePoint.label, instanceWeight.toInt)
           }
           splitIndex += 1
         }
       } else {
         // Ordered feature
         val binIndex = treePoint.binnedFeatures(featureIndex)
-        agg.update(featureIndexIdx, binIndex, treePoint.label, instanceWeight)
+        agg.update(featureIndexIdx, binIndex, treePoint.label, instanceWeight.toInt)
       }
       featureIndexIdx += 1
     }
@@ -325,7 +325,7 @@ private[spark] object RandomForest extends Logging {
       var featureIndexIdx = 0
       while (featureIndexIdx < featuresForNode.get.length) {
         val binIndex = treePoint.binnedFeatures(featuresForNode.get.apply(featureIndexIdx))
-        agg.update(featureIndexIdx, binIndex, label, instanceWeight)
+        agg.update(featureIndexIdx, binIndex, label, instanceWeight.toInt)
         featureIndexIdx += 1
       }
     } else {
@@ -334,7 +334,7 @@ private[spark] object RandomForest extends Logging {
       var featureIndex = 0
       while (featureIndex < numFeatures) {
         val binIndex = treePoint.binnedFeatures(featureIndex)
-        agg.update(featureIndex, binIndex, label, instanceWeight)
+        agg.update(featureIndex, binIndex, label, instanceWeight.toInt)
         featureIndex += 1
       }
     }
@@ -565,8 +565,8 @@ private[spark] object RandomForest extends Logging {
     timer.stop("chooseSplits")
 
     val nodeIdUpdaters = if (nodeIdCache.nonEmpty) {
-      Array.fill[mutable.Map[Int, NodeIndexUpdater]](
-        metadata.numTrees)(mutable.Map[Int, NodeIndexUpdater]())
+      Array.fill[mutable.Map[Int, NodeIndexUpdaterRaw]](
+        metadata.numTrees)(mutable.Map[Int, NodeIndexUpdaterRaw]())
     } else {
       null
     }
@@ -598,7 +598,7 @@ private[spark] object RandomForest extends Logging {
             rightChildIsLeaf, ImpurityStats.getEmptyImpurityStats(stats.rightImpurityCalculator)))
 
           if (nodeIdCache.nonEmpty) {
-            val nodeIndexUpdater = NodeIndexUpdater(
+            val nodeIndexUpdater = NodeIndexUpdaterRaw
               split = split,
               nodeIndex = nodeIndex)
             nodeIdUpdaters(treeIndex).put(nodeIndex, nodeIndexUpdater)
@@ -622,7 +622,7 @@ private[spark] object RandomForest extends Logging {
 
     if (nodeIdCache.nonEmpty) {
       // Update the cache if needed.
-      nodeIdCache.get.updateNodeIndices(input, nodeIdUpdaters, splits)
+      nodeIdCache.get.updateNodeIndicesRaw(input, nodeIdUpdaters, splits)
     }
   }
 
@@ -1100,7 +1100,7 @@ private[spark] object RandomForest extends Logging {
         None
       }
       // Check if enough memory remains to add this node to the group.
-      val nodeMemUsage = RandomForest.aggregateSizeForNode(metadata, featureSubset) * 8L
+      val nodeMemUsage = RandomForestRaw.aggregateSizeForNode(metadata, featureSubset) * 8L
       if (memUsage + nodeMemUsage <= maxMemoryUsage || memUsage == 0) {
         nodeStack.pop()
         mutableNodesForGroup.getOrElseUpdate(treeIndex, new mutable.ArrayBuffer[LearningNode]()) +=

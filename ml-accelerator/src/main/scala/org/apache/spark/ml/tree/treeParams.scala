@@ -512,6 +512,20 @@ private[ml] trait GBTParams extends TreeEnsembleParams with HasMaxIter with HasS
 
   /** Get old Gradient Boosting Loss type */
   private[ml] def getOldLossType: OldLoss
+
+  final val doUseAcc: BooleanParam = new BooleanParam(this, "doUseAcc",
+    "If true, use the optimized algorithm; otherwise, use the raw version")
+  var setUseAccFlag = false
+
+  /** Set algorithm to the raw version */
+  def setDoUseAcc(value: Boolean): this.type = {
+    setUseAccFlag = true
+    set(doUseAcc, value)
+  }
+  setDefault(doUseAcc -> true)
+
+  /** Get algorithm type. */
+  def getDoUseAcc: (Boolean, Boolean) = ($(doUseAcc), setUseAccFlag)
 }
 
 private[ml] object GBTClassifierParams {

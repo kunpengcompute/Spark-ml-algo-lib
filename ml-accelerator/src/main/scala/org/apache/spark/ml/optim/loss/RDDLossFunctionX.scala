@@ -16,6 +16,7 @@
  */
 package org.apache.spark.ml.optim.loss
 
+import java.util.Date
 import scala.reflect.ClassTag
 
 import breeze.linalg.{DenseVector => BDV}
@@ -23,7 +24,7 @@ import breeze.optimize.DiffFunction
 
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.ml.linalg.{BLAS, Vector, Vectors}
-import org.apache.spark.ml.optim.aggregator.DifferentiableLossAggregator
+import org.apache.spark.ml.optim.aggregator.{DifferentiableLossAggregator, DifferentiableLossAggregatorX}
 import org.apache.spark.rdd.RDD
 
 /**
@@ -44,9 +45,9 @@ import org.apache.spark.rdd.RDD
  * @tparam Agg Specialization of [[DifferentiableLossAggregator]], representing the concrete type
  *             of the aggregator.
  */
-private[ml] class RDDLossFunction[
+private[ml] class RDDLossFunctionX[
     T: ClassTag,
-    Agg <: DifferentiableLossAggregator[T, Agg]: ClassTag](
+    Agg <: DifferentiableLossAggregatorX[T, Agg]: ClassTag](
     instances: RDD[T],
     getAggregator: (Broadcast[Vector] => Agg),
     regularization: Option[DifferentiableRegularization[Vector]],

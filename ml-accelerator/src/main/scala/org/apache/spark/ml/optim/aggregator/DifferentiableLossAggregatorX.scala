@@ -16,6 +16,9 @@
  */
 package org.apache.spark.ml.optim.aggregator
 
+import breeze.linalg.{norm,DenseVector => BDV}
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList
+
 import org.apache.spark.ml.linalg.{BLAS, Vector, Vectors}
 
 /**
@@ -27,9 +30,9 @@ import org.apache.spark.ml.linalg.{BLAS, Vector, Vectors}
  * @tparam Agg Specialization of [[DifferentiableLossAggregator]]. Classes that subclass this
  *             type need to use this parameter to specify the concrete type of the aggregator.
  */
-private[ml] trait DifferentiableLossAggregator[
+private[ml] trait DifferentiableLossAggregatorX[
     Datum,
-    Agg <: DifferentiableLossAggregator[Datum, Agg]] extends Serializable {
+    Agg <: DifferentiableLossAggregatorX[Datum, Agg]] extends Serializable {
 
   self: Agg => // enforce classes that extend this to be the same type as `Agg`
 
@@ -40,7 +43,7 @@ private[ml] trait DifferentiableLossAggregator[
   protected val dim: Int
 
   /** Array of gradient values that are mutated when new instances are added to the aggregator. */
-  protected lazy val gradientSumArray: Array[Double] = Array.ofDim[Double](dim)
+  protected lazy val gradientSumArray = DoubleArrayList.wrap(Array.ofDim[Double](dim))
 
   /** Add a single data point to this aggregator. */
   def add(instance: Datum): Agg
@@ -58,7 +61,8 @@ private[ml] trait DifferentiableLossAggregator[
       val localThisGradientSumArray = this.gradientSumArray
       val localOtherGradientSumArray = other.gradientSumArray
       while (i < dim) {
-        localThisGradientSumArray(i) += localOtherGradientSumArray(i)
+        var e = localOtherGradientSumArray.getDouble(i)
+        localThisGradientSumArray.set(i, e + localOtherGradientSumArray.getDouble(i))
         i += 1
       }
     }
@@ -69,7 +73,7 @@ private[ml] trait DifferentiableLossAggregator[
   def gradient: Vector = {
     require(weightSum > 0.0, s"The effective number of instances should be " +
       s"greater than 0.0, but was $weightSum.")
-    val result = Vectors.dense(gradientSumArray.clone())
+    val result = Vectors.dense(gradientSumArray.elements().clone())
     BLAS.scal(1.0 / weightSum, result)
     result
   }
