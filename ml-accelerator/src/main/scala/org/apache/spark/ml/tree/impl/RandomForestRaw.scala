@@ -289,7 +289,8 @@ private[spark] object RandomForestRaw extends Logging {
         var splitIndex = 0
         while (splitIndex < numSplits) {
           if (featureSplits(splitIndex).shouldGoLeft(featureValue, featureSplits)) {
-            agg.featureUpdate(leftNodeFeatureOffset, splitIndex, treePoint.label, instanceWeight.toInt)
+            agg.featureUpdate(leftNodeFeatureOffset, splitIndex,
+              treePoint.label, instanceWeight.toInt)
           }
           splitIndex += 1
         }
@@ -598,7 +599,7 @@ private[spark] object RandomForestRaw extends Logging {
             rightChildIsLeaf, ImpurityStats.getEmptyImpurityStats(stats.rightImpurityCalculator)))
 
           if (nodeIdCache.nonEmpty) {
-            val nodeIndexUpdater = NodeIndexUpdaterRaw
+            val nodeIndexUpdater = NodeIndexUpdaterRaw(
               split = split,
               nodeIndex = nodeIndex)
             nodeIdUpdaters(treeIndex).put(nodeIndex, nodeIndexUpdater)

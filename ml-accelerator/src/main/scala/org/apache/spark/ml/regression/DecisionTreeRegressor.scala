@@ -34,7 +34,6 @@ import org.apache.spark.ml.tree.impl.RandomForestRaw
 import org.apache.spark.ml.tree.impl.TreePoint
 import org.apache.spark.ml.util._
 import org.apache.spark.mllib.tree.configuration.{Algo => OldAlgo, Strategy => OldStrategy}
-import org.apache.spark.mllib.tree.model.{DecisionTreeModel => OldDecisionTreeModel}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.Dataset
 
@@ -145,10 +144,10 @@ class DecisionTreeRegressor @Since("1.4.0") (@Since("1.4.0") override val uid: S
     input: RDD[TreePoint],
     rawPartInfoBc: Broadcast[Int2ObjectOpenHashMap[IntArrayList]]):
     DecisionTreeRegressionModel = {
-      var instr = Instrumentation.create(this, processedInput)
+      val instr = Instrumentation.create(this, processedInput)
       instr.logParams(params: _*)
 
-      var trees = RandomForest4GBDTX.runX(labelArrayBc, processedInput, metadata,
+      val trees = RandomForest4GBDTX.runX(labelArrayBc, processedInput, metadata,
         splits, oldStrategy, numTrees = 1, seed = $(seed), input,
         rawPartInfoBc, parentUID = Some(uid))
 

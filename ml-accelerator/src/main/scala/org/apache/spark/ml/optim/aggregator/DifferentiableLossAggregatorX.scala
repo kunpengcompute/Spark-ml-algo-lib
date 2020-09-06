@@ -57,11 +57,11 @@ private[ml] trait DifferentiableLossAggregatorX[
       weightSum += other.weightSum
       lossSum += other.lossSum
 
-      var i = 0
       val localThisGradientSumArray = this.gradientSumArray
       val localOtherGradientSumArray = other.gradientSumArray
+      var i = 0
       while (i < dim) {
-        var e = localOtherGradientSumArray.getDouble(i)
+        val e = localThisGradientSumArray.getDouble(i)
         localThisGradientSumArray.set(i, e + localOtherGradientSumArray.getDouble(i))
         i += 1
       }

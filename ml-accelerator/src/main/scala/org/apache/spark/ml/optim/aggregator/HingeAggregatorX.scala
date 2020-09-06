@@ -91,11 +91,12 @@ private[ml] class HingeAggregatorX(
         val gradientScale = -labelScaled * weight
         features.foreachActive { (index, value) =>
           val e = localGradientSumArray.getDouble(index)
-          localGradientSumArray.set(index, e += value * gradientScale * localFeaturesStd.getDouble(index))
+          localGradientSumArray.set(index, e + value * gradientScale
+            * localFeaturesStd.getDouble(index))
         }
         if (fitIntercept) {
           val e = localGradientSumArray.getDouble(localGradientSumArray.size() - 1)
-          localGradientSumArray.set(localGradientSumArray.size() - 1), e + gradientScale)
+          localGradientSumArray.set(localGradientSumArray.size() - 1, e + gradientScale)
         }
       }
 

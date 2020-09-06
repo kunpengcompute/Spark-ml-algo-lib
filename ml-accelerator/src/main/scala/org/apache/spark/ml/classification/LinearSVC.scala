@@ -27,8 +27,8 @@ import org.apache.spark.annotation.{Experimental, Since}
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.feature.Instance
 import org.apache.spark.ml.linalg._
-import org.apache.spark.ml.optim.aggregator.{HingeAggregator,HingeAggregatorX}
-import org.apache.spark.ml.optim.loss.{L2Regularization, RDDLossFunction,RDDLossFunctionX}
+import org.apache.spark.ml.optim.aggregator.{HingeAggregator, HingeAggregatorX}
+import org.apache.spark.ml.optim.loss.{L2Regularization, RDDLossFunction, RDDLossFunctionX}
 import org.apache.spark.ml.param._
 import org.apache.spark.ml.param.shared._
 import org.apache.spark.ml.util._
@@ -37,6 +37,7 @@ import org.apache.spark.mllib.stat.MultivariateOnlineSummarizer
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Dataset, Row}
 import org.apache.spark.sql.functions.{col, lit}
+
 
 
 /**
@@ -52,9 +53,9 @@ import org.apache.spark.sql.functions.{col, lit}
 @Since("2.2.0")
 @Experimental
 class LinearSVC @Since("2.2.0") (
-    @Since("2.2.0") override val uid: String)
+                                            @Since("2.2.0") override val uid: String)
   extends Classifier[Vector, LinearSVC, LinearSVCModel]
-  with LinearSVCParams with DefaultParamsWritable {
+    with LinearSVCParams with DefaultParamsWritable {
 
   @Since("2.2.0")
   def this() = this(Identifiable.randomUID("linearsvc"))
@@ -65,6 +66,7 @@ class LinearSVC @Since("2.2.0") (
    *
    * @group setParam
    */
+
 
   var ic = 0.5
   var iters = -1
@@ -165,12 +167,12 @@ class LinearSVC @Since("2.2.0") (
 
     val (summarizer, labelSummarizer) = {
       val seqOp = (c: (MultivariateOnlineSummarizer, MultiClassSummarizer),
-        instance: Instance) =>
-          (c._1.add(instance.features, instance.weight), c._2.add(instance.label, instance.weight))
+                   instance: Instance) =>
+        (c._1.add(instance.features, instance.weight), c._2.add(instance.label, instance.weight))
 
       val combOp = (c1: (MultivariateOnlineSummarizer, MultiClassSummarizer),
-        c2: (MultivariateOnlineSummarizer, MultiClassSummarizer)) =>
-          (c1._1.merge(c2._1), c1._2.merge(c2._2))
+                    c2: (MultivariateOnlineSummarizer, MultiClassSummarizer)) =>
+        (c1._1.merge(c2._1), c1._2.merge(c2._2))
 
       instances.treeAggregate(
         (new MultivariateOnlineSummarizer, new MultiClassSummarizer)
