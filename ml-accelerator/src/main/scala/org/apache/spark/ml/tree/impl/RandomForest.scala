@@ -605,7 +605,7 @@ private[spark] object RandomForest extends Logging {
           val sampleId = firstPoint.sampleId
 
           val splitsBcv = if (bcVariables) splitsBc.get.value else splitsOption.get
-          binSeqOp((nodeStatsAggregators, firstPoint, splitsBcv, sampleId))
+          binSeqOp(nodeStatsAggregators, firstPoint, splitsBcv, sampleId)
 
 
           // iterator all instances in current partition and update aggregate stats
