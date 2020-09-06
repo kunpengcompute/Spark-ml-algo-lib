@@ -150,7 +150,8 @@ private[spark] object RandomForest4GBDTX extends Logging {
       // Choose node splits, and enqueue new nodes as needed.
       timer.start("findBestSplits")
       RandomForest4GBDTX.findBestSplitsX(labelArrayBc, processedInput, metadata,
-        (nodesForGroup, treeToNodeToIndexInfo), splits, nodeStack, nodeIdCacheX, input, rawPartInfoBc, timer)
+        (nodesForGroup, treeToNodeToIndexInfo), splits, nodeStack, nodeIdCacheX, input,
+        rawPartInfoBc, timer)
       timer.stop("findBestSplits")
     }
 
