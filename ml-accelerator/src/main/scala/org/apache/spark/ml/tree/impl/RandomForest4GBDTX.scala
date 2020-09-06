@@ -211,7 +211,6 @@ private[spark] object RandomForest4GBDTX extends Logging {
       processedInput: RDD[(Int, (IntArrayList, ObjectArrayList[Split]))],
       metadata: DecisionTreeMetadata,
       packagedNodeInfo: (Map[Int, Array[LearningNode]], Map[Int, Map[Int, NodeIndexInfo]]),
-      nodesForGroup: Map[Int, Array[LearningNode]],
       splits: Array[Array[Split]],
       nodeStack: mutable.ArrayStack[(Int, LearningNode)],
       nodeIdCache: Int2ObjectOpenHashMap[Int2ObjectOpenHashMap[IntArrayList]],
