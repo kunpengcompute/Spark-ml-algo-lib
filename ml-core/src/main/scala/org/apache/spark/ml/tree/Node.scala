@@ -47,7 +47,7 @@ sealed abstract class Node extends Serializable {
   /** Recursive prediction helper method */
   private[ml] def predictImpl(features: Vector): LeafNode
 
-  private[ml] def predictImplX(binnedFeature: Array[Int], splits: Array[Array[Split]]): LeafNode
+  private[ml] def predictImplX(binnedFeatures: Array[Int], splits: Array[Array[Split]]): LeafNode
 
   /**
    * Get the number of nodes in tree below this node, including leaf nodes.
@@ -123,8 +123,8 @@ class LeafNode private[ml] (
 
   override private[ml] def predictImpl(features: Vector): LeafNode = this
 
-  override private[ml] def predictImplX(binnedFeature: Array[Int], splits: Array[Array[Split]]
-                                       ): LeafNode = this
+  override private[ml] def predictImplX(binnedFeatures: Array[Int], splits: Array[Array[Split]]
+                                        ): LeafNode = this
 
   override private[tree] def numDescendants: Int = 0
 
@@ -318,7 +318,7 @@ private[tree] class LearningNodeX(
    *         group of nodes on one call to
    *         [[org.apache.spark.ml.tree.impl.RandomForest.findBestSplits()]].
    */
-  def predictImpl(binnedFeatures:BinnedFeature, splits: Array[Array[SplitBase]]): Int = {
+  def predictImpl(binnedFeatures: BinnedFeature, splits: Array[Array[SplitBase]]): Int = {
     if (this.isLeaf || this.split.isEmpty) {
       this.id
     } else {

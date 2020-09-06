@@ -36,11 +36,10 @@ sealed trait SplitBase extends Serializable {
 
   /**
    * Return true (split to left) or false (split to right).
-   *
    * @param binnedFeature Binned feature value.
-   * @param splits        All splits for the given feature.
+   * @param splits All splits for the given feature.
    */
-  private[tree] def shouldGoLeft(binnedFeature: Char, Splits: Array[SplitBase]): Boolean
+  private[tree] def shouldGoLeft(binnedFeature: Char, splits: Array[SplitBase]): Boolean
 }
 
 sealed trait Split extends SplitBase {
@@ -72,6 +71,7 @@ private[tree] object Split {
         new ContinuousSplit(featureIndex = oldSplit.feature, threshold = oldSplit.threshold)
     }
   }
+
   def toBase(split: Split, binIdx: Int): SplitBase = {
     split match {
       case value: CategoricalSplit =>
@@ -86,7 +86,7 @@ private[tree] object Split {
       case value: CategoricalSplit =>
         value
       case value: ContinuousSplit =>
-        new ContinuousSplitLearning(value.featureIndex, binIdx)
+        value
       case value: ContinuousSplitLearning =>
         val thresh =
           splits(value.featureIndex)(value.binIndex).asInstanceOf[ContinuousSplit].threshold
@@ -213,8 +213,8 @@ class ContinuousSplit private[ml] (override val featureIndex: Int, val threshold
   }
 
   override private[tree] def shouldGoLeft(
-       binnedFeature: Char,
-       splits: Array[SplitBase]): Boolean = {
+      binnedFeature: Char,
+      splits: Array[SplitBase]): Boolean = {
 
     if (binnedFeature == splits.length) {
       // > last split, so split right
@@ -254,8 +254,8 @@ class ContinuousSplitLearning private[ml] (override val featureIndex: Int, val b
   extends SplitBase {
 
   override private[tree] def shouldGoLeft(
-                                           binnedFeature: Char,
-                                          splits: Array[SplitBase]): Boolean = {
+      binnedFeature: Char,
+      splits: Array[SplitBase]): Boolean = {
 
     if (binnedFeature == splits.length) {
       // > last split, so split right
