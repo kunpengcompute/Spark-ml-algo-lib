@@ -66,7 +66,7 @@ abstract class FirstOrderMinimizerX[T, DF<:StochasticDiffFunction[T]]
   protected def adjustFunction(f: DF): DF = f
   protected def adjust(newX: T, newGrad: T, newVal: Double): (Double, T) = (newVal, newGrad)
   protected def chooseDescentDirection(state: State, f: DF): T
-  protected def takeStep(state: State, dir: T, stepSize:Double): T
+  protected def takeStep(state: State, dir: T, stepSize: Double): T
   protected def updateHistory(newX: T, newGrad: T, newVal: Double, f: DF, oldState: State): History
   protected def updateTheta(f: DF, state: State): (T, T)
 
@@ -102,15 +102,15 @@ abstract class FirstOrderMinimizerX[T, DF<:StochasticDiffFunction[T]]
     import space._
 
     Iterator.iterate(state) { state => try {
-        val (x,currentMomentum) = updateTheta(adjustedFun, state)
-        //the Func used to update the theta, sub class overide it.
-        val (value,grad) = calculateObjective(adjustedFun, x, state.history)
-        val (adjValue,adjGrad) = adjust(x,grad,value)
+        val (x, currentMomentum) = updateTheta(adjustedFun, state)
+        // the Func used to update the theta, sub class overide it.
+        val (value, grad) = calculateObjective(adjustedFun, x, state.history)
+        val (adjValue, adjGrad) = adjust(x, grad, value)
         val oneOffImprovement = (state.adjustedValue - adjValue)/
           (state.adjustedValue.abs max adjValue.abs max 1E-6 * state.initialAdjVal.abs)
         logger.info(f"Val and Grad Norm: $adjValue%.6g (rel: " +
           f"$oneOffImprovement%.3g) ${norm(adjGrad)}%.6g")
-        val history = updateHistory(x,grad,value, adjustedFun, state)
+        val history = updateHistory(x, grad, value, adjustedFun, state)
         val newCInfo = convergenceCheck
           .update(x,
             grad,

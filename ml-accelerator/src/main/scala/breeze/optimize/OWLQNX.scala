@@ -31,7 +31,7 @@ class OWLQNX[K, T](maxIter: Int, m: Int, l1reg: K => Double, tolerance: Double)
             = this(maxIter, m, l1reg, 1E-8)
 
   def this(maxIter: Int, m: Int, l1reg: Double, tolerance: Double = 1E-8)
-          (implicit space:MutableEnumeratedCoordinateField[T, K, Double])
+          (implicit space: MutableEnumeratedCoordinateField[T, K, Double])
             = this(maxIter, m, (_: K) => l1reg, tolerance)
 
   def this(maxIter: Int, m: Int, l1reg: Double)
@@ -45,7 +45,7 @@ class OWLQNX[K, T](maxIter: Int, m: Int, l1reg: K => Double, tolerance: Double)
 
   import space._
 
-  override def chooseDescentDirection(state: State, fn: DiffFunction[T]):T = {
+  override def chooseDescentDirection(state: State, fn: DiffFunction[T]): T = {
     val descentDir = super.chooseDescentDirection(state.copy(grad = state.adjustedGradient), fn)
     val correctedDir = space.zipMapValues.map(descentDir, state.adjustedGradient, { case (d, g)
     => if (d * g < 0) d else 0.0 })
@@ -57,7 +57,7 @@ class OWLQNX[K, T](maxIter: Int, m: Int, l1reg: K => Double, tolerance: Double)
   // projects x to be on the same orthant as y
   // this basically requires that x'_i = x_i if sign(x_i) == sign(y_i), and 0 otherwise.
 
-  override def takeStep(state: State, dir: T, stepSize: Double):T = {
+  override def takeStep(state: State, dir: T, stepSize: Double): T = {
     val stepped = state.x + dir * stepSize
     val orthant = computeOrthant(state.x, state.adjustedGradient)
     space.zipMapValues.map(stepped, orthant, { case (v, ov) =>

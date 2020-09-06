@@ -109,8 +109,9 @@ class DecisionTreeRegressor @Since("1.4.0") (@Since("1.4.0") override val uid: S
     val instr = Instrumentation.create(this, oldDataset)
     instr.logParams(params: _*)
 
-    val trees = RandomForestRaw.run(oldDataset, strategy, numTrees = 1, featureSubsetStrategy = "all",
-      seed = $(seed), instr = Some(instr), parentUID = Some(uid))
+    val trees = RandomForestRaw.run(oldDataset, strategy, numTrees = 1,
+      featureSubsetStrategy = "all", seed = $(seed), instr = Some(instr),
+      parentUID = Some(uid))
 
     val m = trees.head.asInstanceOf[DecisionTreeRegressionModel]
     instr.logSuccess(m)

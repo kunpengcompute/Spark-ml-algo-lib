@@ -18,18 +18,18 @@ package breeze.optimize
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
- 
+
  Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
- You may obtain a copy of the License at 
- 
+ You may obtain a copy of the License at
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
- limitations under the License. 
+ limitations under the License.
 */
 
 import breeze.linalg._
@@ -43,7 +43,7 @@ class LBFGSX[T](convergenceCheck: ConvergenceCheck[T], m: Int)
                (implicit space: MutableInnerProductModule[T, Double]) extends
   FirstOrderMinimizerX[T, DiffFunction[T]](convergenceCheck) with SerializableLogging {
 
-  def this(maxIter: Int = -1, m: Int=7, tolerance: Double=1E-9)
+  def this(maxIter: Int = -1, m: Int = 7, tolerance: Double = 1E-9)
           (implicit space: MutableInnerProductModule[T, Double]) =
     this(FirstOrderMinimizerX.defaultConvergenceCheckX(maxIter, tolerance), m )
   import space._
@@ -68,7 +68,7 @@ class LBFGSX[T](convergenceCheck: ConvergenceCheck[T], m: Int)
 
   override def updateTheta(f: DiffFunction[T], state: State): (T, T) = {
     val adjustedFun = adjustFunction(f)
-    val dir = chooseDescentDirection(state,adjustedFun)
+    val dir = chooseDescentDirection(state, adjustedFun)
     val currentMomentum = ACC
       .updateMomentum(state.momentum, dir, inertiaCoefficient, momentumUpdateCoefficient)(space)
     val stepSize = 1.0

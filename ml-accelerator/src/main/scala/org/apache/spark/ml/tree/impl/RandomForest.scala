@@ -160,7 +160,7 @@ private[spark] object RandomForest extends Logging {
 
     val withReplacement = numTrees > 1
 
-    //Default value of subsampleingRate is 1 for random forest
+    // Default value of subsampleingRate is 1 for random forest
     val baggedInputOri = BaggedPoint.convertToBaggedRDD(treeInput, strategy.subsamplingRate,
       numTrees, withReplacement, seed)
 

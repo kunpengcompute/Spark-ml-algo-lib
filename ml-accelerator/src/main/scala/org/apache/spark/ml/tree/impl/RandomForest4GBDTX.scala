@@ -159,7 +159,7 @@ private[spark] object RandomForest4GBDTX extends Logging {
 
     logInfo("Internal timing for DecisionTree:")
     logInfo(s"$timer")
-    
+
     val numFeatures = metadata.numFeatures
 
     parentUID match {
@@ -239,7 +239,7 @@ private[spark] object RandomForest4GBDTX extends Logging {
      * indices) in a single array for all bins and rely upon the RDD aggregate method to
      * drastically reduce the communication overhead.
      */
-     
+
     var (nodesForGroup, treeToNodeToIndexInfo) = packagedNodeInfo
     // numNodes:  Number of nodes in this group
     val numNodes = nodesForGroup.values.map(_.length).sum
@@ -269,7 +269,7 @@ private[spark] object RandomForest4GBDTX extends Logging {
       treeToNodeToIndexInfo, metadata, nodeIdCacheBc, labelArrayBc, nodes)
 
     timer.stop("chooseSplits")
-    
+
     // Iterate over all nodes in this group.
     nodesForGroup.foreach { case (treeIndex, nodesForTree) =>
       nodesForTree.foreach { node =>

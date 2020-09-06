@@ -17,6 +17,7 @@
 package org.apache.spark.ml.optim.loss
 
 import java.util.Date
+
 import scala.reflect.ClassTag
 
 import breeze.linalg.{DenseVector => BDV}

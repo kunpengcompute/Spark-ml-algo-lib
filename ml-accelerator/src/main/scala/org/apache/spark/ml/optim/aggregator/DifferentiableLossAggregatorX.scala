@@ -16,7 +16,7 @@
  */
 package org.apache.spark.ml.optim.aggregator
 
-import breeze.linalg.{norm,DenseVector => BDV}
+import breeze.linalg.{norm, DenseVector => BDV}
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList
 
 import org.apache.spark.ml.linalg.{BLAS, Vector, Vectors}

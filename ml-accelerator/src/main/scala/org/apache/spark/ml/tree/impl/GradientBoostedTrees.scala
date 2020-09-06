@@ -74,13 +74,13 @@ private[spark] object GradientBoostedTrees extends Logging {
         // Map labels to -1, +1 so binary classification can be treated as regression.
         val remappedInput = input.map(x => new LabeledPoint((x.label * 2) - 1, x.features))
         if (doUseAcc) {
-          GradientBoostedTrees.boostX(remappedInput, remappedInput, boostingStrategy, validate = false,
-            seed, featureSubsetStrategy)
+          GradientBoostedTrees.boostX(remappedInput, remappedInput,
+            boostingStrategy, validate = false, seed, featureSubsetStrategy)
         } else {
-          GradientBoostedTrees.boost(remappedInput, remappedInput, boostingStrategy, validate = false,
-            seed, featureSubsetStrategy)
+          GradientBoostedTrees.boost(remappedInput, remappedInput,
+            boostingStrategy, validate = false, seed, featureSubsetStrategy)
         }
-      //algo is enumerate value, this case may be unreachable
+      // algo is enumerate value, this case may be unreachable
       case _ =>
         throw new IllegalArgumentException(s"$algo is not supported by gradient boosting.")
     }
@@ -141,7 +141,7 @@ private[spark] object GradientBoostedTrees extends Logging {
             validate = true, seed, featureSubsetStrategy)
         }
 
-      //algo is enumerate value, this case may be unreachable
+      // algo is enumerate value, this case may be unreachable
       case _ =>
         throw new IllegalArgumentException(s"$algo is not supported by the gradient boosting.")
     }
@@ -153,7 +153,7 @@ private[spark] object GradientBoostedTrees extends Logging {
   private def getDoUseAccFromSparkConf(sc: SparkContext): Boolean = {
     val doUseAcctStr = sc.conf.getOption(extraParamKey)
     if (doUseAcctStr.nonEmpty) {
-      try{
+      try {
         doUseAcctStr.get.toBoolean
       } catch {
         case ex: Exception =>
@@ -554,7 +554,7 @@ private[spark] object GradientBoostedTrees extends Logging {
     var rawPartInfoBc = rawPartInfoBcTmp
     var labelArrayBc = labelArrayBcTmp
 
-    //X
+    // X
     timer.stop("init")
 
     logDebug("##########")
