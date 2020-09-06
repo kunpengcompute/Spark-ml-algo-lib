@@ -515,9 +515,10 @@ private[ml] trait GBTParams extends TreeEnsembleParams with HasMaxIter with HasS
 
   final val doUseAcc: BooleanParam = new BooleanParam(this, "doUseAcc",
     "If true, use the optimized algorithm; otherwise, use the raw version")
+
   var setUseAccFlag = false
 
-  /** Set algorithm to the raw version */
+  /** Set algorithm to the raw version. */
   def setDoUseAcc(value: Boolean): this.type = {
     setUseAccFlag = true
     set(doUseAcc, value)

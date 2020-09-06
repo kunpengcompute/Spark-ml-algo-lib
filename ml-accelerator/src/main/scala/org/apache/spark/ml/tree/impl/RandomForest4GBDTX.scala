@@ -34,7 +34,6 @@ import org.apache.spark.mllib.tree.configuration.{Algo => OldAlgo, Strategy => O
 import org.apache.spark.mllib.tree.impurity.ImpurityCalculator
 import org.apache.spark.mllib.tree.model.ImpurityStats
 import org.apache.spark.rdd.RDD
-import org.apache.spark.storage.StorageLevel
 import org.apache.spark.util.random.{SamplingUtils, XORShiftRandom}
 
 
@@ -139,7 +138,7 @@ private[spark] object RandomForest4GBDTX extends Logging {
       // Collect some nodes to split, and choose features for each node (if subsampling).
       // Each group of nodes may come from one or multiple trees, and at multiple levels.
       val (nodesForGroup, treeToNodeToIndexInfo) =
-        RandomForest4GBDTX.selectNodesToSplit(nodeStack, maxMemoryUsage, metadata, rng)
+        RandomForest4GBDTX.selectNodesToSplitX(nodeStack, maxMemoryUsage, metadata, rng)
       // Sanity check (should never occur):
       assert(nodesForGroup.nonEmpty,
         s"RandomForest selected empty nodesForGroup.  Error for unknown reason.")
@@ -151,7 +150,7 @@ private[spark] object RandomForest4GBDTX extends Logging {
       // Choose node splits, and enqueue new nodes as needed.
       timer.start("findBestSplits")
       RandomForest4GBDTX.findBestSplitsX(labelArrayBc, processedInput, metadata,
-        (nodesForGroup, treeToNodeToIndexInfo), splits, nodeStack, timer, nodeIdCacheX, input, rawPartInfoBc, timer)
+        (nodesForGroup, treeToNodeToIndexInfo), splits, nodeStack, nodeIdCacheX, input, rawPartInfoBc, timer)
       timer.stop("findBestSplits")
     }
 
@@ -206,7 +205,7 @@ private[spark] object RandomForest4GBDTX extends Logging {
    *                    to pass the entire tree to the executors during
    *                    the node stat aggregation phase.
    */
-  private[tree] def findBestSplits(
+  private[tree] def findBestSplitsX(
       labelArrayBc: Broadcast[DoubleArrayList],
       processedInput: RDD[(Int, (IntArrayList, ObjectArrayList[Split]))],
       metadata: DecisionTreeMetadata,
@@ -217,7 +216,7 @@ private[spark] object RandomForest4GBDTX extends Logging {
       nodeIdCache: Int2ObjectOpenHashMap[Int2ObjectOpenHashMap[IntArrayList]],
       input: RDD[TreePoint],
       rawPartInfoBc: Broadcast[Int2ObjectOpenHashMap[IntArrayList]],
-      timer: TimeTracker = new TimeTracker): Unit = {
+      timer: TimeTracker = new TimeTracker) : Unit = {
 
     /*
      * The high-level descriptions of the best split optimizations are noted here.
@@ -241,7 +240,7 @@ private[spark] object RandomForest4GBDTX extends Logging {
      * drastically reduce the communication overhead.
      */
      
-    var (nodesForGroup, treeToNodeToIndexInfo) = packageNodeInfo
+    var (nodesForGroup, treeToNodeToIndexInfo) = packagedNodeInfo
     // numNodes:  Number of nodes in this group
     val numNodes = nodesForGroup.values.map(_.length).sum
     logDebug("numNodes = " + numNodes)
@@ -266,7 +265,7 @@ private[spark] object RandomForest4GBDTX extends Logging {
     // Calculate best splits for all nodes in the group
     timer.start("chooseSplits")
 
-    val nodeToBestSplits = GradientBoostedTreeUtil.chooseBestSplits(processedInput, 
+    val nodeToBestSplits = GradientBoostedTreesUtil.chooseBestSplits(processedInput,
       treeToNodeToIndexInfo, metadata, nodeIdCacheBc, labelArrayBc, nodes)
 
     timer.stop("chooseSplits")

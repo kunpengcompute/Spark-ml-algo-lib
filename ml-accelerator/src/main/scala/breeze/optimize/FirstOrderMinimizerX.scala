@@ -15,9 +15,10 @@
  * limitations under the License.
  */
 
+
 package breeze.optimize
 
-import java.util.Data
+import java.util.Date
 
 import FirstOrderMinimizerX.ConvergenceCheck
 import breeze.linalg.norm
@@ -26,6 +27,8 @@ import breeze.stats.distributions.{RandBasis, ThreadLocalRandomGenerator}
 import breeze.util.Implicits._
 import breeze.util.SerializableLogging
 
+
+
 /**
  *
  * @author dlwh
@@ -33,7 +36,7 @@ import breeze.util.SerializableLogging
 abstract class FirstOrderMinimizerX[T, DF<:StochasticDiffFunction[T]]
 (val convergenceCheck: ConvergenceCheck[T])
 (implicit space: MutableInnerProductModule[T, Double])
-  extends Minimizer[T,DF] with SerializableLogging {
+  extends Minimizer[T, DF] with SerializableLogging {
 
   def this(maxIter: Int = -1, tolerance: Double = 1E-6,
            fvalMemory: Int = 100, relativeTolerance: Boolean = true)
@@ -44,7 +47,7 @@ abstract class FirstOrderMinimizerX[T, DF<:StochasticDiffFunction[T]]
   var inertiaCoefficient: Double = 0.5
   val momentumUpdateCoefficient : Double = 0.9
 
-  del setInertiaCoefficient(a: Double): Unit = {
+  def setInertiaCoefficient(a: Double): Unit = {
     this.inertiaCoefficient = a
   }
 
@@ -58,21 +61,21 @@ abstract class FirstOrderMinimizerX[T, DF<:StochasticDiffFunction[T]]
 
 
 
+
   protected def initialHistory(f: DF, init: T): History
   protected def adjustFunction(f: DF): DF = f
-  protected def adjust(newX: T, newGrad: T, newVal: Double):(Double,T) = (newVal,newGrad)
-  protected def chooseDescentDirection(state: State, f: DF):T
-  protected def takeStep(state: State, dir: T, stepSize:Double):T
-  protected def updateHistory(newX: T, newGrad: T, newVal: Double, f: DF, oldState: State):History
-  protected def updateTheta(f: DF, state:State): (T, T)
-
+  protected def adjust(newX: T, newGrad: T, newVal: Double): (Double, T) = (newVal, newGrad)
+  protected def chooseDescentDirection(state: State, f: DF): T
+  protected def takeStep(state: State, dir: T, stepSize:Double): T
+  protected def updateHistory(newX: T, newGrad: T, newVal: Double, f: DF, oldState: State): History
+  protected def updateTheta(f: DF, state: State): (T, T)
 
 
   protected def initialState(f: DF, init: T): State = {
     val x = init
-    val history = initialHistory(f,init)
+    val history = initialHistory(f, init)
     val (value, grad) = calculateObjective(f, x, history)
-    val (adjValue,adjGrad) = adjust(x,grad,value)
+    val (adjValue, adjGrad) = adjust(x, grad, value)
     import space._
     val copyInit = space.copy(init)
     copyInit -= copyInit
@@ -90,7 +93,7 @@ abstract class FirstOrderMinimizerX[T, DF<:StochasticDiffFunction[T]]
 
 
   protected def calculateObjective(f: DF, x: T, history: History): (Double, T) = {
-     f.calculate(x)
+    f.calculate(x)
   }
 
   def infiniteIterations(f: DF, state: State): Iterator[State] = {
@@ -109,22 +112,23 @@ abstract class FirstOrderMinimizerX[T, DF<:StochasticDiffFunction[T]]
           f"$oneOffImprovement%.3g) ${norm(adjGrad)}%.6g")
         val history = updateHistory(x,grad,value, adjustedFun, state)
         val newCInfo = convergenceCheck.
-          update(x,
+          .update(x,
             grad,
             value,
             state,
             state.convergenceInfo)
         failedOnce = false
-        FirstOrderMinimizer.State(x,
-          value,
-          grad,
-          adjValue,
-          adjGrad,
-          state.iter + 1,
-          state.initialAdjVal,
-          history,
-          newCInfo,
-          currentMomentum)
+        FirstOrderMinimizerX
+          .State(x,
+            value,
+            grad,
+            adjValue,
+            adjGrad,
+            state.iter + 1,
+            state.initialAdjVal,
+            history,
+            newCInfo,
+            currentMomentum)
     } catch {
         case x: FirstOrderException if !failedOnce =>
           failedOnce = true
@@ -157,7 +161,7 @@ abstract class FirstOrderMinimizerX[T, DF<:StochasticDiffFunction[T]]
   }
 
 
-  def minimizeAndReturnState(f: DF, init: T):State = {
+  def minimizeAndReturnState(f: DF, init: T): State = {
     iterations(f, init).last
   }
 }
@@ -195,12 +199,12 @@ object FirstOrderMinimizerX {
   trait ConvergenceCheck[T] {
     type Info
     def initialInfo: Info
-    def apply(state: State[T, _, _], info: Info):Option[ConvergenceReason]
+    def apply(state: State[T, _, _], info: Info): Option[ConvergenceReason]
     def update(newX: T,
                newGrad: T,
                newVal: Double,
                oldState: State[T, _, _],
-               oldInfo: Info):Info
+               oldInfo: Info): Info
     def ||(otherCheck: ConvergenceCheck[T]):
     ConvergenceCheck[T] = orElse(otherCheck)
 
@@ -267,6 +271,7 @@ object FirstOrderMinimizerX {
   case object MaxIterations extends ConvergenceReason {
     override def reason: String = "max iterations reached"
   }
+
   case object GradientConverged extends ConvergenceReason {
     override def reason: String = "gradient converged"
   }
@@ -277,8 +282,6 @@ object FirstOrderMinimizerX {
       MaxIterations
   }
 
-
-
   def gradientConverged[T](tolerance: Double, relative: Boolean = true)
                           (implicit space: NormedModule[T, Double]): ConvergenceCheck[T] = {
     import space.normImpl
@@ -288,7 +291,6 @@ object FirstOrderMinimizerX {
         GradientConverged
     }
   }
-
 
 
   def defaultConvergenceCheckX[T](maxIter: Int, tolerance: Double,

@@ -17,7 +17,7 @@
 
 package org.apache.spark.ml.tree.impl
 
-import it.unimi.dsi.fastutil.doubles.DoublesArrayList
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList
 
 import org.apache.spark.SparkContext
 import org.apache.spark.internal.Logging
@@ -115,7 +115,7 @@ private[spark] object GradientBoostedTrees extends Logging {
       validationInput: RDD[LabeledPoint],
       boostingStrategy: OldBoostingStrategy,
       seed: Long,
-      featureSubsetStrategy: String
+      featureSubsetStrategy: String,
       doUseAcc: Boolean): (Array[DecisionTreeRegressionModel], Array[Double]) = {
     val algo = boostingStrategy.treeStrategy.algo
     algo match {
@@ -188,13 +188,13 @@ private[spark] object GradientBoostedTrees extends Logging {
   }
 
   def computeInitialPredictionAndErrorX(
-      data: RDD[LabeledPoint],
+      data: RDD[TreePoint],
       initTreeWeight: Double,
       initTree: DecisionTreeRegressionModel,
       loss: OldLoss,
       splits: Array[Array[Split]]): RDD[(Double, Double)] = {
     data.map { lp =>
-      val pred = updatePredictionX(lp.features, 0.0, initTree, initTreeWeight, splits)
+      val pred = updatePredictionX(lp.binnedFeatures, 0.0, initTree, initTreeWeight, splits)
       val error = loss.computeError(pred, lp.label)
       (pred, error)
     }
@@ -229,7 +229,7 @@ private[spark] object GradientBoostedTrees extends Logging {
   }
 
   def updatePredictionErrorX(
-      data: RDD[LabeledPoint],
+      data: RDD[TreePoint],
       predictionAndError: RDD[(Double, Double)],
       treeWeight: Double,
       tree: DecisionTreeRegressionModel,
@@ -238,7 +238,7 @@ private[spark] object GradientBoostedTrees extends Logging {
 
     val newPredError = data.zip(predictionAndError).mapPartitions { iter =>
       iter.map { case (lp, (pred, error)) =>
-        val newPred = updatePrediction(lp.features, pred, tree, treeWeight, splits)
+        val newPred = updatePredictionX(lp.binnedFeatures, pred, tree, treeWeight, splits)
         val newError = loss.computeError(newPred, lp.label)
         (newPred, newError)
       }
@@ -264,12 +264,12 @@ private[spark] object GradientBoostedTrees extends Logging {
   }
 
   def updatePredictionX(
-      features: Vector,
+      features: Arrray[Int],
       prediction: Double,
       tree: DecisionTreeRegressionModel,
       weight: Double,
       splits: Array[Array[Split]]): Double = {
-    prediction + tree.rootNode.predictImpl(features, splits).prediction * weight
+    prediction + tree.rootNode.predictImplX(features, splits).prediction * weight
   }
 
   /**
@@ -536,7 +536,7 @@ private[spark] object GradientBoostedTrees extends Logging {
     // X
     val retaggedInput = input.retag(classOf[LabeledPoint])
     val metadata =
-      DeccisionTreeMetadata.buildMetadata(retaggedInput, treeStrategy, 1, featureSubsetStrategy)
+      DecisionTreeMetadata.buildMetadata(retaggedInput, treeStrategy, 1, featureSubsetStrategy)
 
     // Find the splits and the corresponding bins (interval between the splits) using a sample
     // of the input data.
@@ -549,7 +549,7 @@ private[spark] object GradientBoostedTrees extends Logging {
     }.mkString("\n"))
 
     val (treeInput, processedInput, labelArrayBcTmp, rawPartInfoBcTmp) =
-      GradientBoostedTreesUtil.dataProcessX (retaggedInput, splits, treeStrategy, metadata, timer,
+      GradientBoostedTreesUtil.dataProcessX(retaggedInput, splits, treeStrategy, metadata, timer,
         seed)
     var rawPartInfoBc = rawPartInfoBcTmp
     var labelArrayBc = labelArrayBcTmp
@@ -593,9 +593,6 @@ private[spark] object GradientBoostedTrees extends Logging {
             -loss.gradient(pred, point.label)}.collect()
         )
       )
-      val data = predError.zip(input).map { case ((pred, _), point) =>
-        LabeledPoint(-loss.gradient(pred, point.label), point.features)
-      }
 
       timer.start(s"building tree $m")
       logDebug("###################################################")
@@ -603,7 +600,7 @@ private[spark] object GradientBoostedTrees extends Logging {
       logDebug("###################################################")
 
       val dt = new DecisionTreeRegressor().setSeed(seed + m)
-      val model = dt.train4GBDTX(labelArrayBc, processedInput, metadata, splits treeStrategy,
+      val model = dt.train4GBDTX(labelArrayBc, processedInput, metadata, splits, treeStrategy,
         featureSubsetStrategy, treeInput, rawPartInfoBc)
       timer.stop(s"building tree $m")
       // Update partial model

@@ -411,7 +411,7 @@ private[spark] object RandomForest extends Logging {
       nodesForGroup: Map[Int, Array[LearningNodeX]],
       treeToNodeToIndexInfo: Map[Int, Map[Int, NodeIndexInfo]],
       splits: Array[Array[SplitBase]],
-      nodeStack: mutable.ArrayStack[(Int, LearningNode)],
+      nodeStack: mutable.ArrayStack[(Int, LearningNodeX)],
       timer: TimeTracker = new TimeTracker,
       nodeIdCache: Option[NodeIdCache] = None,
       extraParams: Option[RFExtraParams] = None): Unit = {
@@ -613,7 +613,7 @@ private[spark] object RandomForest extends Logging {
 
           // transform nodeStatsAggregators array to (nodeIndex, nodeAggregateStats) pairs,
           // which can be combined with other partition using `reduceByKey`
-          nodeStatsAggregators.view.zipWithIndex.
+          nodeStatsAggregators.view.zipWithIndex
             .filter(v => RFUtils.isValidAgg(v._1)).map(_.swap).iterator
         }
       }
@@ -1190,7 +1190,7 @@ private[spark] object RandomForest extends Logging {
         s" exceeds requested limit maxMemoryUsage=$maxMemoryUsage. This allows splitting" +
         s" $numNodesInGroup nodes in this iteration.")
     }
-    logWarning(f"[this group] acturalMemUsage: ${memUsage/(1024d*1024d)}%.2f MB," +
+    logWarning(f"[this group] actualMemUsage: ${memUsage/(1024d*1024d)}%.2f MB," +
       f" maxMemoryUsage: ${maxMemoryUsage/(1024d*1024d)}%.2f MB.")
     // Convert mutable maps to immutable ones.
     val nodesForGroup: Map[Int, Array[LearningNodeX]] =

@@ -39,14 +39,13 @@ import breeze.optimize.FirstOrderMinimizerX.{ConvergenceCheck, ConvergenceReason
 import breeze.optimize.linear.PowerMethod
 import breeze.util.SerializableLogging
 
-
 class LBFGSX[T](convergenceCheck: ConvergenceCheck[T], m: Int)
                (implicit space: MutableInnerProductModule[T, Double]) extends
   FirstOrderMinimizerX[T, DiffFunction[T]](convergenceCheck) with SerializableLogging {
 
   def this(maxIter: Int = -1, m: Int=7, tolerance: Double=1E-9)
           (implicit space: MutableInnerProductModule[T, Double]) =
-    this(FirstOrderMinimizer.defaultConvergenceCheck(maxIter, tolerance), m )
+    this(FirstOrderMinimizerX.defaultConvergenceCheckX(maxIter, tolerance), m )
   import space._
   require(m > 0)
 
@@ -54,10 +53,10 @@ class LBFGSX[T](convergenceCheck: ConvergenceCheck[T], m: Int)
 
   override protected def adjustFunction(f: DiffFunction[T]): DiffFunction[T] = f.cached
 
-  protected def takeStep(state: State, dir: T, stepSize: Double): T = state.x + dir * stepSize
+  def takeStep(state: State, dir: T, stepSize: Double): T = state.x + dir * stepSize
   protected def initialHistory(f: DiffFunction[T], x: T):
-  History = new LBFGS.ApproximateInverseHessianX(m)
-  protected def chooseDescentDirection(state: State, fn: DiffFunction[T]):T = {
+  History = new LBFGSX.ApproximateInverseHessianX(m)
+  protected def chooseDescentDirection(state: State, fn: DiffFunction[T]): T = {
     state.history * state.grad
   }
 
@@ -66,11 +65,12 @@ class LBFGSX[T](convergenceCheck: ConvergenceCheck[T], m: Int)
     oldState.history.updated(newX - oldState.x, newGrad -:- oldState.grad)
   }
 
+
   override def updateTheta(f: DiffFunction[T], state: State): (T, T) = {
-    val adjustedFun = adjustedFunction(f)
+    val adjustedFun = adjustFunction(f)
     val dir = chooseDescentDirection(state,adjustedFun)
-    val currentMomentum = ACC.
-      updateMomentum(state.momentum, dir, inertiaCoefficient, momentumUpdateCoefficient)(space)
+    val currentMomentum = ACC
+      .updateMomentum(state.momentum, dir, inertiaCoefficient, momentumUpdateCoefficient)(space)
     val stepSize = 1.0
     logger.info(f"Step Size: $stepSize%.4g")
     val x = takeStep(state, currentMomentum, stepSize)
@@ -78,11 +78,11 @@ class LBFGSX[T](convergenceCheck: ConvergenceCheck[T], m: Int)
   }
 }
 
-object LBFGS {
+object LBFGSX {
   case class ApproximateInverseHessianX[T](m: Int,
-                                          private[LBFGSX] val memStep: IndexedSeq[T] = IndexedSeq.empty,
-                                          private[LBFGSX] val memGradDelta: IndexedSeq[T] = IndexedSeq.empty)
-                                         (implicit space: MutableInnerProductModule[T, Double])
+    private[LBFGSX] val memStep: IndexedSeq[T] = IndexedSeq.empty,
+    private[LBFGSX] val memGradDelta: IndexedSeq[T] = IndexedSeq.empty)
+   (implicit space: MutableInnerProductModule[T, Double])
     extends NumericOps[ApproximateInverseHessianX[T]] {
 
     import space._
@@ -91,14 +91,14 @@ object LBFGS {
 
     def updated(step: T, gradDelta: T): ApproximateInverseHessianX[T] = {
       val (a, b) = ACC.update(step, gradDelta, this.memStep, this.memGradDelta, m)(space)
-      new ApproximateInverseHessian(m, memStep,memGradDelta)
+      new ApproximateInverseHessianX(m, a, b)
     }
 
 
     def historyLength: Int = memStep.length
 
-    def *(grad: T):T = {
-      val a = ACC.getInverseOfHessian (grad, this.memStep, this.memGradDelta, m, historyLength)
+    def *(grad: T): T = {
+      val a = ACC.getInverseOfHessian(grad, this.memStep, this.memGradDelta, m, historyLength)
       a
     }
   }

@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package breeze.optimize
 
 import breeze.math._
@@ -21,21 +22,24 @@ import breeze.numerics._
 import breeze.util._
 
 
-
 class OWLQNX[K, T](maxIter: Int, m: Int, l1reg: K => Double, tolerance: Double)
                   (implicit space: MutableEnumeratedCoordinateField[T, K, Double])
   extends LBFGSX[T](maxIter, m, tolerance = tolerance) with SerializableLogging {
 
   def this(maxIter: Int, m: Int, l1reg: K => Double)
-          (implicit space: MutableEnumeratedCoordinateField[T, K, Double]) = this(maxIter, m, l1reg, 1E-8)
+          (implicit space: MutableEnumeratedCoordinateField[T, K, Double])
+            = this(maxIter, m, l1reg, 1E-8)
 
   def this(maxIter: Int, m: Int, l1reg: Double, tolerance: Double = 1E-8)
-          (implicit space:MutableEnumeratedCoordinateField[T, K, Double]) = this(maxIter, m, (_: K) => l1reg, tolerance)
+          (implicit space:MutableEnumeratedCoordinateField[T, K, Double])
+            = this(maxIter, m, (_: K) => l1reg, tolerance)
 
   def this(maxIter: Int, m: Int, l1reg: Double)
-          (implicit space: MutableEnumeratedCoordinateField[T, K, Double]) = this(maxIter, m, (_: K) => l1reg, 1E-8)
+          (implicit space: MutableEnumeratedCoordinateField[T, K, Double])
+            = this(maxIter, m, (_: K) => l1reg, 1E-8)
 
-  def this(maxIter: Int, m: Int)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]) = this(maxIter, m, (_: K) => 1.0, 1E-8)
+  def this(maxIter: Int, m: Int)(implicit space: MutableEnumeratedCoordinateField[T, K, Double])
+            = this(maxIter, m, (_: K) => 1.0, 1E-8)
 
   require(m > 0)
 
@@ -43,7 +47,6 @@ class OWLQNX[K, T](maxIter: Int, m: Int, l1reg: K => Double, tolerance: Double)
 
   override def chooseDescentDirection(state: State, fn: DiffFunction[T]):T = {
     val descentDir = super.chooseDescentDirection(state.copy(grad = state.adjustedGradient), fn)
-
     val correctedDir = space.zipMapValues.map(descentDir, state.adjustedGradient, { case (d, g)
     => if (d * g < 0) d else 0.0 })
 
@@ -87,7 +90,7 @@ class OWLQNX[K, T](maxIter: Int, m: Int, l1reg: K => Double, tolerance: Double)
 
   private def computeOrthant(x: T, grad: T) = {
     val orth = space.zipMapValues.map(x, grad, {case (v, gv) =>
-      if(v != 0) math.signum(v)
+      if (v != 0) math.signum(v)
       else math.signum(-gv)
     })
     orth
