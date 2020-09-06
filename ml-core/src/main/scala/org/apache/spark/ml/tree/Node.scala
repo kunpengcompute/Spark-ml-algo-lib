@@ -181,7 +181,7 @@ class InternalNode private[ml] (
     }
   }
 
-  private[ml] def predictImplX(binnedFeatures: Array[Int], splits: Array[Array[Spilt]]
+  private[ml] def predictImplX(binnedFeatures: Array[Int], splits: Array[Array[Split]]
                               ): LeafNode = {
     if (split.shouldGoLeft(binnedFeatures(split.featureIndex).toChar, splits(split.featureIndex))) {
       leftChild.predictImplX(binnedFeatures, splits)

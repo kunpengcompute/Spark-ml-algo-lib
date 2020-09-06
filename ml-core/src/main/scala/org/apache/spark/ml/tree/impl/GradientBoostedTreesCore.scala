@@ -24,12 +24,12 @@ import org.apache.spark.ml.tree.{CategoricalSplit, ContinuousSplit, LearningNode
 import org.apache.spark.mllib.tree.impurity.ImpurityCalculator
 import org.apache.spark.mllib.tree.model.ImpurityStats
 
-object GradientBoostedTreesCore extends Logging {
-  private [tree] class NodeIndexInfo(
-                                    val nodeIndexInGroup: Int,
-                                    val featureSubset: Option[Array[Int]],
-                                    val featureSubsetHashSetX: Option[scala.collection.mutable.HashSet[Int]] = None)
-  extends Serializable
+object GradientBoostedTreesCore extends Logging{
+  private[tree] class NodeIndexInfo(
+      val nodeIndexInGroup: Int,
+      val featureSubset: Option[Array[Int]],
+      val featureSubsetHashSetX: Option[scala.collection.mutable.HashSet[Int]] = None)
+    extends Serializable
 
   /**
    * Calculate the impurity statistics for a given (feature, split) based upon left/right
@@ -43,10 +43,10 @@ object GradientBoostedTreesCore extends Logging {
    * @return Impurity statistics for this (feature, split)
    */
   private def calculateImpurityStats(
-                                      stats: ImpurityStats,
-                                      leftImpurityCalculator: ImpurityCalculator,
-                                      rightImpurityCalculator: ImpurityCalculator,
-                                      metadata: DecisionTreeMetadata): ImpurityStats = {
+      stats: ImpurityStats,
+      leftImpurityCalculator: ImpurityCalculator,
+      rightImpurityCalculator: ImpurityCalculator,
+      metadata: DecisionTreeMetadata): ImpurityStats = {
 
     val parentImpurityCalculator: ImpurityCalculator = if (stats == null) {
       leftImpurityCalculator.copy.add(rightImpurityCalculator)
@@ -97,10 +97,10 @@ object GradientBoostedTreesCore extends Logging {
    * @return tuple for best split: (Split, information gain, prediction at node)
    */
   private[tree] def binsToBestSplitX(
-                                     binAggregates: DTFeatureStatsAggregator,
-                                     splits: ObjectArrayList[Split],
-                                     featureIndex: Int,
-                                     node: LearningNode): (Split, ImpurityStats) = {
+      binAggregates: DTFeatureStatsAggregator,
+      splits: ObjectArrayList[Split],
+      featureIndex: Int,
+      node: LearningNode): (Split, ImpurityStats) = {
 
     // Calculate InformationGain and ImpurityStats if current node is top node
     val level = LearningNode.indexToLevel(node.id)
@@ -110,14 +110,14 @@ object GradientBoostedTreesCore extends Logging {
       node.stats
     }
 
-    if (binAggregates.metadata,numSplits(featureIndex) != 0) {
-      val featureIndexIndx = featureIndex
+    if (binAggregates.metadata.numSplits(featureIndex) != 0) {
+      val featureIndexIdx = featureIndex
       val numSplits = binAggregates.metadata.numSplits(featureIndex)
       if (binAggregates.metadata.isContinuous(featureIndex)) {
         // Cumulative sum (scanLeft) of bin statistics.
         // Afterwards, binAggregates for a bin is the sum of aggregates for
         // that bin + all preceding bins.
-//        val nodeFeatureOffset = binAggregates.getFeatureOffset(featureIndexIdx)
+        // val nodeFeatureOffset = binAggregates.getFeatureOffset(featureIndexIdx)
         var splitIndex = 0
         while (splitIndex < numSplits) {
           binAggregates.mergeForFeature(0, splitIndex + 1, splitIndex)
@@ -134,11 +134,11 @@ object GradientBoostedTreesCore extends Logging {
               leftChildStats, rightChildStats, binAggregates.metadata)
             (splitIdx, gainAndImpurityStats)
           }.maxBy(_._2.gain)
-        (splits.getbestFeatureSplitIndex), bestFeatureGainStats)
+        (splits.get(bestFeatureSplitIndex), bestFeatureGainStats)
       } else if (binAggregates.metadata.isUnordered(featureIndex)) {
         // unreachable for GBDT
         // Unordered categorical feature
-        //  val leftChildOffset = binAggregates.getFeatureOffset(featureIndexIdx)
+        // val leftChildOffset = binAggregates.getFeatureOffset(featureIndexIdx)
         val (bestFeatureSplitIndex, bestFeatureGainStats) =
           Range(0, numSplits).map { splitIndex =>
             val leftChildStats = binAggregates.getImpurityCalculator(0, splitIndex)
@@ -151,7 +151,7 @@ object GradientBoostedTreesCore extends Logging {
         (splits.get(bestFeatureSplitIndex), bestFeatureGainStats)
       } else {
         // Ordered categorical feature
-//        val nodeFeatureOffset = binAggregates.getFeatureOffset(featureIndexIdx)
+        // val nodeFeatureOffset = binAggregates.getFeatureOffset(featureIndexIdx)
         val numCategories = binAggregates.metadata.numBins(featureIndex)
 
         /* Each bin is one category (feature value).
@@ -241,7 +241,7 @@ object GradientBoostedTreesCore extends Logging {
         (new ContinuousSplit(featureIndex, 0),
           ImpurityStats.getInvalidImpurityStats(parentImpurityCalculator))
       } else {
-        // Seems like unresachable for GBDT (as well as RF)
+        // Seems like unreachable for GBDT (as well as RF)
         val numCategories = binAggregates.metadata.featureArity(featureIndex)
         (new CategoricalSplit(featureIndex, Array(), numCategories),
           ImpurityStats.getInvalidImpurityStats(parentImpurityCalculator))
