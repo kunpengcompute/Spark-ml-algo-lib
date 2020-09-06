@@ -21,7 +21,7 @@ import it.unimi.dsi.fastutil.ints.Int2CharOpenHashMap
 
 import org.apache.spark.ml.feature.LabeledPoint
 import org.apache.spark.ml.tree.{ContinuousSplit, Split}
-import org.apache.spark.ml.tree.impl.BinnedFeaturesDatatype.BinnedFeaturesDatatype
+import org.apache.spark.ml.tree.impl.BinnedFeaturesDataType.BinnedFeaturesDataType
 import org.apache.spark.rdd.RDD
 
 
@@ -139,7 +139,7 @@ private[spark] object TreePointX {
    * @param featureArity  Array indexed by feature, with value 0 for continuous and numCategories
    *                      for categorical features.
    */
-  private def labeledPointToTreePointByFastHashMap(
+  private[spark] def labeledPointToTreePointByFastHashMap(
       labeledPoint: LabeledPoint,
       thresholds: Array[Array[Double]],
       featureArity: Array[Int]): TreePointX = {
