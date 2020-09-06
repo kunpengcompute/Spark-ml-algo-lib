@@ -32,7 +32,7 @@ private[spark] class DTFeatureStatsAggregator(
    * [[ImpurityAggregator]] instance specifying the impurity type.
    */
 
-  val impurityAggregator: = new VarianceAggregator()
+  val impurityAggregator = new VarianceAggregator()
 
   val featureIndex: Int = _featureIndex
 
@@ -42,10 +42,10 @@ private[spark] class DTFeatureStatsAggregator(
   private val statsSize: Int = impurityAggregator.statsSize
 
   /**
-   * Number of bins for feature.
+   * Number of bins for the feature.
    */
   private val numBins: Int = {
-    metadata.numBins(featureIndex)
+      metadata.numBins(featureIndex)
   }
 
   /**
@@ -97,7 +97,7 @@ private[spark] class DTFeatureStatsAggregator(
    * @param featureOffset  This is a pre-computed feature offset
    *                           from [[getFeatureOffset]].
    * @param binIndex  The other bin is merged into this bin.
-   * @param otherBinIndex  This bin is not modified. X
+   * @param otherBinIndex  This bin is not modified.  X
    */
   def mergeForFeature(featureOffset: Int, binIndex: Int, otherBinIndex: Int): Unit = {
     impurityAggregator.merge(allStats, binIndex * statsSize, otherBinIndex * statsSize)
