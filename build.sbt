@@ -16,9 +16,6 @@ lazy val commonSettings = Seq(
   libraryDependencies += "it.unimi.dsi" % "fastutil" % "8.3.1"
 
 )
-version := "0.1"
-
-scalaVersion := "2.11.8"
 
 lazy val mlcore = (project in file("ml-core"))
   .settings(commonSettings: _*)
