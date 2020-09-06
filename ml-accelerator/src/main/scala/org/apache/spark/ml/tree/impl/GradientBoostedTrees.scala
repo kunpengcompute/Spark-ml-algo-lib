@@ -264,7 +264,7 @@ private[spark] object GradientBoostedTrees extends Logging {
   }
 
   def updatePredictionX(
-      features: Arrray[Int],
+      features: Array[Int],
       prediction: Double,
       tree: DecisionTreeRegressionModel,
       weight: Double,
