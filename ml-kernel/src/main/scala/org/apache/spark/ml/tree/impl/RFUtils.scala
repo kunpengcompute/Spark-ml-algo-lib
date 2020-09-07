@@ -6,10 +6,10 @@ import org.apache.spark.ml.tree.impl.RandomForest.NodeIndexInfo
 import org.apache.spark.mllib.tree.configuration.{Strategy => OldStrategy}
 import org.apache.spark.rdd.RDD
 
-object FfExtraParams {
+object RFExtraParams {
 }
 
-final case class FRExtraParams (
+final case class RFExtraParams (
                                bcVariables: Boolean,
                                featuresDataType: String)
 
@@ -18,7 +18,7 @@ final case class GroupInfo (
 
 object RFUtils extends Logging {
 
-  def parseExtraParams(input: RDD[_], strategy: OldStrategy): RFExtraParams ={
+  def parseExtraParams(input: RDD[_], strategy: OldStrategy): RFExtraParams = {
     null
   }
 
@@ -35,7 +35,7 @@ object RFUtils extends Logging {
 
   def initNodeStatsAgg(
                       numNodes: Int,
-                      nodeToFeaturesBc: Broadcast[option[Map[Int, Array[Int]]]],
+                      nodeToFeaturesBc: Broadcast[Option[Map[Int, Array[Int]]]],
                       metadata: DecisionTreeMetadata,
                       points: Iterator[BaggedPoint[TreePointX]],
                       groupInfo: GroupInfo): (Option[BaggedPoint[TreePointX]], Array[DTStatsAggregator]) ={
@@ -43,7 +43,7 @@ object RFUtils extends Logging {
   }
 
   def isSubSampled(
-                  bagggedPoint: BaggedPoint[TreePointX],
+                  baggedPoint: BaggedPoint[TreePointX],
                   groupInfo: GroupInfo, treeIndex: Int, id: Short): Boolean ={
     true
   }
@@ -52,7 +52,7 @@ object RFUtils extends Logging {
   true
   }
 
-  def is ValidAgg(agg: DTStatsAggregator): Boolean ={
+  def isValidAgg(agg: DTStatsAggregator): Boolean ={
     true
   }
 
