@@ -247,7 +247,7 @@ private[spark] object RandomForest4GBDTX extends Logging {
     logDebug(s"numFeatures = ${metadata.numFeatures}")
     logDebug(s"numClasses = ${metadata.numClasses}")
     logDebug(s"isMulticlass = ${metadata.isMulticlass}")
-    logDebug(s"isMulticlassWithCategoricalFeatures = ${metadata.isMulticlassWithCategoricalFeatures}')
+    logDebug(s"isMulticlassWithCategoricalFeatures = ${metadata.isMulticlassWithCategoricalFeatures}")
 
     // array of nodes to train indexed by node index in group
     val nodes = new Array[LearningNode](numNodes)
