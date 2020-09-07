@@ -26,6 +26,7 @@ lazy val mlcore = (project in file("ml-core"))
 
 lazy val mlacc = (project in file("ml-accelerator"))
   .dependsOn(mlcore % "compile->compile;test->test")
+  .dependsOn(mlkernel % "compile->compile;test->test")
   .settings(commonSettings: _*)
   .settings(
     name := "sophon-ml-acc",
