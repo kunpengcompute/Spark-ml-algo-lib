@@ -17,7 +17,7 @@ object ACC{
       m: T,
       dir: T,
       coeff: Double,
-      ucoeff: Double) (implicit space: MutableInnerProductModule[T, Double]): T = {
+      uCoeff: Double) (implicit space: MutableInnerProductModule[T, Double]): T = {
     null.asInstanceOf[T]
   }
 
@@ -26,7 +26,7 @@ object ACC{
       deltaA: IndexedSeq[T],
       deltaB: IndexedSeq[T],
       m: Int,
-      size: Int) (implicit space: MutableInnerProductModule[T, Double]): T = {
+      size: Int)(implicit space: MutableInnerProductModule[T, Double]): T = {
     null.asInstanceOf[T]
   }
 }
