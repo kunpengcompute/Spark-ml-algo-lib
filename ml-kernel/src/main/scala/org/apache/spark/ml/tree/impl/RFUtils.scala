@@ -38,21 +38,21 @@ object RFUtils extends Logging {
                       nodeToFeaturesBc: Broadcast[Option[Map[Int, Array[Int]]]],
                       metadata: DecisionTreeMetadata,
                       points: Iterator[BaggedPoint[TreePointX]],
-                      groupInfo: GroupInfo): (Option[BaggedPoint[TreePointX]], Array[DTStatsAggregator]) ={
+                      groupInfo: GroupInfo): (Option[BaggedPoint[TreePointX]], Array[DTStatsAggregator]) = {
     null
   }
 
   def isSubSampled(
                   baggedPoint: BaggedPoint[TreePointX],
-                  groupInfo: GroupInfo, treeIndex: Int, id: Short): Boolean ={
+                  groupInfo: GroupInfo, treeIndex: Int, id: Short): Boolean = {
     true
   }
 
-  def isValidNodeInfo(nodeInfo: NodeIndexInfo, agg: Array[DTStatsAggregator]): Boolean {
+  def isValidNodeInfo(nodeInfo: NodeIndexInfo, agg: Array[DTStatsAggregator]): Boolean = {
   true
   }
 
-  def isValidAgg(agg: DTStatsAggregator): Boolean ={
+  def isValidAgg(agg: DTStatsAggregator): Boolean = {
     true
   }
 
