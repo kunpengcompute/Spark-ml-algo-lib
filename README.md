@@ -19,22 +19,20 @@ Building
 
 (1) Create a lib file under Spark-ml-algo-lib/ml-accelerator :
 
-  mkdir Spark-ml-algo-lib/ml-accelerator/lib
+    mkdir Spark-ml-algo-lib/ml-accelerator/lib
 
 (2)	Download the “ml-kernel.jar”, put into the lib file you just created
 
 (3) Compile your project under “Spark-ml-algo-lib/”
 
-  cd Spark-ml-algo-lib/
+    cd Spark-ml-algo-lib/
  
- sbt package
+    sbt package
+
  
  Get ml-core.jar under “ml-core/target/scala-2.11”
  
- Getml-acc.jar under “ml-accelerator/target/scala-2.11”
-
-
-
+ Get ml-acc.jar under “ml-accelerator/target/scala-2.11”
 
 
 Contact
