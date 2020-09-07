@@ -24,7 +24,7 @@ object RFUtils extends Logging {
 
   def getGroupInfo(numNodes: Int,
                   nodeIdxInfo: Map[Int, Map[Int, NodeIndexInfo]],
-                  extraParams: Option[RFExtraParams]):GroupInfo = {
+                  extraParams: Option[RFExtraParams]): GroupInfo = {
     null
   }
 
@@ -38,7 +38,8 @@ object RFUtils extends Logging {
                       nodeToFeaturesBc: Broadcast[Option[Map[Int, Array[Int]]]],
                       metadata: DecisionTreeMetadata,
                       points: Iterator[BaggedPoint[TreePointX]],
-                      groupInfo: GroupInfo): (Option[BaggedPoint[TreePointX]], Array[DTStatsAggregator]) = {
+                      groupInfo: GroupInfo): 
+                        (Option[BaggedPoint[TreePointX]], Array[DTStatsAggregator]) = {
     null
   }
 
