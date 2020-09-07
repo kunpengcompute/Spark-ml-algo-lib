@@ -37,7 +37,7 @@ object RFUtils extends Logging {
                       nodeToFeaturesBc: Broadcast[Option[Map[Int, Array[Int]]]],
                       metadata: DecisionTreeMetadata,
                       points: Iterator[BaggedPoint[TreePointX]],
-                      groupInfo: GroupInfo): 
+                      groupInfo: GroupInfo):
                         (Option[BaggedPoint[TreePointX]], Array[DTStatsAggregator]) = {
     null
   }

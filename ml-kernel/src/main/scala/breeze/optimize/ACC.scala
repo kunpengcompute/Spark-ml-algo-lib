@@ -9,7 +9,7 @@ object ACC{
      delta: T,
      mStep: IndexedSeq[T],
      g: IndexedSeq[T],
-     m: Int) (implicit space: MutableInnerProductModule[T, Double]): 
+     m: Int) (implicit space: MutableInnerProductModule[T, Double]):
        (IndexedSeq[T], IndexedSeq[T]) = {
     null
   }
