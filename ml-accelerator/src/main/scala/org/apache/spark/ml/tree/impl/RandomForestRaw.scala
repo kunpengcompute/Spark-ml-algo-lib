@@ -615,7 +615,7 @@ private[spark] object RandomForestRaw extends Logging {
 
           logDebug(s"leftChildIndex = ${node.leftChild.get.id}" +
             s", impurity = ${stats.leftImpurity}")
-          logDebug(s"rightChildIndex = ${node.rightChild.get.id}"+
+          logDebug(s"rightChildIndex = ${node.rightChild.get.id}" +
             s", impurity = ${stats.rightImpurity}")
         }
       }
