@@ -398,8 +398,8 @@ private[spark] object RandomForestRaw extends Logging {
     val numNodes = nodesForGroup.values.map(_.length).sum
     logDebug(s"numNodes = ${numNodes}")
     logDebug(s"numFeatures = ${metadata.numFeatures}")
-    logDebug(s"numClasses = ${metadata.numClasses})
-    logDebug(s"isMulticlass = ${metadata.isMulticlass})
+    logDebug(s"numClasses = ${metadata.numClasses}")
+    logDebug(s"isMulticlass = ${metadata.isMulticlass}")
     logDebug("isMulticlassWithCategoricalFeatures = " +
       s"${metadata.isMulticlassWithCategoricalFeatures}")
     logDebug(s"using nodeIdCache = ${nodeIdCache.nonEmpty.toString}")
