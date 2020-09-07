@@ -138,8 +138,8 @@ private[spark] object RandomForest extends Logging {
         instrumentation.logNumFeatures(metadata.numFeatures)
         instrumentation.logNumClasses(metadata.numClasses)
       case None =>
-        logInfo("numFeatures: " + metadata.numFeatures)
-        logInfo("numClasses: " + metadata.numClasses)
+        logInfo(s"numFeatures: ${metadata.numFeatures}")
+        logInfo(s"numClasses: ${metadata.numClasses}")
     }
 
     // Find the splits and the corresponding bins (interval between the splits) using a sample
@@ -174,7 +174,7 @@ private[spark] object RandomForest extends Logging {
     // Max memory usage for aggregates
     // TODO: Calculate memory usage more precisely.
     val maxMemoryUsage: Long = strategy.maxMemoryInMB * 1024L * 1024L
-    logDebug("max memory usage for aggregates = " + maxMemoryUsage + " bytes.")
+    logDebug(s"max memory usage for aggregates = ${maxMemoryUsage} bytes.")
 
     /*
      * The main idea here is to perform group-wise training of the decision tree nodes thus
@@ -441,13 +441,13 @@ private[spark] object RandomForest extends Logging {
     val bcVariables = if (extraParams.isEmpty) false else extraParams.get.bcVariables
     /** numNodes:  Number of nodes in this group */
     val numNodes = nodesForGroup.values.map(_.length).sum
-    logDebug("numNodes = " + numNodes)
-    logDebug("numFeatures = " + metadata.numFeatures)
-    logDebug("numClasses = " + metadata.numClasses)
-    logDebug("isMulticlass = " + metadata.isMulticlass)
-    logDebug("isMulticlassWithCategoricalFeatures = " +
-      metadata.isMulticlassWithCategoricalFeatures)
-    logDebug("using nodeIdCache = " + nodeIdCache.nonEmpty.toString)
+    logDebug(s"numNodes = ${numNodes}")
+    logDebug(s"numFeatures = ${etadata.numFeatures}")
+    logDebug(s"numClasses = ${metadata.numClasses}")
+    logDebug(s"isMulticlass = ${metadata.isMulticlass}")
+    logDebug(s"isMulticlassWithCategoricalFeatures = " +
+      s"${metadata.isMulticlassWithCategoricalFeatures}")
+    logDebug(s"using nodeIdCache = ${ nodeIdCache.nonEmpty.toString}")
 
     val groupInfo = RFUtils.getGroupInfo(numNodes, treeToNodeToIndexInfo, extraParams)
 
@@ -648,14 +648,14 @@ private[spark] object RandomForest extends Logging {
         val aggNodeIndex = nodeInfo.nodeIndexInGroup
         val (split: SplitBase, stats: ImpurityStats) =
           nodeToBestSplits(aggNodeIndex)
-        logDebug("best split = " + split)
+        logDebug(s"best split = ${split}")
 
         // Extract info for this node.  Create children if not leaf.
         val isLeaf =
           (stats.gain <= 0) || (LearningNodeX.indexToLevel(nodeIndex) == metadata.maxDepth)
         node.isLeaf = isLeaf
         node.stats = stats
-        logDebug("Node = " + node)
+        logDebug(s"Node = ${node}")
 
         if (!isLeaf) {
           node.split = Some(split)
@@ -682,10 +682,10 @@ private[spark] object RandomForest extends Logging {
             nodeStack.push((treeIndex, node.rightChild.get))
           }
 
-          logDebug("leftChildIndex = " + node.leftChild.get.id +
-            ", impurity = " + stats.leftImpurity)
-          logDebug("rightChildIndex = " + node.rightChild.get.id +
-            ", impurity = " + stats.rightImpurity)
+          logDebug(s"leftChildIndex = ${node.leftChild.get.id}" +
+            s", impurity = ${stats.leftImpurity}")
+          logDebug(s"rightChildIndex = ${node.rightChild.get.id}" +
+            s", impurity = ${stats.rightImpurity}")
         }
       }
     }
@@ -859,7 +859,7 @@ private[spark] object RandomForest extends Logging {
             (featureValue, centroid)
           }
 
-          logDebug("Centroids for categorical variable: " + centroidForCategories.mkString(","))
+          logDebug(s"Centroids for categorical variable: ${centroidForCategories.mkString(",")}")
 
           // bins sorted by centroids
           val categoriesSortedByCentroid = centroidForCategories.toList.sortBy(_._2)
@@ -953,7 +953,7 @@ private[spark] object RandomForest extends Logging {
       metadata: DecisionTreeMetadata,
       seed: Long): Array[Array[Split]] = {
 
-    logDebug("isMulticlass = " + metadata.isMulticlass)
+    logDebug(s"isMulticlass = ${metadata.isMulticlass}")
 
     val numFeatures = metadata.numFeatures
 
@@ -967,7 +967,7 @@ private[spark] object RandomForest extends Logging {
       } else {
         1.0
       }
-      logDebug("fraction of data used for calculating quantiles = " + fraction)
+      logDebug(s"fraction of data used for calculating quantiles = ${fraction}")
       input.sample(withReplacement = false, fraction, new XORShiftRandom(seed).nextInt())
     } else {
       input.sparkContext.emptyRDD[LabeledPoint]
@@ -1091,7 +1091,7 @@ private[spark] object RandomForest extends Logging {
       } else {
         // stride between splits
         val stride: Double = numSamples.toDouble / (numSplits + 1)
-        logDebug("stride = " + stride)
+        logDebug(s"stride = ${stride}")
 
         // iterate `valueCount` to find splits
         val splitsBuilder = mutable.ArrayBuilder.make[Double]
