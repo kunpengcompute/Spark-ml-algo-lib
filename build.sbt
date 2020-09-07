@@ -32,6 +32,13 @@ lazy val mlacc = (project in file("ml-accelerator"))
     version := "1.0.0"
   )
 
+lazy val mlkernel = (project in file("ml-kernel"))
+  .dependsOn(mlcore % "compile->compile;test->test")
+  .settings(commonSettings: _*)
+  .settings(
+    name := "sophon-ml-kernel-client",
+    version := "1.0.0"
+  )
 
 
 
