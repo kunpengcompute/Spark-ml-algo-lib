@@ -412,7 +412,7 @@ private[spark] object GradientBoostedTrees extends Logging {
     var predError: RDD[(Double, Double)] =
       computeInitialPredictionAndError(input, firstTreeWeight, firstTreeModel, loss)
     predErrorCheckpointer.update(predError)
-    logDebug("error of gbt = " + predError.values.mean())
+    logDebug(s"error of gbt = ${predError.values.mean()}")
 
     // Note: A model of type regression is used since we require raw prediction
     timer.stop("building tree 0")
@@ -433,7 +433,7 @@ private[spark] object GradientBoostedTrees extends Logging {
 
       timer.start(s"building tree $m")
       logDebug("###################################################")
-      logDebug("Gradient boosting tree iteration " + m)
+      logDebug(s"Gradient boosting tree iteration ${m}")
       logDebug("###################################################")
 
       val dt = new DecisionTreeRegressor().setSeed(seed + m)
@@ -449,7 +449,7 @@ private[spark] object GradientBoostedTrees extends Logging {
       predError = updatePredictionError(
         input, predError, baseLearnerWeights(m), baseLearners(m), loss)
       predErrorCheckpointer.update(predError)
-      logDebug("error of gbt = " + predError.values.mean())
+      logDebug(s"error of gbt = ${predError.values.mean()}")
 
       if (validate) {
         // Stop training early if
@@ -573,7 +573,7 @@ private[spark] object GradientBoostedTrees extends Logging {
     var predError: RDD[(Double, Double)] =
       computeInitialPredictionAndErrorX(treeInput, firstTreeWeight, firstTreeModel, loss, splits)
     predErrorCheckpointer.update(predError)
-    logDebug("error of gbt = " + predError.values.mean())
+    logDebug(s"error of gbt = ${predError.values.mean()}")
 
     // Note: A model of type regression is used since we require raw prediction
     timer.stop("building tree 0")
@@ -596,7 +596,7 @@ private[spark] object GradientBoostedTrees extends Logging {
 
       timer.start(s"building tree $m")
       logDebug("###################################################")
-      logDebug("Gradient boosting tree iteration " + m)
+      logDebug(s"Gradient boosting tree iteration ${m}")
       logDebug("###################################################")
 
       val dt = new DecisionTreeRegressor().setSeed(seed + m)
@@ -613,7 +613,7 @@ private[spark] object GradientBoostedTrees extends Logging {
       predError = updatePredictionErrorX(
         treeInput, predError, baseLearnerWeights(m), baseLearners(m), loss, splits)
       predErrorCheckpointer.update(predError)
-      logDebug("error of gbt = " + predError.values.mean())
+      logDebug(s"error of gbt = ${predError.values.mean()}")
 
       if (validate) {
         // Stop training early if

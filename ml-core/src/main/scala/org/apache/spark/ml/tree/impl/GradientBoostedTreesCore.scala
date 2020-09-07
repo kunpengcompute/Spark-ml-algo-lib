@@ -188,7 +188,7 @@ object GradientBoostedTreesCore extends Logging{
           (featureValue, centroid)
         }
 
-        logDebug("Centroids for categorical variable: " + centroidForCategories.mkString(","))
+        logDebug(s"Centroids for categorical variable: ${centroidForCategories.mkString(",")}")
 
         // bins sorted by centroids
         val categoriesSortedByCentroid = centroidForCategories.toList.sortBy(_._2)

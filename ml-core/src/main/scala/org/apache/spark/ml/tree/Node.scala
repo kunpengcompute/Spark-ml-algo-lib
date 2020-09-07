@@ -130,7 +130,7 @@ class LeafNode private[ml] (
 
   override private[tree] def subtreeToString(indentFactor: Int = 0): String = {
     val prefix: String = " " * indentFactor
-    prefix + s"Predict: $prediction\n"
+    s"$prefix" + s"Predict: $prediction\n"
   }
 
   override private[tree] def subtreeDepth: Int = 0
@@ -196,9 +196,9 @@ class InternalNode private[ml] (
 
   override private[tree] def subtreeToString(indentFactor: Int = 0): String = {
     val prefix: String = " " * indentFactor
-    prefix + s"If (${InternalNode.splitToString(split, left = true)})\n" +
+    s"$prefix If (${InternalNode.splitToString(split, left = true)})\n" +
       leftChild.subtreeToString(indentFactor + 1) +
-      prefix + s"Else (${InternalNode.splitToString(split, left = false)})\n" +
+      s"$prefix Else (${InternalNode.splitToString(split, left = false)})\n" +
       rightChild.subtreeToString(indentFactor + 1)
   }
 
