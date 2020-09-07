@@ -39,9 +39,11 @@ object GradientBoostedTreesUtil extends Logging {
                       input: RDD[(Int, (IntArrayList, ObjectArrayList[Split]))],
                       nodeIndexInfo: Map[Int, Map[Int, NodeIndexInfo]],
                       metadata: DecisionTreeMetadata,
-                      nodeIdCacheBc: Broadcast[Int2ObjectOpenHashMap[Int2ObjectOpenHashMap[IntArrayList]]],
+                      nodeIdCacheBc: Broadcast[Int2ObjectOpenHashMap[Int2ObjectOpenHashMap
+                        [IntArrayList]]],
                       labelArrayBc: Broadcast[DoubleArrayList],
-                      nodes: Array[LearningNode]): scala.collection.Map[Int, (Split, ImpurityStats)]={
+                      nodes: Array[LearningNode]): 
+                        scala.collection.Map[Int, (Split, ImpurityStats)]={
     null
   }
 
