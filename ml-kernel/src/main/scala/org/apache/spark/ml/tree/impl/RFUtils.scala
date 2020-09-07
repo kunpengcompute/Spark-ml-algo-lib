@@ -24,7 +24,7 @@ object RFUtils extends Logging {
 
   def getGroupInfo(numNodes: Int,
                   nodeIdxInfo: Map[Int, Map[Int, NodeIndexInfo]],
-                  extraParams: Option[RFExtraParams]):GroupInfo = {
+                  extraParams: Option[RFExtraParams]): GroupInfo = {
     null
   }
 
@@ -33,23 +33,22 @@ object RFUtils extends Logging {
     null
   }
 
-  def initNodeStatsAgg(
-                      numNodes: Int,
+  def initNodeStatsAgg(numNodes: Int,
                       nodeToFeaturesBc: Broadcast[Option[Map[Int, Array[Int]]]],
                       metadata: DecisionTreeMetadata,
                       points: Iterator[BaggedPoint[TreePointX]],
-                      groupInfo: GroupInfo): (Option[BaggedPoint[TreePointX]], Array[DTStatsAggregator]) = {
+                      groupInfo: GroupInfo): 
+                        (Option[BaggedPoint[TreePointX]], Array[DTStatsAggregator]) = {
     null
   }
 
-  def isSubSampled(
-                  baggedPoint: BaggedPoint[TreePointX],
+  def isSubSampled(baggedPoint: BaggedPoint[TreePointX],
                   groupInfo: GroupInfo, treeIndex: Int, id: Short): Boolean = {
     true
   }
 
   def isValidNodeInfo(nodeInfo: NodeIndexInfo, agg: Array[DTStatsAggregator]): Boolean = {
-  true
+    true
   }
 
   def isValidAgg(agg: DTStatsAggregator): Boolean = {
