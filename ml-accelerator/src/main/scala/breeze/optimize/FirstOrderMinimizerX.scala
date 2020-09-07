@@ -132,7 +132,7 @@ abstract class FirstOrderMinimizerX[T, DF<:StochasticDiffFunction[T]]
     } catch {
         case x: FirstOrderException if !failedOnce =>
           failedOnce = true
-          logger.error("Failure! Resetting history: " + x)
+          logger.error(s"Failure! Resetting history: $x")
           state.copy(history = initialHistory(adjustedFun, state.x))
         case x: FirstOrderException =>
           logger.error("Failure again! Giving up and returning. " +
