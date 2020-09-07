@@ -442,7 +442,7 @@ private[spark] object RandomForest extends Logging {
     /** numNodes:  Number of nodes in this group */
     val numNodes = nodesForGroup.values.map(_.length).sum
     logDebug(s"numNodes = ${numNodes}")
-    logDebug(s"numFeatures = ${etadata.numFeatures}")
+    logDebug(s"numFeatures = ${metadata.numFeatures}")
     logDebug(s"numClasses = ${metadata.numClasses}")
     logDebug(s"isMulticlass = ${metadata.isMulticlass}")
     logDebug(s"isMulticlassWithCategoricalFeatures = " +
