@@ -14,26 +14,25 @@ You can find the latest documentation, including a programming guide, on the pro
 
 
 
-Building
-========
+Building And Package
+====================
 
-(1) Create a lib file under Spark-ml-algo-lib/ml-accelerator :
+(1) Compile under the "Spark-ml-algo-lib" :
 
-    mkdir Spark-ml-algo-lib/ml-accelerator/lib
+    sbt clean compile
+    sbt "project mlcore" package
+    sbt "project mlacc" package
 
-(2)	Download the “ml-kernel.jar”, put into the lib file you just created
 
-(3) Compile your project under “Spark-ml-algo-lib/”
+(2) get "sophon-ml-core_2.11-1.0.0.jar" under the "Spark-ml-algo-lib/ml-core/target/scala-2.11"
 
-    cd Spark-ml-algo-lib/
+    cd ml-core/target/scala-2.11
  
-    sbt package
+   get "sophon-ml-core_2.11-1.0.0.jar" under the "Spark-ml-algo-lib/ml-core/target/scala-2.11"
+
+    cd ml-accelerator/target/scala-2.11
 
  
- Get ml-core.jar under “ml-core/target/scala-2.11”
- 
- Get ml-acc.jar under “ml-accelerator/target/scala-2.11”
-
 
 Contact
 =======
