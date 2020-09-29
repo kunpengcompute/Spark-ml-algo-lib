@@ -17,20 +17,18 @@ You can find the latest documentation, including a programming guide, on the pro
 Building And Package
 ====================
 
-(1) Compile under the "Spark-ml-algo-lib" :
+(1) Package under the "Spark-ml-algo-lib" :
 
-    sbt clean compile
-    sbt "project mlcore" package
-    sbt "project mlacc" package
+    mvn clean package
 
 
-(2) get "sophon-ml-core_2.11-1.0.0.jar" under the "Spark-ml-algo-lib/ml-core/target/scala-2.11"
+(2) get "sophon-ml-core_2.11-1.0.0.jar" under the "Spark-ml-algo-lib/ml-core/target"
 
-    cd ml-core/target/scala-2.11
+    cd ml-core/target
  
-   get "sophon-ml-core_2.11-1.0.0.jar" under the "Spark-ml-algo-lib/ml-core/target/scala-2.11"
+   get "sophon-ml-acc__2.11-1.0.0.jar" under the "Spark-ml-algo-lib/ml-accelerator/target"
 
-    cd ml-accelerator/target/scala-2.11
+    cd ml-accelerator/target
 
  
 
