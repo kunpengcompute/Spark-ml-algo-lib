@@ -26,7 +26,7 @@ Building And Package
 
     cd ml-core/target
  
-   get "sophon-ml-acc__2.11-1.0.0.jar" under the "Spark-ml-algo-lib/ml-accelerator/target"
+   get "sophon-ml-acc_2.11-1.0.0.jar" under the "Spark-ml-algo-lib/ml-accelerator/target"
 
     cd ml-accelerator/target
 
