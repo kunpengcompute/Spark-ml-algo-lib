@@ -42,7 +42,7 @@ import org.apache.spark.util.random.XORShiftRandom
 private[spark] class BaggedPoint[Datum](
      val datum: Datum,
      val subsampleWeights: Array[Int],
-     val sampleId: Short = 0)
+     var sampleId: Short = 0)
   extends Serializable
 
 private[spark] object BaggedPoint {

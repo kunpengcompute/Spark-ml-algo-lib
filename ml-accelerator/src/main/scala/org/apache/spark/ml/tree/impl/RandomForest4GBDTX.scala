@@ -240,7 +240,7 @@ private[spark] object RandomForest4GBDTX extends Logging {
      * drastically reduce the communication overhead.
      */
 
-    var (nodesForGroup, treeToNodeToIndexInfo) = packagedNodeInfo
+    val (nodesForGroup, treeToNodeToIndexInfo) = packagedNodeInfo
     // numNodes:  Number of nodes in this group
     val numNodes = nodesForGroup.values.map(_.length).sum
     logDebug(s"numNodes = ${numNodes}")
