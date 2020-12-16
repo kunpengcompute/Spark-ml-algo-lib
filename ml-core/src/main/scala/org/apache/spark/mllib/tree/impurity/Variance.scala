@@ -84,9 +84,9 @@ private[spark] class VarianceAggregator()
   }
 
   def updateX(allStats: Array[Double], offset: Int, label: Double): Unit = {
-      allStats(offset) += 1.0
-      allStats(offset + 1) += label
-      allStats(offset + 2) += label * label
+    allStats(offset) += 1.0
+    allStats(offset + 1) += label
+    allStats(offset + 2) += label * label
   }
 
   /**

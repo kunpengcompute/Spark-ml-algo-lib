@@ -123,8 +123,8 @@ private[spark] object RandomForest extends Logging {
     val binnedFeaturesType = BinnedFeaturesDataType.withName(extraParams.featuresDataType)
     val retaggedInput = input.retag(classOf[LabeledPoint])
     // featureSubsetStrategy: The number of features to consider for splits at each tree node.
-    // featureSubsetStrategy: default value is "auto" for random forest
-    // impurity: default value is "gini" for random forest
+    // featureSubsetStrategy: default value is "auto" for random forest.
+    // impurity: default value is "gini" for random forest.
     val metadata =
       DecisionTreeMetadata.buildMetadata(retaggedInput, strategy, numTrees, featureSubsetStrategy)
     logWarning(s"decisionTreeMetadata details: ${metadata.numFeatures}," +
@@ -160,7 +160,7 @@ private[spark] object RandomForest extends Logging {
 
     val withReplacement = numTrees > 1
 
-    // Default value of subsampleingRate is 1 for random forest
+    // Default value of subsamplingRate is 1 for random forest.
     val baggedInputOri = BaggedPoint.convertToBaggedRDD(treeInput, strategy.subsamplingRate,
       numTrees, withReplacement, seed)
 
@@ -220,7 +220,7 @@ private[spark] object RandomForest extends Logging {
       // Each group of nodes may come from one or multiple trees, and at multiple levels.
       // nodesForGroup: treeIndex --> learningNodes in tree
       // treeToNodeToIndexInfo: treeIndex --> (global) learningNodes index in tree
-      //    --> (node index in group, feature indices)
+      //    --> (node index in group, feature indices).
       val (nodesForGroup, treeToNodeToIndexInfo) =
         RandomForest.selectNodesToSplit(nodeStack, maxMemoryUsage, metadata, rng)
       // Sanity check (should never occur):
@@ -390,7 +390,7 @@ private[spark] object RandomForest extends Logging {
    *                         Used for matching instances with nodes.
    * @param nodesForGroup Mapping: treeIndex --> nodes to be split in tree
    * @param treeToNodeToIndexInfo Mapping: treeIndex --> (global) learningNodes index in tree
-   *                              --> (node index in froup, feature indices)
+   *                              --> (node index in group, feature indices)
    *                              feature indices: probably parts of full features.
    *                              Mapping: treeIndex --> nodeIndex --> nodeIndexInfo,
    *                              where nodeIndexInfo stores the index in the group and the
@@ -503,7 +503,7 @@ private[spark] object RandomForest extends Logging {
         baggedPoint: BaggedPoint[TreePointX],
         splitsBcv: Array[Array[SplitBase]],
         sampleId: Short): Array[DTStatsAggregator] = {
-      // TODO: treeToNodeToIndexInfo and topNodesForGroup(includ sub-nodes) weren't broadcast.
+      // TODO: treeToNodeToIndexInfo and topNodesForGroup(include sub-nodes) weren't broadcast.
       treeToNodeToIndexInfo.foreach { case (treeIndex, nodeIndexToInfo) =>
         if (RFUtils.isSubSampled(baggedPoint, groupInfo, treeIndex, sampleId)) {
           val nodeIndex =

@@ -28,7 +28,6 @@ import org.apache.spark.ml.tree.{LearningNode, Split, SplitBase}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 
-
 /**
  * This is used by the node id cache to find the child id that a data point would belong to.
  * @param split Split information.
@@ -180,9 +179,9 @@ private[spark] class NodeIdCache(
    * @param splits  Split information needed to find child node indices.
    */
   def updateNodeIndicesRaw(
-                         data: RDD[BaggedPoint[TreePoint]],
-                         nodeIdUpdaters: Array[mutable.Map[Int, NodeIndexUpdaterRaw]],
-                         splits: Array[Array[Split]]): Unit = {
+      data: RDD[BaggedPoint[TreePoint]],
+      nodeIdUpdaters: Array[mutable.Map[Int, NodeIndexUpdaterRaw]],
+      splits: Array[Array[Split]]): Unit = {
     if (prevNodeIdsForInstances != null) {
       // Unpersist the previous one if one exists.
       prevNodeIdsForInstances.unpersist()
@@ -239,6 +238,75 @@ private[spark] class NodeIdCache(
   }
 
   /**
+   * Update the node index values in the cache.
+   * This updates the RDD and its lineage.
+   * TODO: Passing bin information to executors seems unnecessary and costly.
+   * @param data The RDD of training rows.
+   * @param nodeIdUpdaters A map of node index updaters.
+   *                       The key is the indices of nodes that we want to update.
+   * @param splits  Split information needed to find child node indices.
+   */
+  def updateNodeIndicesY(
+      data: RDD[BaggedPoint[TreePointY]],
+      nodeIdUpdaters: Array[mutable.Map[Int, NodeIndexUpdaterRaw]],
+      splits: Array[Array[Split]]): Unit = {
+    if (prevNodeIdsForInstances != null) {
+      // Unpersist the previous one if one exists.
+      prevNodeIdsForInstances.unpersist()
+    }
+
+    prevNodeIdsForInstances = nodeIdsForInstances
+    nodeIdsForInstances = data.zip(nodeIdsForInstances).map { case (point, ids) =>
+      var treeId = 0
+      while (treeId < nodeIdUpdaters.length) {
+        val nodeIdUpdater = nodeIdUpdaters(treeId).getOrElse(ids(treeId), null)
+        if (nodeIdUpdater != null) {
+          val featureIndex = nodeIdUpdater.split.featureIndex
+          val newNodeIndex = nodeIdUpdater.updateNodeIndex(
+            binnedFeature = point.datum.binnedFeatures.get(featureIndex),
+            splits = splits(featureIndex))
+          ids(treeId) = newNodeIndex
+        }
+        treeId += 1
+      }
+      ids
+    }
+
+    // Keep on persisting new ones.
+    nodeIdsForInstances.persist(StorageLevel.MEMORY_AND_DISK)
+    rddUpdateCount += 1
+
+    // Handle checkpointing if the directory is not None.
+    if (canCheckpoint && checkpointInterval != -1 && (rddUpdateCount % checkpointInterval) == 0) {
+      // Let's see if we can delete previous checkpoints.
+      var canDelete = true
+      while (checkpointQueue.size > 1 && canDelete) {
+        // We can delete the oldest checkpoint iff
+        // the next checkpoint actually exists in the file system.
+        if (checkpointQueue(1).getCheckpointFile.isDefined) {
+          val old = checkpointQueue.dequeue()
+          // Since the old checkpoint is not deleted by Spark, we'll manually delete it here.
+          try {
+            val path = new Path(old.getCheckpointFile.get)
+            val fs = path.getFileSystem(hadoopConf)
+            fs.delete(path, true)
+          } catch {
+            case e: IOException =>
+              logError("Decision Tree learning using cacheNodeIds failed to remove checkpoint" +
+                s" file: ${old.getCheckpointFile.get}")
+          }
+        } else {
+          canDelete = false
+        }
+      }
+
+      nodeIdsForInstances.checkpoint()
+      checkpointQueue.enqueue(nodeIdsForInstances)
+    }
+  }
+
+
+  /**
    * Call this after training is finished to delete any remaining checkpoints.
    */
   def deleteAllCheckpoints(): Unit = {
@@ -283,3 +351,4 @@ private[spark] object NodeIdCache {
       checkpointInterval)
   }
 }
+

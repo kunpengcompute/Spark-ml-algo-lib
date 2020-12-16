@@ -28,9 +28,9 @@ import org.apache.spark.ml.feature.LabeledPoint
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.tree._
+import org.apache.spark.ml.tree.impl.DecisionForest
 import org.apache.spark.ml.tree.impl.DecisionTreeMetadata
 import org.apache.spark.ml.tree.impl.RandomForest4GBDTX
-import org.apache.spark.ml.tree.impl.RandomForestRaw
 import org.apache.spark.ml.tree.impl.TreePoint
 import org.apache.spark.ml.util._
 import org.apache.spark.mllib.tree.configuration.{Algo => OldAlgo, Strategy => OldStrategy}
@@ -109,9 +109,8 @@ class DecisionTreeRegressor @Since("1.4.0") (@Since("1.4.0") override val uid: S
     val instr = Instrumentation.create(this, oldDataset)
     instr.logParams(params: _*)
 
-    val trees = RandomForestRaw.run(oldDataset, strategy, numTrees = 1,
-      featureSubsetStrategy = "all", seed = $(seed), instr = Some(instr),
-      parentUID = Some(uid))
+    val trees = DecisionForest.run(oldDataset, strategy, numTrees = 1,
+      featureSubsetStrategy = "all", seed = $(seed), instr = Some(instr), parentUID = Some(uid))
 
     val m = trees.head.asInstanceOf[DecisionTreeRegressionModel]
     instr.logSuccess(m)
@@ -126,7 +125,7 @@ class DecisionTreeRegressor @Since("1.4.0") (@Since("1.4.0") override val uid: S
     val instr = Instrumentation.create(this, data)
     instr.logParams(params: _*)
 
-    val trees = RandomForestRaw.run(data, oldStrategy, numTrees = 1, featureSubsetStrategy,
+    val trees = DecisionForest.run(data, oldStrategy, numTrees = 1, featureSubsetStrategy,
       seed = $(seed), instr = Some(instr), parentUID = Some(uid))
 
     val m = trees.head.asInstanceOf[DecisionTreeRegressionModel]

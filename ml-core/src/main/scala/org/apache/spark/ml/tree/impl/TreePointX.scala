@@ -157,7 +157,7 @@ private[spark] object TreePointX {
       featureIndex += 1
     }
     val binFeatures = new BinnedFeatureFastHashMap(binFeaturesMap)
-    // binFeatures.defaultReturnValue('\u0000)
+    // binFeatures.defaultReturnValue('\u0000')
     new TreePointX(labeledPoint.label, binFeatures)
   }
 

@@ -165,6 +165,7 @@ private[spark] object RandomForest4GBDTX extends Logging {
     parentUID match {
       case Some(uid) =>
         if (strategy.algo == OldAlgo.Classification) {
+          // unreachable for GBDT
           topNodes.map { rootNode =>
             new DecisionTreeClassificationModel(uid, rootNode.toNode, numFeatures,
               strategy.getNumClasses)
@@ -174,6 +175,7 @@ private[spark] object RandomForest4GBDTX extends Logging {
             new DecisionTreeRegressionModel(uid, rootNode.toNode, numFeatures)
           }
         }
+      // unreachable for GBDT
       case None =>
         if (strategy.algo == OldAlgo.Classification) {
           topNodes.map { rootNode =>
@@ -191,12 +193,6 @@ private[spark] object RandomForest4GBDTX extends Logging {
    *
    * @param input Training data: RDD of [[TreePoint]]
    * @param metadata Learning and dataset metadata
-   * @param topNodesForGroup For each tree in group, tree index -> root node.
-   *                         Used for matching instances with nodes.
-   * @param nodesForGroup Mapping: treeIndex --> nodes to be split in tree
-   * @param treeToNodeToIndexInfo Mapping: treeIndex --> nodeIndex --> nodeIndexInfo,
-   *                              where nodeIndexInfo stores the index in the group and the
-   *                              feature subsets (if using feature subsets).
    * @param splits possible splits for all features, indexed (numFeatures)(numSplits)
    * @param nodeStack  Queue of nodes to split, with values (treeIndex, node).
    *                   Updated with new non-leaf nodes which are created.
@@ -240,6 +236,7 @@ private[spark] object RandomForest4GBDTX extends Logging {
      * drastically reduce the communication overhead.
      */
 
+    // Un-package node info
     val (nodesForGroup, treeToNodeToIndexInfo) = packagedNodeInfo
     // numNodes:  Number of nodes in this group
     val numNodes = nodesForGroup.values.map(_.length).sum
@@ -401,6 +398,7 @@ private[spark] object RandomForest4GBDTX extends Logging {
         metadata.setNumSplits(i, split.length)
         split
 
+      // unreachable for GBDT
       case i if metadata.isCategorical(i) && metadata.isUnordered(i) =>
         // Unordered features
         // 2^(maxFeatureValue - 1) - 1 combinations
@@ -609,6 +607,7 @@ private[spark] object RandomForest4GBDTX extends Logging {
       metadata.numBins.map(_.toLong).sum
     }
     if (metadata.isClassification) {
+      // unreachable for GBDT
       metadata.numClasses * totalBins
     } else {
       3 * totalBins

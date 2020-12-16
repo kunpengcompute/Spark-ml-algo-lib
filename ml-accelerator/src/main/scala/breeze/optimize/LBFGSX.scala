@@ -1,19 +1,4 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// scalastyle:off header.matches
 package breeze.optimize
 
 /*
@@ -39,6 +24,19 @@ import breeze.optimize.FirstOrderMinimizerX.{ConvergenceCheck, ConvergenceReason
 import breeze.optimize.linear.PowerMethod
 import breeze.util.SerializableLogging
 
+/**
+ * Port of LBFGS to Scala.
+ *
+ * Special note for LBFGS:
+ *  If you use it in published work, you must cite one of:
+ *     * J. Nocedal. Updating  Quasi-Newton  Matrices  with  Limited  Storage
+ *    (1980), Mathematics of Computation 35, pp. 773-782.
+ *  * D.C. Liu and J. Nocedal. On the  Limited  mem  Method  for  Large
+ *    Scale  Optimization  (1989),  Mathematical  Programming  B,  45,  3,
+ *    pp. 503-528.
+ *
+ * @param m: The memory of the search. 3 to 7 is usually sufficient.
+ */
 class LBFGSX[T](convergenceCheck: ConvergenceCheck[T], m: Int)
                (implicit space: MutableInnerProductModule[T, Double]) extends
   FirstOrderMinimizerX[T, DiffFunction[T]](convergenceCheck) with SerializableLogging {

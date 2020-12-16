@@ -2,21 +2,20 @@
   <parent>
      <groupId>org.apache.spark</groupId>
      <artifactId>sophon-ml</artifactId>
-     <version>1.0.0</version>
+     <version>1.1.0</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>sophon-ml-kernel-client_2.11</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <name>${project.artifactId}</name>
   <description>Spark ml core</description>
-  <packaging>pom</packaging>
 
   <dependencies>
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>sophon-ml-core_2.11</artifactId>
-      <version>1.0.0</version>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 
@@ -39,6 +38,29 @@
                 <arg>${project.build.directory}/.scala_dependencies</arg>
               </args>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.scalastyle</groupId>
+        <artifactId>scalastyle-maven-plugin</artifactId>
+        <version>1.0.0</version>
+        <configuration>
+          <verbose>false</verbose>
+          <failOnViolation>true</failOnViolation>
+          <includeTestSourceDirectory>false</includeTestSourceDirectory>
+          <failOnWarning>false</failOnWarning>
+          <sourceDirectory>src/main/scala</sourceDirectory>
+          <configLocation>${project.basedir}/../scalastyle-config.xml</configLocation>
+          <outputFile>${project.build.directory}/scalastyle-output.xml</outputFile>
+          <outputEncoding>UTF-8</outputEncoding>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
