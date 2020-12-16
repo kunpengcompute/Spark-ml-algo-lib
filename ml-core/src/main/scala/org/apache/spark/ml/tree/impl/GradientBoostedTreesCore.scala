@@ -17,366 +17,237 @@
 
 package org.apache.spark.ml.tree.impl
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
+
 import org.apache.spark.internal.Logging
-import org.apache.spark.ml.feature.LabeledPoint
-import org.apache.spark.ml.linalg.Vector
-import org.apache.spark.ml.regression.{DecisionTreeRegressionModel, DecisionTreeRegressor}
-import org.apache.spark.mllib.tree.configuration.{Algo => OldAlgo}
-import org.apache.spark.mllib.tree.configuration.{BoostingStrategy => OldBoostingStrategy}
-import org.apache.spark.mllib.tree.impurity.{Variance => OldVariance}
-import org.apache.spark.mllib.tree.loss.{Loss => OldLoss}
-import org.apache.spark.rdd.RDD
-import org.apache.spark.rdd.util.PeriodicRDDCheckpointer
-import org.apache.spark.storage.StorageLevel
+import org.apache.spark.ml.tree.{CategoricalSplit, ContinuousSplit, LearningNode, Split}
+import org.apache.spark.mllib.tree.impurity.ImpurityCalculator
+import org.apache.spark.mllib.tree.model.ImpurityStats
 
-
-private[spark] object GradientBoostedTrees extends Logging {
+object GradientBoostedTreesCore extends Logging{
+  private[tree] class NodeIndexInfo(
+      val nodeIndexInGroup: Int,
+      val featureSubset: Option[Array[Int]],
+      val featureSubsetHashSetX: Option[scala.collection.mutable.HashSet[Int]] = None)
+    extends Serializable
 
   /**
-   * Method to train a gradient boosting model
-   * @param input Training dataset: RDD of `LabeledPoint`.
-   * @param seed Random seed.
-   * @return tuple of ensemble models and weights:
-   *         (array of decision tree models, array of model weights)
-   */
-  def run(
-      input: RDD[LabeledPoint],
-      boostingStrategy: OldBoostingStrategy,
-      seed: Long,
-      featureSubsetStrategy: String): (Array[DecisionTreeRegressionModel], Array[Double]) = {
-    val algo = boostingStrategy.treeStrategy.algo
-    algo match {
-      case OldAlgo.Regression =>
-        GradientBoostedTrees.boost(input, input, boostingStrategy, validate = false,
-          seed, featureSubsetStrategy)
-      case OldAlgo.Classification =>
-        // Map labels to -1, +1 so binary classification can be treated as regression.
-        val remappedInput = input.map(x => new LabeledPoint((x.label * 2) - 1, x.features))
-        GradientBoostedTrees.boost(remappedInput, remappedInput, boostingStrategy, validate = false,
-          seed, featureSubsetStrategy)
-      case _ =>
-        throw new IllegalArgumentException(s"$algo is not supported by gradient boosting.")
-    }
-  }
-
-  /**
-   * Method to validate a gradient boosting model
-   * @param input Training dataset: RDD of `LabeledPoint`.
-   * @param validationInput Validation dataset.
-   *                        This dataset should be different from the training dataset,
-   *                        but it should follow the same distribution.
-   *                        E.g., these two datasets could be created from an original dataset
-   *                        by using `org.apache.spark.rdd.RDD.randomSplit()`
-   * @param seed Random seed.
-   * @return tuple of ensemble models and weights:
-   *         (array of decision tree models, array of model weights)
-   */
-  def runWithValidation(
-      input: RDD[LabeledPoint],
-      validationInput: RDD[LabeledPoint],
-      boostingStrategy: OldBoostingStrategy,
-      seed: Long,
-      featureSubsetStrategy: String): (Array[DecisionTreeRegressionModel], Array[Double]) = {
-    val algo = boostingStrategy.treeStrategy.algo
-    algo match {
-      case OldAlgo.Regression =>
-        GradientBoostedTrees.boost(input, validationInput, boostingStrategy,
-          validate = true, seed, featureSubsetStrategy)
-      case OldAlgo.Classification =>
-        // Map labels to -1, +1 so binary classification can be treated as regression.
-        val remappedInput = input.map(
-          x => new LabeledPoint((x.label * 2) - 1, x.features))
-        val remappedValidationInput = validationInput.map(
-          x => new LabeledPoint((x.label * 2) - 1, x.features))
-        GradientBoostedTrees.boost(remappedInput, remappedValidationInput, boostingStrategy,
-          validate = true, seed, featureSubsetStrategy)
-      case _ =>
-        throw new IllegalArgumentException(s"$algo is not supported by the gradient boosting.")
-    }
-  }
-
-  /**
-   * Compute the initial predictions and errors for a dataset for the first
-   * iteration of gradient boosting.
-   * @param data: training data.
-   * @param initTreeWeight: learning rate assigned to the first tree.
-   * @param initTree: first DecisionTreeModel.
-   * @param loss: evaluation metric.
-   * @return an RDD with each element being a zip of the prediction and error
-   *         corresponding to every sample.
-   */
-  def computeInitialPredictionAndError(
-      data: RDD[LabeledPoint],
-      initTreeWeight: Double,
-      initTree: DecisionTreeRegressionModel,
-      loss: OldLoss): RDD[(Double, Double)] = {
-    data.map { lp =>
-      val pred = updatePrediction(lp.features, 0.0, initTree, initTreeWeight)
-      val error = loss.computeError(pred, lp.label)
-      (pred, error)
-    }
-  }
-
-  /**
-   * Update a zipped predictionError RDD
-   * (as obtained with computeInitialPredictionAndError)
-   * @param data: training data.
-   * @param predictionAndError: predictionError RDD
-   * @param treeWeight: Learning rate.
-   * @param tree: Tree using which the prediction and error should be updated.
-   * @param loss: evaluation metric.
-   * @return an RDD with each element being a zip of the prediction and error
-   *         corresponding to each sample.
-   */
-  def updatePredictionError(
-      data: RDD[LabeledPoint],
-      predictionAndError: RDD[(Double, Double)],
-      treeWeight: Double,
-      tree: DecisionTreeRegressionModel,
-      loss: OldLoss): RDD[(Double, Double)] = {
-
-    val newPredError = data.zip(predictionAndError).mapPartitions { iter =>
-      iter.map { case (lp, (pred, error)) =>
-        val newPred = updatePrediction(lp.features, pred, tree, treeWeight)
-        val newError = loss.computeError(newPred, lp.label)
-        (newPred, newError)
-      }
-    }
-    newPredError
-  }
-
-  /**
-   * Add prediction from a new boosting iteration to an existing prediction.
+   * Calculate the impurity statistics for a given (feature, split) based upon left/right
+   * aggregates.
    *
-   * @param features Vector of features representing a single data point.
-   * @param prediction The existing prediction.
-   * @param tree New Decision Tree model.
-   * @param weight Tree weight.
-   * @return Updated prediction.
+   * @param stats the recycle impurity statistics for this feature's all splits,
+   *              only 'impurity' and 'impurityCalculator' are valid between each iteration
+   * @param leftImpurityCalculator left node aggregates for this (feature, split)
+   * @param rightImpurityCalculator right node aggregate for this (feature, split)
+   * @param metadata learning and dataset metadata for DecisionTree
+   * @return Impurity statistics for this (feature, split)
    */
-  def updatePrediction(
-      features: Vector,
-      prediction: Double,
-      tree: DecisionTreeRegressionModel,
-      weight: Double): Double = {
-    prediction + tree.rootNode.predictImpl(features).prediction * weight
-  }
+  private def calculateImpurityStats(
+      stats: ImpurityStats,
+      leftImpurityCalculator: ImpurityCalculator,
+      rightImpurityCalculator: ImpurityCalculator,
+      metadata: DecisionTreeMetadata): ImpurityStats = {
 
-  /**
-   * Method to calculate error of the base learner for the gradient boosting calculation.
-   * Note: This method is not used by the gradient boosting algorithm but is useful for debugging
-   * purposes.
-   * @param data Training dataset: RDD of `LabeledPoint`.
-   * @param trees Boosted Decision Tree models
-   * @param treeWeights Learning rates at each boosting iteration.
-   * @param loss evaluation metric.
-   * @return Measure of model error on data
-   */
-  def computeError(
-      data: RDD[LabeledPoint],
-      trees: Array[DecisionTreeRegressionModel],
-      treeWeights: Array[Double],
-      loss: OldLoss): Double = {
-    data.map { lp =>
-      val predicted = trees.zip(treeWeights).foldLeft(0.0) { case (acc, (model, weight)) =>
-        updatePrediction(lp.features, acc, model, weight)
-      }
-      loss.computeError(predicted, lp.label)
-    }.mean()
-  }
-
-  /**
-   * Method to compute error or loss for every iteration of gradient boosting.
-   *
-   * @param data RDD of `LabeledPoint`
-   * @param trees Boosted Decision Tree models
-   * @param treeWeights Learning rates at each boosting iteration.
-   * @param loss evaluation metric.
-   * @param algo algorithm for the ensemble, either Classification or Regression
-   * @return an array with index i having the losses or errors for the ensemble
-   *         containing the first i+1 trees
-   */
-  def evaluateEachIteration(
-      data: RDD[LabeledPoint],
-      trees: Array[DecisionTreeRegressionModel],
-      treeWeights: Array[Double],
-      loss: OldLoss,
-      algo: OldAlgo.Value): Array[Double] = {
-
-    val sc = data.sparkContext
-    val remappedData = algo match {
-      case OldAlgo.Classification => data.map(x => new LabeledPoint((x.label * 2) - 1, x.features))
-      case _ => data
-    }
-
-    val broadcastTrees = sc.broadcast(trees)
-    val localTreeWeights = treeWeights
-    val treesIndices = trees.indices
-
-    val dataCount = remappedData.count()
-    val evaluation = remappedData.map { point =>
-      treesIndices.map { idx =>
-        val prediction = broadcastTrees.value(idx)
-          .rootNode
-          .predictImpl(point.features)
-          .prediction
-        prediction * localTreeWeights(idx)
-      }
-      .scanLeft(0.0)(_ + _).drop(1)
-      .map(prediction => loss.computeError(prediction, point.label))
-    }
-    .aggregate(treesIndices.map(_ => 0.0))(
-      (aggregated, row) => treesIndices.map(idx => aggregated(idx) + row(idx)),
-      (a, b) => treesIndices.map(idx => a(idx) + b(idx)))
-    .map(_ / dataCount)
-
-    broadcastTrees.destroy(blocking = false)
-    evaluation.toArray
-  }
-
-  /**
-   * Internal method for performing regression using trees as base learners.
-   * @param input training dataset
-   * @param validationInput validation dataset, ignored if validate is set to false.
-   * @param boostingStrategy boosting parameters
-   * @param validate whether or not to use the validation dataset.
-   * @param seed Random seed.
-   * @return tuple of ensemble models and weights:
-   *         (array of decision tree models, array of model weights)
-   */
-  def boost(
-      input: RDD[LabeledPoint],
-      validationInput: RDD[LabeledPoint],
-      boostingStrategy: OldBoostingStrategy,
-      validate: Boolean,
-      seed: Long,
-      featureSubsetStrategy: String): (Array[DecisionTreeRegressionModel], Array[Double]) = {
-    val timer = new TimeTracker()
-    timer.start("total")
-    timer.start("init")
-
-    boostingStrategy.assertValid()
-
-    // Initialize gradient boosting parameters
-    val numIterations = boostingStrategy.numIterations
-    val baseLearners = new Array[DecisionTreeRegressionModel](numIterations)
-    val baseLearnerWeights = new Array[Double](numIterations)
-    val loss = boostingStrategy.loss
-    val learningRate = boostingStrategy.learningRate
-
-    // Prepare strategy for individual trees, which use regression with variance impurity.
-    val treeStrategy = boostingStrategy.treeStrategy.copy
-    val validationTol = boostingStrategy.validationTol
-    treeStrategy.algo = OldAlgo.Regression
-    treeStrategy.impurity = OldVariance
-    treeStrategy.assertValid()
-
-    // Cache input
-    val persistedInput = if (input.getStorageLevel == StorageLevel.NONE) {
-      input.persist(StorageLevel.MEMORY_AND_DISK)
-      true
+    val parentImpurityCalculator: ImpurityCalculator = if (stats == null) {
+      leftImpurityCalculator.copy.add(rightImpurityCalculator)
     } else {
-      false
+      stats.impurityCalculator
     }
 
-    // Prepare periodic checkpointers
-    val predErrorCheckpointer = new PeriodicRDDCheckpointer[(Double, Double)](
-      treeStrategy.getCheckpointInterval, input.sparkContext)
-    val validatePredErrorCheckpointer = new PeriodicRDDCheckpointer[(Double, Double)](
-      treeStrategy.getCheckpointInterval, input.sparkContext)
+    val impurity: Double = if (stats == null) {
+      parentImpurityCalculator.calculate()
+    } else {
+      stats.impurity
+    }
 
-    timer.stop("init")
+    val leftCount = leftImpurityCalculator.count
+    val rightCount = rightImpurityCalculator.count
 
-    logDebug("##########")
-    logDebug("Building tree 0")
-    logDebug("##########")
+    val totalCount = leftCount + rightCount
 
-    // Initialize tree
-    timer.start("building tree 0")
-    val firstTree = new DecisionTreeRegressor().setSeed(seed)
-    val firstTreeModel = firstTree.train(input, treeStrategy, featureSubsetStrategy)
-    val firstTreeWeight = 1.0
-    baseLearners(0) = firstTreeModel
-    baseLearnerWeights(0) = firstTreeWeight
+    // If left child or right child doesn't satisfy minimum instances per node,
+    // then this split is invalid, return invalid information gain stats.
+    if ((leftCount < metadata.minInstancesPerNode) ||
+      (rightCount < metadata.minInstancesPerNode)) {
+      return ImpurityStats.getInvalidImpurityStats(parentImpurityCalculator)
+    }
 
-    var predError: RDD[(Double, Double)] =
-      computeInitialPredictionAndError(input, firstTreeWeight, firstTreeModel, loss)
-    predErrorCheckpointer.update(predError)
-    logDebug("error of gbt = " + predError.values.mean())
+    val leftImpurity = leftImpurityCalculator.calculate() // Note: This equals 0 if count = 0
+    val rightImpurity = rightImpurityCalculator.calculate()
 
-    // Note: A model of type regression is used since we require raw prediction
-    timer.stop("building tree 0")
+    val leftWeight = leftCount / totalCount.toDouble
+    val rightWeight = rightCount / totalCount.toDouble
 
-    var validatePredError: RDD[(Double, Double)] =
-      computeInitialPredictionAndError(validationInput, firstTreeWeight, firstTreeModel, loss)
-    if (validate) validatePredErrorCheckpointer.update(validatePredError)
-    var bestValidateError = if (validate) validatePredError.values.mean() else 0.0
-    var bestM = 1
+    val gain = impurity - leftWeight * leftImpurity - rightWeight * rightImpurity
 
-    var m = 1
-    var doneLearning = false
-    while (m < numIterations && !doneLearning) {
-      // Update data with pseudo-residuals
-      val data = predError.zip(input).map { case ((pred, _), point) =>
-        LabeledPoint(-loss.gradient(pred, point.label), point.features)
-      }
+    // if information gain doesn't satisfy minimum information gain,
+    // then this split is invalid, return invalid information gain stats.
+    if (gain < metadata.minInfoGain) {
+      return ImpurityStats.getInvalidImpurityStats(parentImpurityCalculator)
+    }
 
-      timer.start(s"building tree $m")
-      logDebug("###################################################")
-      logDebug("Gradient boosting tree iteration " + m)
-      logDebug("###################################################")
+    new ImpurityStats(gain, impurity, parentImpurityCalculator,
+      leftImpurityCalculator, rightImpurityCalculator)
+  }
 
-      val dt = new DecisionTreeRegressor().setSeed(seed + m)
-      val model = dt.train(data, treeStrategy, featureSubsetStrategy)
-      timer.stop(s"building tree $m")
-      // Update partial model
-      baseLearners(m) = model
-      // Note: The setting of baseLearnerWeights is incorrect for losses other than SquaredError.
-      //       Technically, the weight should be optimized for the particular loss.
-      //       However, the behavior should be reasonable, though not optimal.
-      baseLearnerWeights(m) = learningRate
+  /**
+   * Find the best split for a node.
+   *
+   * @param binAggregates Bin statistics.
+   * @return tuple for best split: (Split, information gain, prediction at node)
+   */
+  private[tree] def binsToBestSplitX(
+      binAggregates: DTFeatureStatsAggregator,
+      splits: ObjectArrayList[Split],
+      featureIndex: Int,
+      node: LearningNode): (Split, ImpurityStats) = {
 
-      predError = updatePredictionError(
-        input, predError, baseLearnerWeights(m), baseLearners(m), loss)
-      predErrorCheckpointer.update(predError)
-      logDebug("error of gbt = " + predError.values.mean())
+    // Calculate InformationGain and ImpurityStats if current node is top node
+    val level = LearningNode.indexToLevel(node.id)
+    var gainAndImpurityStats: ImpurityStats = if (level == 0) {
+      null
+    } else {
+      node.stats
+    }
 
-      if (validate) {
-        // Stop training early if
-        // 1. Reduction in error is less than the validationTol or
-        // 2. If the error increases, that is if the model is overfit.
-        // We want the model returned corresponding to the best validation error.
-
-        validatePredError = updatePredictionError(
-          validationInput, validatePredError, baseLearnerWeights(m), baseLearners(m), loss)
-        validatePredErrorCheckpointer.update(validatePredError)
-        val currentValidateError = validatePredError.values.mean()
-        if (bestValidateError - currentValidateError < validationTol * Math.max(
-          currentValidateError, 0.01)) {
-          doneLearning = true
-        } else if (currentValidateError < bestValidateError) {
-          bestValidateError = currentValidateError
-          bestM = m + 1
+    if (binAggregates.metadata.numSplits(featureIndex) != 0) {
+      val featureIndexIdx = featureIndex
+      val numSplits = binAggregates.metadata.numSplits(featureIndex)
+      if (binAggregates.metadata.isContinuous(featureIndex)) {
+        // Cumulative sum (scanLeft) of bin statistics.
+        // Afterwards, binAggregates for a bin is the sum of aggregates for
+        // that bin + all preceding bins.
+        // val nodeFeatureOffset = binAggregates.getFeatureOffset(featureIndexIdx)
+        var splitIndex = 0
+        while (splitIndex < numSplits) {
+          binAggregates.mergeForFeature(0, splitIndex + 1, splitIndex)
+          splitIndex += 1
         }
+        // Find best split.
+        val (bestFeatureSplitIndex, bestFeatureGainStats) =
+          Range(0, numSplits).map { case splitIdx =>
+            val leftChildStats = binAggregates.getImpurityCalculator(0, splitIdx)
+            val rightChildStats =
+              binAggregates.getImpurityCalculator(0, numSplits)
+            rightChildStats.subtract(leftChildStats)
+            gainAndImpurityStats = calculateImpurityStats(gainAndImpurityStats,
+              leftChildStats, rightChildStats, binAggregates.metadata)
+            (splitIdx, gainAndImpurityStats)
+          }.maxBy(_._2.gain)
+        (splits.get(bestFeatureSplitIndex), bestFeatureGainStats)
+      } else if (binAggregates.metadata.isUnordered(featureIndex)) {
+        // unreachable for GBDT
+        // Unordered categorical feature
+        // val leftChildOffset = binAggregates.getFeatureOffset(featureIndexIdx)
+        val (bestFeatureSplitIndex, bestFeatureGainStats) =
+          Range(0, numSplits).map { splitIndex =>
+            val leftChildStats = binAggregates.getImpurityCalculator(0, splitIndex)
+            val rightChildStats = binAggregates.getImpurityCalculator(0, numSplits)
+              .subtract(leftChildStats)
+            gainAndImpurityStats = calculateImpurityStats(gainAndImpurityStats,
+              leftChildStats, rightChildStats, binAggregates.metadata)
+            (splitIndex, gainAndImpurityStats)
+          }.maxBy(_._2.gain)
+        (splits.get(bestFeatureSplitIndex), bestFeatureGainStats)
+      } else {
+        // Ordered categorical feature
+        // val nodeFeatureOffset = binAggregates.getFeatureOffset(featureIndexIdx)
+        val numCategories = binAggregates.metadata.numBins(featureIndex)
+
+        /* Each bin is one category (feature value).
+         * The bins are ordered based on centroidForCategories, and this ordering determines which
+         * splits are considered.  (With K categories, we consider K - 1 possible splits.)
+         *
+         * centroidForCategories is a list: (category, centroid)
+         */
+        val centroidForCategories = Range(0, numCategories).map { case featureValue =>
+          val categoryStats =
+            binAggregates.getImpurityCalculator(0, featureValue)
+          val centroid = if (categoryStats.count != 0) {
+            if (binAggregates.metadata.isMulticlass) {
+              // unreachable for GBDT
+              // multiclass classification
+              // For categorical variables in multiclass classification,
+              // the bins are ordered by the impurity of their corresponding labels.
+              categoryStats.calculate()
+            } else if (binAggregates.metadata.isClassification) {
+              // unreachable for GBDT
+              // binary classification
+              // For categorical variables in binary classification,
+              // the bins are ordered by the count of class 1.
+              categoryStats.stats(1)
+            } else {
+              // regression
+              // For categorical variables in regression and binary classification,
+              // the bins are ordered by the prediction.
+              categoryStats.predict
+            }
+          } else {
+            Double.MaxValue
+          }
+          (featureValue, centroid)
+        }
+
+        logDebug(s"Centroids for categorical variable: ${centroidForCategories.mkString(",")}")
+
+        // bins sorted by centroids
+        val categoriesSortedByCentroid = centroidForCategories.toList.sortBy(_._2)
+
+        logDebug("Sorted centroids for categorical variable = " +
+          categoriesSortedByCentroid.mkString(","))
+
+        // Cumulative sum (scanLeft) of bin statistics.
+        // Afterwards, binAggregates for a bin is the sum of aggregates for
+        // that bin + all preceding bins.
+        var splitIndex = 0
+        while (splitIndex < numSplits) {
+          val currentCategory = categoriesSortedByCentroid(splitIndex)._1
+          val nextCategory = categoriesSortedByCentroid(splitIndex + 1)._1
+          binAggregates.mergeForFeature(0, nextCategory, currentCategory)
+          splitIndex += 1
+        }
+        // lastCategory = index of bin with total aggregates for this (node, feature)
+        val lastCategory = categoriesSortedByCentroid.last._1
+        // Find best split.
+        val (bestFeatureSplitIndex, bestFeatureGainStats) =
+          Range(0, numSplits).map { splitIndex =>
+            val featureValue = categoriesSortedByCentroid(splitIndex)._1
+            val leftChildStats =
+              binAggregates.getImpurityCalculator(0, featureValue)
+            val rightChildStats =
+              binAggregates.getImpurityCalculator(0, lastCategory)
+            rightChildStats.subtract(leftChildStats)
+            gainAndImpurityStats = calculateImpurityStats(gainAndImpurityStats,
+              leftChildStats, rightChildStats, binAggregates.metadata)
+            (splitIndex, gainAndImpurityStats)
+          }.maxBy(_._2.gain)
+        val categoriesForSplit =
+          categoriesSortedByCentroid.map(_._1.toDouble).slice(0, bestFeatureSplitIndex + 1)
+        val bestFeatureSplit =
+          new CategoricalSplit(featureIndex, categoriesForSplit.toArray, numCategories)
+        (bestFeatureSplit, bestFeatureGainStats)
       }
-      m += 1
-    }
-
-    timer.stop("total")
-
-    logInfo("Internal timing for DecisionTree:")
-    logInfo(s"$timer")
-
-    predErrorCheckpointer.unpersistDataSet()
-    predErrorCheckpointer.deleteAllCheckpoints()
-    validatePredErrorCheckpointer.unpersistDataSet()
-    validatePredErrorCheckpointer.deleteAllCheckpoints()
-    if (persistedInput) input.unpersist()
-
-    if (validate) {
-      (baseLearners.slice(0, bestM), baseLearnerWeights.slice(0, bestM))
     } else {
-      (baseLearners, baseLearnerWeights)
+      // If no valid splits for features, then this split is invalid,
+      // return invalid information gain stats.  Take any split and continue.
+      // Splits is empty, so arbitrarily choose to split on any threshold
+      // val parentImpurityCalculator = binAggregates.getParentImpurityCalculator()
+      // No split, no need to merge
+      val featureIndexIdx = featureIndex
+      val numSplits = binAggregates.metadata.numSplits(featureIndex)
+      // val nodeFeatureOffset = binAggregates.getFeatureOffset(featureIndexIdx)
+      val parentImpurityCalculator = binAggregates.getImpurityCalculator(0, numSplits)
+      if (binAggregates.metadata.isContinuous(featureIndex)) {
+        (new ContinuousSplit(featureIndex, 0),
+          ImpurityStats.getInvalidImpurityStats(parentImpurityCalculator))
+      } else {
+        // Seems like unreachable for GBDT (as well as RF)
+        val numCategories = binAggregates.metadata.featureArity(featureIndex)
+        (new CategoricalSplit(featureIndex, Array(), numCategories),
+          ImpurityStats.getInvalidImpurityStats(parentImpurityCalculator))
+      }
     }
+
+    // For each (feature, split), calculate the gain, and select the best (feature, split).
   }
 }
