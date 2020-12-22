@@ -608,9 +608,7 @@ private[spark] object DecisionForest extends Logging {
             val firstPoint = firstPointOption.get
             val sampleId = firstPoint.sampleId
 
-            // val topNodesForGroupBcv = topNodesForGroupBc.value
             val splitsBcv = if (bcVariables) splitsBc.get.value else splitsOption.get
-            // val treeToNodeToIndexInfoBcv = treeToNodeToIndexInfoBc.value
             binSeqOp(nodeStatsAggregators, firstPoint, splitsBcv, sampleId)
             // iterator all instances in current partition and update aggregate stats
             points.foreach(binSeqOp(nodeStatsAggregators, _, splitsBcv, sampleId))
