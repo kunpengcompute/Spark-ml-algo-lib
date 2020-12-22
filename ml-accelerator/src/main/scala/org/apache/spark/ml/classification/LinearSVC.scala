@@ -19,18 +19,16 @@ package org.apache.spark.ml.classification
 
 import scala.collection.mutable
 
-import breeze.linalg.{norm, DenseVector => BDV}
+import breeze.linalg.{DenseVector => BDV}
 import breeze.optimize.{CachedDiffFunction, OWLQNX => BreezeOWLQN}
 
 import org.apache.spark.SparkException
 import org.apache.spark.annotation.{Experimental, Since}
-import org.apache.spark.internal.Logging
 import org.apache.spark.ml.feature.Instance
 import org.apache.spark.ml.linalg._
-import org.apache.spark.ml.optim.aggregator.{HingeAggregator, HingeAggregatorX}
-import org.apache.spark.ml.optim.loss.{L2Regularization, RDDLossFunction, RDDLossFunctionX}
+import org.apache.spark.ml.optim.aggregator.HingeAggregatorX
+import org.apache.spark.ml.optim.loss.{L2Regularization, RDDLossFunctionX}
 import org.apache.spark.ml.param._
-import org.apache.spark.ml.param.shared._
 import org.apache.spark.ml.util._
 import org.apache.spark.mllib.linalg.VectorImplicits._
 import org.apache.spark.mllib.stat.MultivariateOnlineSummarizer

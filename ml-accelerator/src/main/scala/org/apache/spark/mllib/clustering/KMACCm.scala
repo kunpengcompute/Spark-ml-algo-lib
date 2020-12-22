@@ -16,12 +16,9 @@
  */
 package org.apache.spark.mllib.clustering
 
-import java.util.Date
-
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.mllib.linalg.BLAS.{axpy, scal}
 import org.apache.spark.mllib.linalg.Vectors
-import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.rdd.RDD
 
 
@@ -78,7 +75,6 @@ object KMACCm {
         sampleRate = DEFAULT_SAMPLE_RATE
     }
 
-    // println(sampleRate)
     while (iteration < maxIterations && !converged) {
       val s = Array.fill(cl * cl)(0.0)
       KmeansUtil.generateDisMatrix(centers, s)

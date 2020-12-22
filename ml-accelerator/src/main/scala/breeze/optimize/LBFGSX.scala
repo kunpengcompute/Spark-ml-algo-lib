@@ -18,10 +18,8 @@ package breeze.optimize
 */
 
 import breeze.linalg._
-import breeze.linalg.operators.OpMulMatrix
 import breeze.math.MutableInnerProductModule
-import breeze.optimize.FirstOrderMinimizerX.{ConvergenceCheck, ConvergenceReason}
-import breeze.optimize.linear.PowerMethod
+import breeze.optimize.FirstOrderMinimizerX.ConvergenceCheck
 import breeze.util.SerializableLogging
 
 /**

@@ -19,10 +19,9 @@ package org.apache.spark.ml.tree.impl
 
 import java.io.IOException
 
-import scala.collection.{mutable, SeqView}
-import scala.util.{Random, Try}
+import scala.collection.mutable
+import scala.util.Random
 
-import org.apache.spark.Partitioner
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.classification.DecisionTreeClassificationModel
 import org.apache.spark.ml.feature.LabeledPoint
@@ -34,7 +33,6 @@ import org.apache.spark.mllib.tree.configuration.{Algo => OldAlgo, Strategy => O
 import org.apache.spark.mllib.tree.impurity.ImpurityCalculator
 import org.apache.spark.mllib.tree.model.ImpurityStats
 import org.apache.spark.rdd.RDD
-import org.apache.spark.storage.StorageLevel
 import org.apache.spark.util.random.{SamplingUtils, XORShiftRandom}
 
 /**

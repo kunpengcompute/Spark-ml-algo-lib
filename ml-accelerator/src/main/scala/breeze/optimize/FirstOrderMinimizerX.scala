@@ -1,14 +1,11 @@
 // scalastyle:off header.matches
 package breeze.optimize
 
-import java.util.Date
-
 import scala.language.implicitConversions
 
 import FirstOrderMinimizerX.ConvergenceCheck
 import breeze.linalg.norm
-import breeze.math.{MutableEnumeratedCoordinateField, MutableFiniteCoordinateField, MutableInnerProductModule, NormedModule}
-import breeze.stats.distributions.{RandBasis, ThreadLocalRandomGenerator}
+import breeze.math.{MutableInnerProductModule, NormedModule}
 import breeze.util.Implicits._
 import breeze.util.SerializableLogging
 

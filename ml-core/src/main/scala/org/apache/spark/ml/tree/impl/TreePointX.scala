@@ -144,7 +144,6 @@ private[spark] object TreePointX {
       thresholds: Array[Array[Double]],
       featureArity: Array[Int]): TreePointX = {
     val numFeatures = labeledPoint.features.size
-    // val arr = new Array[Char](numFeatures)
     val binFeaturesMap = new Int2CharOpenHashMap()
     var featureIndex = 0
     while (featureIndex < numFeatures) {
@@ -157,7 +156,6 @@ private[spark] object TreePointX {
       featureIndex += 1
     }
     val binFeatures = new BinnedFeatureFastHashMap(binFeaturesMap)
-    // binFeatures.defaultReturnValue('\u0000')
     new TreePointX(labeledPoint.label, binFeatures)
   }
 

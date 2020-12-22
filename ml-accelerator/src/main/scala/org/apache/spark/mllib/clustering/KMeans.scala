@@ -17,8 +17,6 @@
 
 package org.apache.spark.mllib.clustering
 
-import java.util.Date
-
 import scala.collection.mutable.ArrayBuffer
 
 import org.apache.spark.annotation.Since
@@ -244,7 +242,6 @@ class KMeans private(
       data: RDD[VectorWithNorm],
       instr: Option[Instrumentation[NewKMeans]]): KMeansModel = {
 
-    // println("KmeansX")
     val sc = data.sparkContext
     val initStartTime = System.nanoTime()
     val centers = initialModel match {
@@ -326,10 +323,6 @@ class KMeans private(
         iteration += 1
       }
     }
-//        centers.foreach(t => println(t.vector.toArray.toList.toString()))
-//        println("****************************")
-//        centersR.foreach(t => println(t.vector.toArray.toList.toString()))
-
 
     val iterationTimeInSeconds = (System.nanoTime() - iterationStartTime) / 1e9
     logInfo(f"Iterations took $iterationTimeInSeconds%.3f seconds.")

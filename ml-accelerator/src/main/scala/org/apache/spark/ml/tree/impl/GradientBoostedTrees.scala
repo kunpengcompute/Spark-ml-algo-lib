@@ -24,7 +24,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.ml.feature.LabeledPoint
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.regression.{DecisionTreeRegressionModel, DecisionTreeRegressor}
-import org.apache.spark.ml.tree.{Split, TreeEnsembleParams}
+import org.apache.spark.ml.tree.Split
 import org.apache.spark.ml.tree.impl.RandomForest4GBDTX.findSplits
 import org.apache.spark.mllib.tree.configuration.{Algo => OldAlgo}
 import org.apache.spark.mllib.tree.configuration.{BoostingStrategy => OldBoostingStrategy}

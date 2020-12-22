@@ -117,7 +117,6 @@ object GradientBoostedTreesCore extends Logging{
         // Cumulative sum (scanLeft) of bin statistics.
         // Afterwards, binAggregates for a bin is the sum of aggregates for
         // that bin + all preceding bins.
-        // val nodeFeatureOffset = binAggregates.getFeatureOffset(featureIndexIdx)
         var splitIndex = 0
         while (splitIndex < numSplits) {
           binAggregates.mergeForFeature(0, splitIndex + 1, splitIndex)
@@ -151,7 +150,6 @@ object GradientBoostedTreesCore extends Logging{
         (splits.get(bestFeatureSplitIndex), bestFeatureGainStats)
       } else {
         // Ordered categorical feature
-        // val nodeFeatureOffset = binAggregates.getFeatureOffset(featureIndexIdx)
         val numCategories = binAggregates.metadata.numBins(featureIndex)
 
         /* Each bin is one category (feature value).
@@ -235,7 +233,6 @@ object GradientBoostedTreesCore extends Logging{
       // No split, no need to merge
       val featureIndexIdx = featureIndex
       val numSplits = binAggregates.metadata.numSplits(featureIndex)
-      // val nodeFeatureOffset = binAggregates.getFeatureOffset(featureIndexIdx)
       val parentImpurityCalculator = binAggregates.getImpurityCalculator(0, numSplits)
       if (binAggregates.metadata.isContinuous(featureIndex)) {
         (new ContinuousSplit(featureIndex, 0),
