@@ -28,14 +28,12 @@ Building And Package
 
 
 
-Contact
-=======
+Contribution guidelines
+========
 
-Spark is distributed through GitHub. For the latest version, a bug tracker,
-and other information, see
+Please use GitHub [issues](https://github.com/kunpengcompute/Spark-ml-algo-lib/issues) for tracking requests and bugs.
 
-  http://spark.apache.org/
+More Information
+========
 
-or the repository at
-
-  https://github.com/apache/spark/tree/v2.3.2
+For further assistance, you can send email to kunpengcompute@huawei.com.
