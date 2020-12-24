@@ -1,3 +1,4 @@
+// scalastyle:off header.matches
 /*
  * This file to You under the Apache License, Version 2.0;
  * you may not use this file except in compliance with
@@ -6,6 +7,7 @@
  */
 
 package org.apache.spark.ml.tree.impl
+
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.ints.IntArrayList

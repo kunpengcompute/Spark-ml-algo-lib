@@ -17,13 +17,10 @@
 
 package org.apache.spark.ml.optim.aggregator
 
-import java.util.Date
-
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList
 
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.ml.feature.Instance
-import org.apache.spark.ml.linalg
 import org.apache.spark.ml.linalg._
 
 /**

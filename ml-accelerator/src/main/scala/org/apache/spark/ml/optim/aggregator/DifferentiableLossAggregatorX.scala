@@ -16,7 +16,6 @@
  */
 package org.apache.spark.ml.optim.aggregator
 
-import breeze.linalg.{norm, DenseVector => BDV}
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList
 
 import org.apache.spark.ml.linalg.{BLAS, Vector, Vectors}
@@ -43,7 +42,8 @@ private[ml] trait DifferentiableLossAggregatorX[
   protected val dim: Int
 
   /** Array of gradient values that are mutated when new instances are added to the aggregator. */
-  protected lazy val gradientSumArray = DoubleArrayList.wrap(Array.ofDim[Double](dim))
+  protected lazy val gradientSumArray: DoubleArrayList =
+    DoubleArrayList.wrap(Array.ofDim[Double](dim))
 
   /** Add a single data point to this aggregator. */
   def add(instance: Datum): Agg
@@ -57,9 +57,9 @@ private[ml] trait DifferentiableLossAggregatorX[
       weightSum += other.weightSum
       lossSum += other.lossSum
 
+      var i = 0
       val localThisGradientSumArray = this.gradientSumArray
       val localOtherGradientSumArray = other.gradientSumArray
-      var i = 0
       while (i < dim) {
         val e = localThisGradientSumArray.getDouble(i)
         localThisGradientSumArray.set(i, e + localOtherGradientSumArray.getDouble(i))
