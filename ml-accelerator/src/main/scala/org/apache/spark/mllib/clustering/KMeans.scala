@@ -1,4 +1,10 @@
 /*
+* Copyright (C) 2021. Huawei Technologies Co., Ltd.
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* */
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -266,14 +272,10 @@ class KMeans private(
 
     // Execute iterations of Lloyd's algorithm until converged
     if (cl > 1) {
-      var method = "default"
-      val temp = data.sparkContext.getConf.getOption("spark.sophon.Kmeans.optMethod")
-      try {
-        method = temp.get
-      }
-      catch {
-        case x: Exception =>
-          method = "default"
+      val methodEnum = Array("default", "allData")
+      val method = sc.getConf.get("spark.sophon.Kmeans.optMethod", "default")
+      if (!methodEnum.contains(method)) {
+        throw new Exception("'spark.sophon.Kmeans.optMethod' value is invalid")
       }
       if (method == "allData") {
         KMACCm.compute(data, centers, maxIterations, epsilon, false)

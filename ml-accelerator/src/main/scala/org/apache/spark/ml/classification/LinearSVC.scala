@@ -1,4 +1,10 @@
 /*
+* Copyright (C) 2021. Huawei Technologies Co., Ltd.
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* */
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -24,6 +30,7 @@ import breeze.optimize.{CachedDiffFunction, OWLQNX => BreezeOWLQN}
 
 import org.apache.spark.SparkException
 import org.apache.spark.annotation.{Experimental, Since}
+import org.apache.spark.ml.StaticUtils
 import org.apache.spark.ml.feature.Instance
 import org.apache.spark.ml.linalg._
 import org.apache.spark.ml.optim.aggregator.HingeAggregatorX
@@ -165,8 +172,10 @@ class LinearSVC @Since("2.2.0") (
 
     val (summarizer, labelSummarizer) = {
       val seqOp = (c: (MultivariateOnlineSummarizer, MultiClassSummarizer),
-                   instance: Instance) =>
-        (c._1.add(instance.features, instance.weight), c._2.add(instance.label, instance.weight))
+                   instance: Instance) => {
+        (c._1.add(instance.features, instance.weight),
+          c._2.add(instance.label, instance.weight + StaticUtils.ZERO_DOUBLE))
+      }
 
       val combOp = (c1: (MultivariateOnlineSummarizer, MultiClassSummarizer),
                     c2: (MultivariateOnlineSummarizer, MultiClassSummarizer)) =>
@@ -220,15 +229,20 @@ class LinearSVC @Since("2.2.0") (
 
       def regParamL1Fun = (index: Int) => 0D
       val optimizer = new BreezeOWLQN[Int, BDV[Double]]($(maxIter), 10, regParamL1Fun, $(tol))
-      val u = instances.sparkContext.getConf.getOption("spark.sophon.LinearSVC.inertiaCoefficient")
-      val icOld = ic
+
+      var u = ic
       try {
-        this.ic = u.get.toDouble
+        u = instances.sparkContext.getConf
+          .getDouble("spark.sophon.LinearSVC.inertiaCoefficient", ic)
+        if (u < 0.0) {
+          throw new Exception
+        }
       }
       catch {
-        case x : Exception =>
-          this.ic = icOld
+        case x: Exception =>
+          throw new Exception("'spark.sophon.LinearSVC.inertiaCoefficient' value is invalid")
       }
+      this.ic = u
 
       optimizer.setInertiaCoefficient(ic)
       val initialCoefWithIntercept = Vectors.zeros(numFeaturesPlusIntercept)

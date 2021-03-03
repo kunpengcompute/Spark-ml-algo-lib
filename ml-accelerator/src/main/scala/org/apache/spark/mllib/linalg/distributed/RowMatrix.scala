@@ -1,4 +1,10 @@
 /*
+* Copyright (C) 2021. Huawei Technologies Co., Ltd.
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* */
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -31,6 +37,7 @@ import com.github.fommil.netlib.BLAS.{getInstance => blas}
 
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
+import org.apache.spark.ml.StaticUtils
 import org.apache.spark.mllib.linalg._
 import org.apache.spark.mllib.stat.{MultivariateOnlineSummarizer, MultivariateStatisticalSummary, Statistics}
 import org.apache.spark.rdd.RDD
@@ -118,7 +125,7 @@ class RowMatrix @Since("1.0.0")(
    */
   @Since("1.0.0")
   def computeGramianMatrix(): Matrix = {
-    if (rows.map(_.isInstanceOf[SparseVector]).reduce((x, y) => x == 1 & y == 1)) {
+    if (rows.map(_.isInstanceOf[SparseVector]).reduce((x, y) => x && y)) {
       RowMatrixUtil.computeGramMatrixAsDenseMatrix(
         rows.map(_.asInstanceOf[SparseVector]), numCols().toInt)
     } else {
@@ -326,7 +333,7 @@ class RowMatrix @Since("1.0.0")(
           eigenValueDecompositionOnDenseMatrix(n, k, tol, maxIter)
         } else {
           val G = computeDenseGramianMatrix().asBreeze.asInstanceOf[BDM[Double]]
-          val driverCores = rows.sparkContext.getConf.getInt("spark.driver.cores", -1)
+          val driverCores = RowMatrixUtil.parseExtraParams(rows.sparkContext, -1)
           EigenValueDecomposition.symmetricEigsLocal(G, n, k, tol, maxIter, driverCores)
         }
       case SVDMode.LocalLAPACK =>
@@ -434,7 +441,7 @@ class RowMatrix @Since("1.0.0")(
     // full fill the covariance matrix
     val fullCovariance = new Array[Double](n * n)
     val m1 = m - 1.0
-    for(i <- 0 until n) {
+    for(i <- StaticUtils.ZERO_INT until n) {
       val srcOffset = (2 * n - i + 1) * i / 2
       fullCovariance(i * n + i) = covariance(srcOffset) / m1
       for(j <- i + 1 until n) {
