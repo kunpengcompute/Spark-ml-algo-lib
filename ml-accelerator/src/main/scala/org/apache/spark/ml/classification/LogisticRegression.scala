@@ -1,4 +1,10 @@
 /*
+* Copyright (C) 2021. Huawei Technologies Co., Ltd.
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* */
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -27,6 +33,7 @@ import breeze.optimize.{CachedDiffFunction, LBFGSL, OWLQNL}
 import org.apache.spark.SparkException
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
+import org.apache.spark.ml.StaticUtils
 import org.apache.spark.ml.feature.Instance
 import org.apache.spark.ml.linalg._
 import org.apache.spark.ml.optim.aggregator.LogisticAggregatorX
@@ -269,7 +276,7 @@ class LogisticRegression @Since("1.2.0") (
     val instances: RDD[Instance] =
       dataset.select(col($(labelCol)), w, col($(featuresCol))).rdd.map {
         case Row(label: Double, weight: Double, features: Vector) =>
-          Instance(label, weight, features)
+          Instance(label, weight + StaticUtils.ZERO_DOUBLE, features)
       }
 
     if (handlePersistence) instances.persist(StorageLevel.MEMORY_AND_DISK)

@@ -1,4 +1,11 @@
 // scalastyle:off header.matches
+/*
+* Copyright (C) 2021. Huawei Technologies Co., Ltd.
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* */
+
 package breeze.optimize
 
 import scala.language.implicitConversions

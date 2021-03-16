@@ -1,4 +1,10 @@
 /*
+* Copyright (C) 2021. Huawei Technologies Co., Ltd.
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* */
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -65,14 +71,18 @@ object KMACCm {
     val cl = centers.length
     val p = Array.fill(cl)(0.0)
     val sc = data.sparkContext
+
     var sampleRate = DEFAULT_SAMPLE_RATE
-    val temp = data.sparkContext.getConf.getOption("spark.sophon.Kmeans.sampleRate")
     try {
-      sampleRate = temp.get.toDouble
+      sampleRate = sc.getConf.getDouble("spark.sophon.Kmeans.sampleRate",
+        DEFAULT_SAMPLE_RATE)
+      if (sampleRate < 0.0) {
+        throw new Exception
+      }
     }
     catch {
       case x: Exception =>
-        sampleRate = DEFAULT_SAMPLE_RATE
+        throw new Exception("'spark.sophon.Kmeans.sampleRate' value is invalid")
     }
 
     while (iteration < maxIterations && !converged) {
