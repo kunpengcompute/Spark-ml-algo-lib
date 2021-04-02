@@ -14,7 +14,7 @@ You can find the latest documentation, including a programming guide, on the pro
 
 
 
-Building And Packageing
+Building and Packaging
 ====================
 
 (1) Build the project under the "Spark-ml-algo-lib" directory:
