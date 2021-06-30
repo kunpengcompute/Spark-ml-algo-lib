@@ -74,7 +74,7 @@ object KMACCm {
 
     var sampleRate = DEFAULT_SAMPLE_RATE
     try {
-      sampleRate = sc.getConf.getDouble("spark.sophon.Kmeans.sampleRate",
+      sampleRate = sc.getConf.getDouble("spark.boostkit.Kmeans.sampleRate",
         DEFAULT_SAMPLE_RATE)
       if (sampleRate < 0.0) {
         throw new Exception
@@ -82,7 +82,7 @@ object KMACCm {
     }
     catch {
       case x: Exception =>
-        throw new Exception("'spark.sophon.Kmeans.sampleRate' value is invalid")
+        throw new Exception("'spark.boostkit.Kmeans.sampleRate' value is invalid")
     }
 
     while (iteration < maxIterations && !converged) {

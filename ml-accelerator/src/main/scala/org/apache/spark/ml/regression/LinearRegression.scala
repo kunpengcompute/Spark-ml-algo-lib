@@ -27,6 +27,7 @@ import scala.collection.mutable
 
 import breeze.linalg.{DenseVector => BDV}
 import breeze.optimize.{CachedDiffFunction, LBFGSL, OWLQNL}
+import org.apache.hadoop.fs.Path
 
 import org.apache.spark.SparkException
 import org.apache.spark.annotation.Since
@@ -42,10 +43,12 @@ import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.util._
 import org.apache.spark.mllib.linalg.VectorImplicits._
 import org.apache.spark.mllib.stat.MultivariateOnlineSummarizer
+import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Dataset, Row}
 import org.apache.spark.sql.functions._
 import org.apache.spark.storage.StorageLevel
+import org.apache.spark.util.VersionUtils.majorMinorVersion
 
 /**
  * Linear regression.
@@ -562,4 +565,148 @@ object LinearRegression extends DefaultParamsReadable[LinearRegression] {
 
   /** Set of loss function names that LinearRegression supports. */
   private[regression] val supportedLosses = Array(SquaredError, Huber)
+}
+
+/**
+ * Model produced by [[LinearRegression]].
+ */
+@Since("1.3.0")
+class LinearRegressionModel private[ml] (
+    @Since("1.4.0") override val uid: String,
+    @Since("2.0.0") val coefficients: Vector,
+    @Since("1.3.0") val intercept: Double,
+    @Since("2.3.0") val scale: Double)
+  extends RegressionModel[Vector, LinearRegressionModel]
+    with LinearRegressionParams with MLWritable {
+
+  private[ml] def this(uid: String, coefficients: Vector, intercept: Double) =
+    this(uid, coefficients, intercept, 1.0)
+
+  private var trainingSummary: Option[LinearRegressionTrainingSummary] = None
+
+  override val numFeatures: Int = coefficients.size
+
+  /**
+   * Gets summary (e.g. residuals, mse, r-squared ) of model on training set. An exception is
+   * thrown if `trainingSummary == None`.
+   */
+  @Since("1.5.0")
+  def summary: LinearRegressionTrainingSummary = trainingSummary.getOrElse {
+    throw new SparkException("No training summary available for this LinearRegressionModel")
+  }
+
+  private[regression]
+  def setSummary(summary: Option[LinearRegressionTrainingSummary]): this.type = {
+    this.trainingSummary = summary
+    this
+  }
+
+  /** Indicates whether a training summary exists for this model instance. */
+  @Since("1.5.0")
+  def hasSummary: Boolean = trainingSummary.isDefined
+
+  /**
+   * Evaluates the model on a test dataset.
+   *
+   * @param dataset Test dataset to evaluate model on.
+   */
+  @Since("2.0.0")
+  def evaluate(dataset: Dataset[_]): LinearRegressionSummary = {
+    // Handle possible missing or invalid prediction columns
+    val (summaryModel, predictionColName) = findSummaryModelAndPredictionCol()
+    new LinearRegressionSummary(summaryModel.transform(dataset), predictionColName,
+      $(labelCol), $(featuresCol), summaryModel, Array(0D))
+  }
+
+  /**
+   * If the prediction column is set returns the current model and prediction column,
+   * otherwise generates a new column and sets it as the prediction column on a new copy
+   * of the current model.
+   */
+  private[regression] def findSummaryModelAndPredictionCol(): (LinearRegressionModel, String) = {
+    $(predictionCol) match {
+      case "" =>
+        val predictionColName = "prediction_" + java.util.UUID.randomUUID.toString
+        (copy(ParamMap.empty).setPredictionCol(predictionColName), predictionColName)
+      case p => (this, p)
+    }
+  }
+
+
+  override protected def predict(features: Vector): Double = {
+    dot(features, coefficients) + intercept
+  }
+
+  @Since("1.4.0")
+  override def copy(extra: ParamMap): LinearRegressionModel = {
+    val newModel = copyValues(new LinearRegressionModel(uid, coefficients, intercept), extra)
+    newModel.setSummary(trainingSummary).setParent(parent)
+  }
+
+  /**
+   * Returns a [[org.apache.spark.ml.util.MLWriter]] instance for this ML instance.
+   *
+   * For [[LinearRegressionModel]], this does NOT currently save the training [[summary]].
+   * An option to save [[summary]] may be added in the future.
+   *
+   * This also does not save the [[parent]] currently.
+   */
+  @Since("1.6.0")
+  override def write: MLWriter = new LinearRegressionModel.LinearRegressionModelWriter(this)
+}
+
+@Since("1.6.0")
+object LinearRegressionModel extends MLReadable[LinearRegressionModel] {
+
+  @Since("1.6.0")
+  override def read: MLReader[LinearRegressionModel] = new LinearRegressionModelReader
+
+  @Since("1.6.0")
+  override def load(path: String): LinearRegressionModel = super.load(path)
+
+  /** [[MLWriter]] instance for [[LinearRegressionModel]] */
+  private[LinearRegressionModel] class LinearRegressionModelWriter(instance: LinearRegressionModel)
+    extends MLWriter with Logging {
+
+    private case class Data(intercept: Double, coefficients: Vector, scale: Double)
+
+    override protected def saveImpl(path: String): Unit = {
+      // Save metadata and Params
+      DefaultParamsWriter.saveMetadata(instance, path, sc)
+      // Save model data: intercept, coefficients, scale
+      val data = Data(instance.intercept, instance.coefficients, instance.scale)
+      val dataPath = new Path(path, "data").toString
+      sparkSession.createDataFrame(Seq(data)).repartition(1).write.parquet(dataPath)
+    }
+  }
+
+  private class LinearRegressionModelReader extends MLReader[LinearRegressionModel] {
+
+    /** Checked against metadata when loading model */
+    private val className = classOf[LinearRegressionModel].getName
+
+    override def load(path: String): LinearRegressionModel = {
+      val metadata = DefaultParamsReader.loadMetadata(path, sc, className)
+
+      val dataPath = new Path(path, "data").toString
+      val data = sparkSession.read.format("parquet").load(dataPath)
+      val (majorVersion, minorVersion) = majorMinorVersion(metadata.sparkVersion)
+      val model = if (majorVersion < 2 || (majorVersion == 2 && minorVersion <= 2)) {
+        // Spark 2.2 and before
+        val Row(intercept: Double, coefficients: Vector) =
+          MLUtils.convertVectorColumnsToML(data, "coefficients")
+            .select("intercept", "coefficients")
+            .head()
+        new LinearRegressionModel(metadata.uid, coefficients, intercept)
+      } else {
+        // Spark 2.3 and later
+        val Row(intercept: Double, coefficients: Vector, scale: Double) =
+          data.select("intercept", "coefficients", "scale").head()
+        new LinearRegressionModel(metadata.uid, coefficients, intercept, scale)
+      }
+
+      DefaultParamsReader.getAndSetParams(model, metadata)
+      model
+    }
+  }
 }

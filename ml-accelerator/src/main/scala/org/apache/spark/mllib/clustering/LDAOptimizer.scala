@@ -352,7 +352,6 @@ final class OnlineLDAOptimizer extends LDAOptimizer with Logging {
 
     timer.stop("stats-treeAggregate")
 
-    timer.start("update-lambda")
     expElogbetaBc.destroy(false)
 
     if (nonEmptyDocsN == 0) {
@@ -360,7 +359,7 @@ final class OnlineLDAOptimizer extends LDAOptimizer with Logging {
       // Therefore, there is no need to update any of the model parameters
       return this
     }
-
+    timer.start("update-lambda")
     val batchResult = statsSum *:* expElogbeta.t
     // Note that this is an optimization to avoid batch.count
     val batchSize = (miniBatchFraction * corpusSize).ceil.toInt
