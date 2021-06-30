@@ -7,25 +7,31 @@ Introduction
 
 The machine learning algorithm library running on Kunpeng processors is an acceleration library that provides a rich set of high-level tools for machine learning algorithms. It is based on the original APIs of Apache [Spark 2.3.2](https://github.com/apache/spark/tree/v2.3.2) and [breeze 0.13.1](https://github.com/scalanlp/breeze/tree/releases/v0.13.1). The acceleration library for greatly improves the computing power in big data scenarios.
 
-The library provides nine machine learning algorithms: support vector machine (SVM), random forest classifier (RFC), gradient boosting decision tree (GBDT), decision tree (DT), K-means clustering, linear regression, logistic regression algorithm, principal component analysis (PCA), singular value decomposition (SVD), latent dirichlet allocation (LDA), prefix-projected pattern prowth (Prefix-Span), alternating least squares (ALS), and K-nearest neighbors (KNN). You can find the latest documentation on the project web page. This README file contains only basic setup instructions.
+The library provides eighteen machine learning algorithms: support vector machine (SVM), random forest classifier (RFC), gradient boosting decision tree (GBDT), decision tree (DT), K-means clustering, linear regression, logistic regression algorithm, principal component analysis (PCA), singular value decomposition (SVD), latent dirichlet allocation (LDA), prefix-projected pattern prowth (Prefix-Span), alternating least squares (ALS), K-nearest neighbors (KNN)， Covariance, Density-based spatial clustering of applicaitons with noise (DBSCAN), Pearson, Spearman, and XGboost. You can find the latest documentation on the project web page. This README file contains only basic setup instructions.
 You can find the latest documentation, including a programming guide, on the project web page. This README file only contains basic setup instructions.
 
 
 
 
 
-Building and Packaging
+Building And Packageing
 ====================
 
 (1) Build the project under the "Spark-ml-algo-lib" directory:
 
     mvn clean package
 
+(2) Build XGBoost project under the "Spark-ml-algo-lib/ml-xgboost/jvm-packages" directory:
 
-(2) Obtain "sophon-ml-core_2.11-1.2.0.jar" under the "Spark-ml-algo-lib/ml-core/target" directory.
+    mvn clean package
 
-   Obtain "sophon-ml-acc_2.11-1.2.0.jar" under the "Spark-ml-algo-lib/ml-accelerator/target" directory.
+(3) Obtain "boostkit-ml-core_2.11-1.3.0-spark2.3.2.jar" under the "Spark-ml-algo-lib/ml-core/target" directory.
 
+   Obtain "boostkit-ml-acc_2.11-1.3.0-spark2.3.2.jar" under the "Spark-ml-algo-lib/ml-accelerator/target" directory.
+
+   Obtain "boostkit-xgboost4j_2.11-1.3.0.jar" under the "Spark-ml-algo-lib/ml-xgboost/jvm-packages/boostkit-xgboost4j/target" directory.
+
+   Obtain "boostkit-xgboost4j-spark2.3.2_2.11-1.3.0.jar" under the "Spark-ml-algo-lib/ml-xgboost/jvm-packages/boostkit-xgboost4j-spark/target" directory.
 
 
 Contribution Guidelines
