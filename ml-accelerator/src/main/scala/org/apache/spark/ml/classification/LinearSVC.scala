@@ -233,14 +233,14 @@ class LinearSVC @Since("2.2.0") (
       var u = ic
       try {
         u = instances.sparkContext.getConf
-          .getDouble("spark.sophon.LinearSVC.inertiaCoefficient", ic)
+          .getDouble("spark.boostkit.LinearSVC.inertiaCoefficient", ic)
         if (u < 0.0) {
           throw new Exception
         }
       }
       catch {
         case x: Exception =>
-          throw new Exception("'spark.sophon.LinearSVC.inertiaCoefficient' value is invalid")
+          throw new Exception("'spark.boostkit.LinearSVC.inertiaCoefficient' value is invalid")
       }
       this.ic = u
 
