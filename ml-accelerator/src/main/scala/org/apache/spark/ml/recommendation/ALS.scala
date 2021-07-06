@@ -995,26 +995,27 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
 
     var unpersistCycle = DEFAULT_UNPERSIST_CYCLE
     try {
-      unpersistCycle = sc.getConf.getInt("spark.sophon.ALS.unpersistCycle", DEFAULT_UNPERSIST_CYCLE)
+      unpersistCycle = sc.getConf.getInt("spark.boostkit.ALS.unpersistCycle",
+        DEFAULT_UNPERSIST_CYCLE)
       if (unpersistCycle < 0) {
         throw new Exception
       }
     }
     catch {
       case x: Exception =>
-        throw new Exception("'spark.sophon.ALS.unpersistCycle' value is invalid")
+        throw new Exception("'spark.boostkit.ALS.unpersistCycle' value is invalid")
     }
 
     var blockMaxRow = DEFAULT_BLOCK_MAX_ROW
     try {
-      blockMaxRow = sc.getConf.getInt("spark.sophon.ALS.blockMaxRow", DEFAULT_BLOCK_MAX_ROW)
+      blockMaxRow = sc.getConf.getInt("spark.boostkit.ALS.blockMaxRow", DEFAULT_BLOCK_MAX_ROW)
       if (blockMaxRow < 0) {
         throw new Exception
       }
     }
     catch {
       case x: Exception =>
-        throw new Exception("'spark.sophon.ALS.blockMaxRow' value is invalid")
+        throw new Exception("'spark.boostkit.ALS.blockMaxRow' value is invalid")
     }
     if (implicitPrefs) {
       val dataIterI = new Array[RDD[(Int, ALS.FactorBlock)]](unpersistCycle)

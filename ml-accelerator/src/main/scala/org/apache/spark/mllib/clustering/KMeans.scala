@@ -273,9 +273,9 @@ class KMeans private(
     // Execute iterations of Lloyd's algorithm until converged
     if (cl > 1) {
       val methodEnum = Array("default", "allData")
-      val method = sc.getConf.get("spark.sophon.Kmeans.optMethod", "default")
+      val method = sc.getConf.get("spark.boostkit.Kmeans.optMethod", "default")
       if (!methodEnum.contains(method)) {
-        throw new Exception("'spark.sophon.Kmeans.optMethod' value is invalid")
+        throw new Exception("'spark.boostkit.Kmeans.optMethod' value is invalid")
       }
       if (method == "allData") {
         KMACCm.compute(data, centers, maxIterations, epsilon, false)

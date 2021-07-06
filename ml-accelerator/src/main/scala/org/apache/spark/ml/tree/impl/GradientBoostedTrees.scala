@@ -153,7 +153,7 @@ private[spark] object GradientBoostedTrees extends Logging {
     }
   }
 
-  private val extraParamKey = "spark.sophon.ml.gbdt.doUseAcc"
+  private val extraParamKey = "spark.boostkit.ml.gbdt.doUseAcc"
   private val doUseAccDefault = true
 
   private def getDoUseAccFromSparkConf(sc: SparkContext): Boolean = {
@@ -163,7 +163,7 @@ private[spark] object GradientBoostedTrees extends Logging {
         doUseAcctStr.get.toBoolean
       } catch {
         case ex: Exception =>
-          throw new IllegalArgumentException(s"Parse sophon parameter" +
+          throw new IllegalArgumentException(s"Parse boostkit parameter" +
             s"($extraParamKey) failed, Error reason: ${ex.getMessage}")
       }
     } else {
