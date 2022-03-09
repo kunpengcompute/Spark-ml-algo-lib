@@ -1,0 +1,72 @@
+trustRank:
+  cit_patents_100:
+    outputPath: hdfs:///tmp/graph/result/tr/cit_patents_100
+    seedsPath: hdfs:///tmp/graph/dataset/tr_seeds/cit-Patents_100
+    splitGraph: "\t"
+    numIter: 100
+    resetProb: 0.15
+    tolerance: 1e-8
+
+  cit_patents_500:
+    outputPath: hdfs:///tmp/graph/result/tr/cit_patents_500
+    seedsPath: hdfs:///tmp/graph/dataset/tr_seeds/cit-Patents_500
+    splitGraph: "\t"
+    numIter: 100
+    resetProb: 0.15
+    tolerance: 1e-8
+
+  cit_patents_1000:
+    outputPath: hdfs:///tmp/graph/result/tr/cit_patents_1000
+    seedsPath: hdfs:///tmp/graph/dataset/tr_seeds/cit-Patents_1000
+    splitGraph: "\t"
+    numIter: 100
+    resetProb: 0.15
+    tolerance: 1e-8
+
+  uk_2002_100:
+    outputPath: hdfs:///tmp/graph/result/tr/uk_2002_100
+    seedsPath: hdfs:///tmp/graph/dataset/tr_seeds/uk-2002-edgelist_100
+    splitGraph: "\t"
+    numIter: 100
+    resetProb: 0.15
+    tolerance: 1e-8
+
+  uk_2002_500:
+    outputPath: hdfs:///tmp/graph/result/tr/uk_2002_500
+    seedsPath: hdfs:///tmp/graph/dataset/tr_seeds/uk-2002-edgelist_500
+    splitGraph: "\t"
+    numIter: 100
+    resetProb: 0.15
+    tolerance: 1e-8
+
+  uk_2002_1000:
+    outputPath: hdfs:///tmp/graph/result/tr/uk_2002_1000
+    seedsPath: hdfs:///tmp/graph/dataset/tr_seeds/uk-2002-edgelist_1000
+    splitGraph: "\t"
+    numIter: 100
+    resetProb: 0.15
+    tolerance: 1e-8
+
+  arabic_2005_100:
+    outputPath: hdfs:///tmp/graph/result/tr/arabic_2005_100
+    seedsPath: hdfs:///tmp/graph/dataset/tr_seeds/arabic-2005-edgelist_100
+    splitGraph: "\t"
+    numIter: 100
+    resetProb: 0.15
+    tolerance: 1e-8
+
+  arabic_2005_500:
+    outputPath: hdfs:///tmp/graph/result/tr/arabic_2005_500
+    seedsPath: hdfs:///tmp/graph/dataset/tr_seeds/arabic-2005-edgelist_500
+    splitGraph: "\t"
+    numIter: 100
+    resetProb: 0.15
+    tolerance: 1e-8
+
+  arabic_2005_1000:
+    outputPath: hdfs:///tmp/graph/result/tr/arabic_2005_1000
+    seedsPath: hdfs:///tmp/graph/dataset/tr_seeds/arabic-2005-edgelist_1000
+    splitGraph: "\t"
+    numIter: 100
+    resetProb: 0.15
+    tolerance: 1e-8

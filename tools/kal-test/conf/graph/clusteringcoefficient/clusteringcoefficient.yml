@@ -1,0 +1,35 @@
+clusteringCoefficient:
+  cit_patents:
+    outputPath: hdfs:///tmp/graph/result/clusteringcoefficient/cit_patents
+    splitGraph: "\t"
+    isDirect: true
+
+  uk_2002:
+    outputPath: hdfs:///tmp/graph/result/clusteringcoefficient/uk_2002
+    splitGraph: "\t"
+    isDirect: true
+
+  arabic_2005:
+    outputPath: hdfs:///tmp/graph/result/clusteringcoefficient/arabic_2005
+    splitGraph: "\t"
+    isDirect: true
+
+  graph500_22:
+    outputPath: hdfs:///tmp/graph/result/clusteringcoefficient/graph500_22
+    splitGraph: " "
+    isDirect: false
+
+  graph500_23:
+    outputPath: hdfs:///tmp/graph/result/clusteringcoefficient/graph500_23
+    splitGraph: ","
+    isDirect: false
+
+  graph500_24:
+    outputPath: hdfs:///tmp/graph/result/clusteringcoefficient/graph500_24
+    splitGraph: " "
+    isDirect: false
+
+  graph500_25:
+    outputPath: hdfs:///tmp/graph/result/clusteringcoefficient/graph500_25
+    splitGraph: " "
+    isDirect: false

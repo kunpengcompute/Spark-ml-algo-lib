@@ -1,0 +1,29 @@
+#Spearman model params
+
+spearman:
+  CP10M1K_aarch64:
+    numPartitions: 2840
+
+  CP2M5K_aarch64:
+    numPartitions: 1420
+
+  CP1M10K_aarch64:
+    numPartitions: 1400
+
+  CP10M1K_x86_64:
+    numPartitions: 2360
+
+  CP2M5K_x86_64:
+    numPartitions: 1180
+
+  CP1M10K_x86_64:
+    numPartitions: 1160
+
+  CP10M1K_raw:
+    numPartitions: 2360
+
+  CP2M5K_raw:
+    numPartitions: 2360
+
+  CP1M10K_raw:
+    numPartitions: 2320

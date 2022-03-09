@@ -1,0 +1,38 @@
+# BFS dataset parameters
+
+bfs:
+  cit_patents:
+    outputPath: hdfs:///tmp/graph/result/bfs/cit_patents
+    splitGraph: "\t"
+    isDirect: true
+    depthLimit: 10
+
+  enwiki_2018:
+    outputPath: hdfs:///tmp/graph/result/bfs/enwiki_2018
+    splitGraph: "\t"
+    isDirect: true
+    depthLimit: 10
+
+  arabic_2005:
+    outputPath: hdfs:///tmp/graph/result/bfs/arabic_2005
+    splitGraph: "\t"
+    isDirect: true
+    depthLimit: 10
+
+  graph500_22:
+    outputPath: hdfs:///tmp/graph/result/bfs/graph500_22
+    splitGraph: " "
+    isDirect: false
+    depthLimit: 10
+
+  graph500_23:
+    outputPath: hdfs:///tmp/graph/result/bfs/graph500_23
+    splitGraph: ","
+    isDirect: false
+    depthLimit: 10
+
+  graph500_25:
+    outputPath: hdfs:///tmp/graph/result/bfs/graph500_25
+    splitGraph: " "
+    isDirect: false
+    depthLimit: 10

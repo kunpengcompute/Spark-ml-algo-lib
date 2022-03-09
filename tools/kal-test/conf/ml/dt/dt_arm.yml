@@ -1,0 +1,177 @@
+#DT model params
+
+dt:
+  classification:
+    dataframe:
+      higgs:
+        genericPt: 300
+        maxMemoryInMB: 5120
+        pt: 36
+        numCopiesInput: 7
+        maxDepth: 17
+        maxBins: 512
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featuresType: "array"
+        copyStrategy: "normal"
+        useDFCollPtner: "true"
+      mnist8m:
+        genericPt: 300
+        maxMemoryInMB: 4096
+        pt: 36
+        numCopiesInput: 7
+        maxDepth: 14
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 10
+        bcVariables: false
+        featuresType: "array"
+        copyStrategy: "normal"
+        useDFCollPtner: "true"
+      epsilon:
+        genericPt: 300
+        maxMemoryInMB: 4096
+        pt: 36
+        numCopiesInput: 7
+        maxDepth: 14
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featuresType: "array"
+        copyStrategy: "normal"
+        useDFCollPtner: "true"
+    rdd:
+      higgs:
+        genericPt: 300
+        maxMemoryInMB: 5120
+        pt: 36
+        numCopiesInput: 7
+        maxDepth: 17
+        maxBins: 512
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featuresType: "array"
+        copyStrategy: "normal"
+        useDFCollPtner: "true"
+      mnist8m:
+        genericPt: 300
+        maxMemoryInMB: 4096
+        pt: 36
+        numCopiesInput: 7
+        maxDepth: 14
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 10
+        bcVariables: false
+        featuresType: "array"
+        copyStrategy: "normal"
+        useDFCollPtner: "true"
+      epsilon:
+        genericPt: 300
+        maxMemoryInMB: 4096
+        pt: 36
+        numCopiesInput: 7
+        maxDepth: 14
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featuresType: "array"
+        copyStrategy: "normal"
+        useDFCollPtner: "true"
+  regression:
+    dataframe:
+      higgs:
+        genericPt: 300
+        maxMemoryInMB: 4096
+        pt: 36
+        numCopiesInput: 7
+        maxDepth: 17
+        maxBins: 512
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featuresType: "array"
+        copyStrategy: "normal"
+        useDFCollPtner: "true"
+      mnist8m:
+        genericPt: 300
+        maxMemoryInMB: 4096
+        pt: 36
+        numCopiesInput: 7
+        maxDepth: 15
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 10
+        bcVariables: false
+        featuresType: "array"
+        copyStrategy: "normal"
+        useDFCollPtner: "true"
+      epsilon:
+        genericPt: 300
+        maxMemoryInMB: 4096
+        pt: 36
+        numCopiesInput: 7
+        maxDepth: 13
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featuresType: "array"
+        copyStrategy: "normal"
+        useDFCollPtner: "true"
+    rdd:
+      higgs:
+        genericPt: 300
+        maxMemoryInMB: 4096
+        pt: 36
+        numCopiesInput: 7
+        maxDepth: 17
+        maxBins: 512
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featuresType: "array"
+        copyStrategy: "normal"
+        useDFCollPtner: "true"
+      mnist8m:
+        genericPt: 300
+        maxMemoryInMB: 4096
+        pt: 36
+        numCopiesInput: 7
+        maxDepth: 15
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 10
+        bcVariables: false
+        featuresType: "array"
+        copyStrategy: "normal"
+        useDFCollPtner: "true"
+      epsilon:
+        genericPt: 300
+        maxMemoryInMB: 4096
+        pt: 36
+        numCopiesInput: 7
+        maxDepth: 13
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featuresType: "array"
+        copyStrategy: "normal"
+        useDFCollPtner: "true"

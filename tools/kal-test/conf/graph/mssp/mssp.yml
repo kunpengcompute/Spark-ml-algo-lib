@@ -1,0 +1,38 @@
+# MSSP dataset parameters
+
+mssp:
+  uk_2002_5:
+    inputPath: hdfs:///tmp/graph/dataset/uk-2002-edgelist.txt
+    sourcePath: hdfs:///tmp/graph/mssp/source/uk-random_5
+    splitGraph: "\t"
+    outputPath: hdfs:///tmp/graph/result/mssp/uk_2002_5
+
+  uk_2002_50:
+    inputPath: hdfs:///tmp/graph/dataset/uk-2002-edgelist.txt
+    sourcePath: hdfs:///tmp/graph/mssp/source/uk-random_50
+    splitGraph: "\t"
+    outputPath: hdfs:///tmp/graph/result/mssp/uk_2002_50
+
+  arabic_2005_5:
+    inputPath: hdfs:///tmp/graph/dataset/arabic-2005-edgelist.txt
+    sourcePath: hdfs:///tmp/graph/mssp/source/arabic-random_5
+    splitGraph: "\t"
+    outputPath: hdfs:///tmp/graph/result/mssp/arabic_2005_5
+
+  arabic_2005_50:
+    inputPath: hdfs:///tmp/graph/dataset/arabic-2005-edgelist.txt
+    sourcePath: hdfs:///tmp/graph/mssp/source/arabic-random_50
+    splitGraph: "\t"
+    outputPath: hdfs:///tmp/graph/result/mssp/arabic_2005_50
+
+  livejournal_5:
+    inputPath: hdfs:///tmp/graph/dataset/soc-LiveJournal1.txt
+    sourcePath: hdfs:///tmp/graph/mssp/source/livejournal-random_5
+    splitGraph: "\t"
+    outputPath: hdfs:///tmp/graph/result/mssp/livejournal_5
+
+  livejournal_50:
+    inputPath: hdfs:///tmp/graph/dataset/soc-LiveJournal1.txt
+    sourcePath: hdfs:///tmp/graph/mssp/source/livejournal-random_50
+    splitGraph: "\t"
+    outputPath: hdfs:///tmp/graph/result/mssp/livejournal_50

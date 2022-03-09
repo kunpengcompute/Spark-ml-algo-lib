@@ -1,0 +1,110 @@
+#Logistic Regression model params
+
+logR:
+  mnist8m_aarch64:
+    numPartitions: 276
+    numLabels: 10
+    numFeatures: 784
+    regParam: 0.01
+    elasticNetParam: 0.0
+    maxIter: 400
+    tolerance: 1E-6
+    isSetBound: true
+    coefficientLowerBound: -1E32
+    coefficientUpperBound: 1E32
+
+  Twitter_aarch64:
+    numPartitions: 276
+    numLabels: 1
+    numFeatures: 9866
+    regParam: 0.01
+    elasticNetParam: 0.0
+    maxIter: 400
+    tolerance: 1E-6
+    isSetBound: false
+    coefficientLowerBound: -1E32
+    coefficientUpperBound: 1E32
+
+  rcv_aarch64:
+    numPartitions: 276
+    numLabels: 1
+    numFeatures: 47236
+    regParam: 0.01
+    elasticNetParam: 1.0
+    maxIter: 400
+    tolerance: 1E-6
+    isSetBound: false
+    coefficientLowerBound: -1E32
+    coefficientUpperBound: 1E32
+
+  mnist8m_x86_64:
+    numPartitions: 228
+    numLabels: 10
+    numFeatures: 784
+    regParam: 0.01
+    elasticNetParam: 0.0
+    maxIter: 400
+    tolerance: 1E-6
+    isSetBound: true
+    coefficientLowerBound: -1E32
+    coefficientUpperBound: 1E32
+
+  Twitter_x86_64:
+    numPartitions: 228
+    numLabels: 1
+    numFeatures: 9866
+    regParam: 0.01
+    elasticNetParam: 0.0
+    maxIter: 400
+    tolerance: 1E-6
+    isSetBound: false
+    coefficientLowerBound: -1E32
+    coefficientUpperBound: 1E32
+
+  rcv_x86_64:
+    numPartitions: 228
+    numLabels: 1
+    numFeatures: 47236
+    regParam: 0.01
+    elasticNetParam: 1.0
+    maxIter: 400
+    tolerance: 1E-6
+    isSetBound: false
+    coefficientLowerBound: -1E32
+    coefficientUpperBound: 1E32
+
+  mnist8m_raw:
+    numPartitions: 228
+    numLabels: 10
+    numFeatures: 784
+    regParam: 0.01
+    elasticNetParam: 0.0
+    maxIter: 400
+    tolerance: 1E-6
+    isSetBound: true
+    coefficientLowerBound: -1E32
+    coefficientUpperBound: 1E32
+
+  Twitter_raw:
+    numPartitions: 228
+    numLabels: 1
+    numFeatures: 9866
+    regParam: 0.01
+    elasticNetParam: 0.0
+    maxIter: 400
+    tolerance: 1E-6
+    isSetBound: false
+    coefficientLowerBound: -1E32
+    coefficientUpperBound: 1E32
+
+  rcv_raw:
+    numPartitions: 228
+    numLabels: 1
+    numFeatures: 47236
+    regParam: 0.01
+    elasticNetParam: 1.0
+    maxIter: 400
+    tolerance: 1E-6
+    isSetBound: false
+    coefficientLowerBound: -1E32
+    coefficientUpperBound: 1E32

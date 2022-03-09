@@ -1,0 +1,26 @@
+# WCE dataset parameters
+
+wce:
+  graph500_24:
+    inputPath: hdfs:///tmp/graph_data/graph500-24.e
+    outputPath: hdfs:///tmp/result/graph500_24
+    splitGraph: " "
+    maxIterations: 1000
+    maxDegree: 2000
+    numPartitions: 284
+
+  graph500_25:
+    inputPath: hdfs:///tmp/graph_data/graph500-25.e
+    outputPath: hdfs:///tmp/result/graph500_25
+    splitGraph: " "
+    maxIterations: 1000
+    maxDegree: 2000
+    numPartitions: 284
+
+  graph500_26:
+    inputPath: hdfs:///tmp/graph_data/graph500-26.txt
+    outputPath: hdfs:///tmp/result/graph500_26
+    splitGraph: ","
+    maxIterations: 1000
+    maxDegree: 2000
+    numPartitions: 284

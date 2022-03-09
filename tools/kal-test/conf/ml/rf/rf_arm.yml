@@ -1,0 +1,233 @@
+#RF model params
+
+rf:
+  classification:
+    dataframe:
+      higgs:
+        genericPt: 300
+        maxMemoryInMB: 2048
+        pt: 36
+        numCopiesInput: 5
+        numTrees: 20
+        maxDepth: 17
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featureSubsetStrategy: ""
+        featuresType: "array"
+      mnist8m:
+        genericPt: 300
+        maxMemoryInMB: 2048
+        pt: 36
+        numCopiesInput: 7
+        numTrees: 20
+        maxDepth: 13
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 10
+        bcVariables: false
+        featureSubsetStrategy: ""
+        featuresType: "array"
+      epsilon:
+        genericPt: 300
+        maxMemoryInMB: 4096
+        pt: 36
+        numCopiesInput: 7
+        numTrees: 20
+        maxDepth: 15
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featureSubsetStrategy: ""
+        featuresType: "array"
+      rcv:
+        genericPt: 300
+        maxMemoryInMB: 16384
+        pt: 36
+        numCopiesInput: 7
+        numTrees: 20
+        maxDepth: 13
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featureSubsetStrategy: "0.1"
+        featuresType: "fasthashmap"
+    rdd:
+      higgs:
+        genericPt: 300
+        maxMemoryInMB: 2048
+        pt: 36
+        numCopiesInput: 5
+        numTrees: 20
+        maxDepth: 17
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featureSubsetStrategy: "auto"
+        featuresType: "array"
+      mnist8m:
+        genericPt: 250
+        maxMemoryInMB: 2048
+        pt: 20
+        numCopiesInput: 7
+        numTrees: 20
+        maxDepth: 13
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 10
+        bcVariables: false
+        featureSubsetStrategy: "auto"
+        featuresType: "array"
+      epsilon:
+        genericPt: 300
+        maxMemoryInMB: 4096
+        pt: 20
+        numCopiesInput: 7
+        numTrees: 20
+        maxDepth: 15
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featureSubsetStrategy: "auto"
+        featuresType: "array"
+      rcv:
+        genericPt: 220
+        maxMemoryInMB: 10240
+        pt: 36
+        numCopiesInput: 7
+        numTrees: 20
+        maxDepth: 13
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featureSubsetStrategy: "0.1"
+        featuresType: "fasthashmap"
+  regression:
+    dataframe:
+      higgs:
+        genericPt: 300
+        maxMemoryInMB: 2048
+        pt: 36
+        numCopiesInput: 7
+        numTrees: 20
+        maxDepth: 17
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featureSubsetStrategy: ""
+        featuresType: "array"
+      mnist8m:
+        genericPt: 300
+        maxMemoryInMB: 2048
+        pt: 36
+        numCopiesInput: 7
+        numTrees: 20
+        maxDepth: 13
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 10
+        bcVariables: false
+        featureSubsetStrategy: ""
+        featuresType: "array"
+      epsilon:
+        genericPt: 300
+        maxMemoryInMB: 4096
+        pt: 36
+        numCopiesInput: 7
+        numTrees: 20
+        maxDepth: 11
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featureSubsetStrategy: ""
+        featuresType: "array"
+      rcv:
+        genericPt: 220
+        maxMemoryInMB: 16384
+        pt: 36
+        numCopiesInput: 7
+        numTrees: 20
+        maxDepth: 13
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featureSubsetStrategy: "0.1"
+        featuresType: "fasthashmap"
+    rdd:
+      higgs:
+        genericPt: 300
+        maxMemoryInMB: 2048
+        pt: 36
+        numCopiesInput: 7
+        numTrees: 20
+        maxDepth: 17
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featureSubsetStrategy: "auto"
+        featuresType: "array"
+      mnist8m:
+        genericPt: 300
+        maxMemoryInMB: 2048
+        pt: 36
+        numCopiesInput: 7
+        numTrees: 20
+        maxDepth: 13
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 10
+        bcVariables: false
+        featureSubsetStrategy: "auto"
+        featuresType: "array"
+      epsilon:
+        genericPt: 300
+        maxMemoryInMB: 4096
+        pt: 20
+        numCopiesInput: 7
+        numTrees: 20
+        maxDepth: 11
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featureSubsetStrategy: "auto"
+        featuresType: "array"
+      rcv:
+        genericPt: 220
+        maxMemoryInMB: 10240
+        pt: 36
+        numCopiesInput: 7
+        numTrees: 20
+        maxDepth: 13
+        maxBins: 128
+        useNodeIdCache: false
+        checkpointInterval: 10
+        numClasses: 2
+        bcVariables: false
+        featureSubsetStrategy: "0.1"
+        featuresType: "fasthashmap"
