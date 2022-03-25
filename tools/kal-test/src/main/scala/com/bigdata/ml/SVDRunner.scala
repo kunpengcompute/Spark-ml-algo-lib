@@ -163,12 +163,12 @@ class SVDKernel {
     svd.U.rows.count()
 
     val costTime = (System.currentTimeMillis() - startTime) / 1000.0
-    params.setLoadDataTime(loadDataTime)
+    params.setLoadDataTime(costTime)
 
     // save V and s
     if (params.outputDataPath != null){
       spark.sparkContext.parallelize(svd.s.toArray, 1).saveAsTextFile(s"${params.outputDataPath}_${params.cpuName}_${params.isRaw}/s")
-      spark.sparkContext.parallelize(toRowMajorArray(svd.V.asInstanceOf[DenseMatrix]).map(_.mkString(","))).saveAsTextFile(s"${params.outputDataPath}_${params.cpuName}_${params.isRaw}/V")
+      spark.sparkContext.parallelize(Utils.toRowMajorArray(svd.V.asInstanceOf[DenseMatrix]).map(_.mkString(","))).saveAsTextFile(s"${params.outputDataPath}_${params.cpuName}_${params.isRaw}/V")
     }
 
     println(s"Results have been saved at ${params.outputDataPath}")
@@ -176,28 +176,4 @@ class SVDKernel {
     costTime
   }
 
-  /**
-   *  Convert DenseMatrix to 2-dimension array, stored in row major
-   * @param matrix Input matrix
-   * @return 2-dimension array, stored in row major
-   */
-  def toRowMajorArray(matrix: DenseMatrix): Array[Array[Double]] = {
-    val nRow = matrix.numRows
-    val nCol = matrix.numCols
-    val arr = new Array[Array[Double]](nRow).map(_ => new Array[Double](nCol))
-    if(matrix.isTransposed){
-      var srcOffset = 0
-      for{i <- 0 until nRow} {
-        System.arraycopy(matrix.values, srcOffset, arr(i), 0, nCol)
-        srcOffset += nCol
-      }
-    } else {
-      matrix.values.indices.foreach(idx => {
-        val j = math.floor(idx / nRow).toInt
-        val i = idx % nRow
-        arr(i)(j) = matrix.values(idx)
-      })
-    }
-    arr
-  }
 }
