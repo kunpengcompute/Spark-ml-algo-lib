@@ -16,13 +16,11 @@ package org.apache.spark.mllib.clustering
 
 object KmeansUtil {
 
-
   def generateDisMatrix(
-      centers: Array[VectorWithNorm],
-      s: Array[Double]): Unit = {
-
+      centers: Array[VectorWithNorm], parLevel: Int): Array[Double] = {
+    val cl = centers.length
+    Array.fill(cl * cl)(0.0)
   }
-
 
   def findClosest(
       centers: TraversableOnce[VectorWithNorm],
