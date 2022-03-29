@@ -1,0 +1,10 @@
+# incPageRank dataset parameters arm
+
+incpr:
+  twitter_2010:
+    splitGraph: "\t"
+    numIter: 100
+    resetProb: 0.15
+    partNum: 273
+    inputPath: hdfs:///tmp/incpr/incData/twitter-2010_0.001_batch_1
+    outputPath: hdfs:///tmp/incpr/res/output
