@@ -96,17 +96,13 @@ if [ ! ${num_executors_val} ] ||
   exit 0
 fi
 
-echo "JuTaoBB 94"
 source conf/graph/graph_datasets.properties
-echo "JuTaoBB 96"
 spark_version=sparkVersion
 spark_version_val=${!spark_version}
-echo "JuTaoBB 99"
 data_path_val=${!dataset_name}
-echo "JuTaoBB 101"
 kal_version=kalVersion
 kal_version_val=${!kal_version}
-#echo "${dataset_name} : ${data_path_val}"
+echo "${dataset_name} : ${data_path_val}"
 
 
 echo "start to submit spark jobs"
