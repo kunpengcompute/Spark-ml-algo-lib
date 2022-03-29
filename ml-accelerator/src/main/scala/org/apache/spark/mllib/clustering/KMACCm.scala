@@ -26,7 +26,7 @@ import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.mllib.linalg.BLAS.{axpy, scal}
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.rdd.RDD
-
+import org.apache.spark.sql.SparkSession
 
 object KMACCm {
   val DEFAULT_SAMPLE_RATE = 0.05
@@ -85,9 +85,23 @@ object KMACCm {
         throw new Exception("'spark.boostkit.Kmeans.sampleRate' value is invalid")
     }
 
+    val DEFAULT_PAR_LEVEL = 100
+    var customParLevel = DEFAULT_PAR_LEVEL
+    try{
+      customParLevel = SparkSession.builder().getOrCreate()
+        .sparkContext.getConf.getInt("spark.boostkit.Kmeans.parLevel",
+        DEFAULT_PAR_LEVEL)
+      if (customParLevel < 1) {
+        throw new Exception
+      }
+    }
+    catch {
+      case x: Exception =>
+        throw new Exception("'spark.boostkit.Kmeans.parLevel' value is invalid")
+    }
+
     while (iteration < maxIterations && !converged) {
-      val s = Array.fill(cl * cl)(0.0)
-      KmeansUtil.generateDisMatrix(centers, s)
+      val s = KmeansUtil.generateDisMatrix(centers, customParLevel)
       val bcCenters = sc.broadcast(centers)
       val bcs = sc.broadcast(s)
 
