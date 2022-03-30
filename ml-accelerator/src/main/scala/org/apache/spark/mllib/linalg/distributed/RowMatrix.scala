@@ -38,6 +38,7 @@ import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.StaticUtils
+import org.apache.spark.mllib.feature.SPCA
 import org.apache.spark.mllib.linalg._
 import org.apache.spark.mllib.stat.{MultivariateOnlineSummarizer, MultivariateStatisticalSummary, Statistics}
 import org.apache.spark.rdd.RDD
@@ -571,19 +572,9 @@ class RowMatrix @Since("1.0.0")(
         val explainedVariance = s.map(_ / eigenSum)
         (svd.V, Vectors.dense(explainedVariance))
       case PCAMode.SparseSVD =>
-        val cov = computeCovariance().asBreeze.asInstanceOf[BDM[Double]]
-        val tol = 1e-10
-        val maxIter = math.max(3 * k, 300)
-        val newResult = RowMatrixUtil.toBlockMatrix(cov, rows.sparkContext)
-        val (sigmaSquares, u) = EigenValueDecomposition.symmetricEigs(
-          RowMatrixUtil.multiplyDenseGramMatrixBy(newResult),
-          n, k, tol, maxIter)
-        val eigenSum = Statistics.colStats(rows).variance.toArray.sum
-        val explainedVariance = sigmaSquares.toArray.map(_ / eigenSum)
-        (Matrices.dense(n, k, Arrays.copyOfRange(u.data, 0, n * k)),
-          Vectors.dense(explainedVariance))
+        val model = new SPCA(k).fit(rows)
+        (model.pc.asInstanceOf[Matrix], model.explainedVariance.asInstanceOf[Vector])
     }
-
   }
 
   /**
