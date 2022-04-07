@@ -27,7 +27,7 @@ bfs:
 
   graph500_23:
     outputPath: hdfs:///tmp/graph/result/bfs/graph500_23
-    splitGraph: ","
+    splitGraph: " "
     isDirect: false
     depthLimit: 10
 

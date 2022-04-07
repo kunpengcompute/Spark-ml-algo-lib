@@ -8,7 +8,7 @@ closeness:
     comparePathUnweighted: hdfs:///tmp/graph/dataset/closeness/groundtruth-cit-unweighted.txt
   graph500_23:
     outputPath: hdfs:///tmp/graph/result/closeness/graph500_23
-    splitGraph: ","
+    splitGraph: " "
     comparePathWeighted: hdfs:///tmp/graph/dataset/closeness/groundtruth-23-weighted.txt
     comparePathUnweighted: hdfs:///tmp/graph/dataset/closeness/groundtruth-23-unweighted.txt
   uk_2002:

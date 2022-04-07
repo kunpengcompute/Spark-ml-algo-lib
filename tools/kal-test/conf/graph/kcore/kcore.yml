@@ -15,9 +15,9 @@ partition:
   graph500_26_x86_64_no: 232
 split:
   graph500_22: " "
-  graph500_23: ","
+  graph500_23: " "
   graph500_25: " "
-  graph500_26: ","
+  graph500_26: " "
 iterNum:
   graph500_22: 28
   graph500_23: 44
