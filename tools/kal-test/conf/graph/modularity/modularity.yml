@@ -4,8 +4,8 @@ modularity:
   graph500_23:
     inputPath: hdfs:///tmp/modularity/graph/graph500-23.e
     inputCommunity: hdfs:///tmp/modularity/lpa_community/graph500-23.e
-    splitGraph: ","
-    splitCommunity: ","
+    splitGraph: " "
+    splitCommunity: " "
     isWeighted: false
     isDirected: false
     numPartitions: 200
@@ -22,8 +22,8 @@ modularity:
   graph500_26:
     inputPath: hdfs:///tmp/modularity/graph/graph500-26.e
     inputCommunity: hdfs:///tmp/modularity/lpa_community/graph500-26.e
-    splitGraph: ","
-    splitCommunity: ","
+    splitGraph: " "
+    splitCommunity: " "
     isWeighted: false
     isDirected: false
     numPartitions: 500

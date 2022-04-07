@@ -21,7 +21,7 @@ clusteringCoefficient:
 
   graph500_23:
     outputPath: hdfs:///tmp/graph/result/clusteringcoefficient/graph500_23
-    splitGraph: ","
+    splitGraph: " "
     isDirect: false
 
   graph500_24:
