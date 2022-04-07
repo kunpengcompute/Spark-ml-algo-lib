@@ -5,7 +5,7 @@ partition:
 minK: 3
 maxDegree: 2000
 split:
-  graph500_23: ","
+  graph500_23: " "
   graph500_24: " "
   graph500_25: " "
 

@@ -11,4 +11,4 @@ partition:
 split:
   liveJournal: "\t"
   graph500_25: " "
-  graph500_26: ","
+  graph500_26: " "
