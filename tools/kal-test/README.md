@@ -7,15 +7,16 @@ The Kunpeng algorithm library test tool can be used to test machine learning and
 
 ### Compilation Tutorial
 
-####Prerequisites
+#### Prerequisites
 1.  The Maven compilation environment has been configured.
 2.  The algorithm software package has been obtained.
-3.  Go to the Spark-ml-algo-lib/tools/kal-test directory in the compilation environment.
-4.  Install the dependencies.<br/>
+#### Procedure
+1.  Go to the Spark-ml-algo-lib/tools/kal-test directory in the compilation environment.
+2.  Install the dependencies.<br/>
     mvn install:install-file -DgroupId=org.apache.spark.graphx.lib -DartifactId=boostkit-graph-kernel-client_2.11 -Dversion=2.1.0 -Dfile=lib/boostkit-graph-kernel-client_2.11-1.2.0.jar -Dpackaging=jar**_
-5.  Run the compile command:<br/>
+3.  Run the compile command:<br/>
     mvn clean install -DskipTests_**
-6.  View the kal-test_2.11-0.1.jar file generated in Spark-ml-algo-lib/tools/kal-test/target.
+4.  View the kal-test_2.11-0.1.jar file generated in Spark-ml-algo-lib/tools/kal-test/target.
 
 ### Deployment and Usage Description
 
@@ -38,11 +39,11 @@ The Kunpeng algorithm library test tool can be used to test machine learning and
 
 ### References
 
-1. KNN open source: https://github.com/saurfang/spark-knn.git
-2. BFS open source: https://github.com/prasad223/GraphxBFS
-3. DBSCAN open source: https://github.com/alitouka/spark_dbscan
-4. ClusteringCoefficient open source: https://github.com/apache/spark/pull/9150/files
-5. Betweenness open source: https://github.com/Sotera/distributed-graph-analytics/tree/master/dga-graphx/src/main/scala/com/soteradefense/dga/graphx/hbse
-6. Node2Vec open source: https://github.com/QuanLab/node2vec-spark
-7. SubgraphMatching open source: https://datalab.snu.ac.kr/pegasusn/scala-apidoc/#pegasus.spark.subgraph.PSE
-8. XGBoost open source: https://github.com/dmlc/xgboost/tree/v1.1.0
+1. Open source KNN: https://github.com/saurfang/spark-knn.git
+2. Open source BFS: https://github.com/prasad223/GraphxBFS
+3. Open source DBSCAN: https://github.com/alitouka/spark_dbscan
+4. Open source ClusteringCoefficient: https://github.com/apache/spark/pull/9150/files
+5. Open source Betweenness: https://github.com/Sotera/distributed-graph-analytics/tree/master/dga-graphx/src/main/scala/com/soteradefense/dga/graphx/hbse
+6. Open source Node2Vec: https://github.com/QuanLab/node2vec-spark
+7. Open source SubgraphMatching: https://datalab.snu.ac.kr/pegasusn/scala-apidoc/#pegasus.spark.subgraph.PSE
+8. Open source XGBoost: https://github.com/dmlc/xgboost/tree/v1.1.0
