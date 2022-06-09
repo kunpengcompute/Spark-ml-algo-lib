@@ -50,7 +50,8 @@ object LDAUtilsXOpt {
       vocabSize: Int,
       logphatPartOptionBase: () => Option[BDV[Double]],
       alpha: BV[Double],
-      gammaShape: Double): RDD[(BDM[Double], Option[BDV[Double]], Long)] = {
+      gammaShape: Double,
+      seed: Long): RDD[(BDM[Double], Option[BDV[Double]], Long)] = {
     null
   }
 

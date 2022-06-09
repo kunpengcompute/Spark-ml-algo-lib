@@ -1,10 +1,4 @@
 /*
-* Copyright (C) 2021. Huawei Technologies Co., Ltd.
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-* */
-/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -27,7 +21,7 @@ import java.util.Locale
 
 import breeze.linalg.{DenseVector => BDV}
 
-import org.apache.spark.annotation.{DeveloperApi, Since}
+import org.apache.spark.annotation.Since
 import org.apache.spark.api.java.JavaPairRDD
 import org.apache.spark.graphx._
 import org.apache.spark.internal.Logging
@@ -288,21 +282,15 @@ class LDA private (
 
 
   /**
-   * :: DeveloperApi ::
-   *
    * LDAOptimizer used to perform the actual calculation
    */
   @Since("1.4.0")
-  @DeveloperApi
   def getOptimizer: LDAOptimizer = ldaOptimizer
 
   /**
-   * :: DeveloperApi ::
-   *
    * LDAOptimizer used to perform the actual calculation (default = EMLDAOptimizer)
    */
   @Since("1.4.0")
-  @DeveloperApi
   def setOptimizer(optimizer: LDAOptimizer): this.type = {
     this.ldaOptimizer = optimizer
     this
@@ -341,7 +329,7 @@ class LDA private (
     val state = ldaOptimizer.initialize(documents, this)
     timer.stop("initialize")
     var iter = 0
-    val iterationTimes = Array.fill[Double](maxIterations)(0)
+    val iterationTimes = Array.ofDim[Double](maxIterations)
 
     timer.start("train")
     LDAUtilsXOpt.init(documents.sparkContext)

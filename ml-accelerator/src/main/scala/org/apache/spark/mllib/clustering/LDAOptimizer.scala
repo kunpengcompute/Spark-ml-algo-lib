@@ -1,10 +1,4 @@
 /*
-* Copyright (C) 2021. Huawei Technologies Co., Ltd.
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-* */
-/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -29,20 +23,18 @@ import breeze.linalg.{all, sum, DenseMatrix => BDM, DenseVector => BDV}
 import breeze.numerics.{abs, exp, trigamma}
 import breeze.stats.distributions.{Gamma, RandBasis}
 
-import org.apache.spark.annotation.{DeveloperApi, Since}
+import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.tree.impl.TimeTracker
 import org.apache.spark.mllib.linalg.{DenseVector, Matrices, SparseVector, Vector, Vectors}
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
 
 /**
- * :: DeveloperApi ::
- *
  * An LDAOptimizer specifies which optimization/learning/inference algorithm to use, and it can
  * hold optimizer-specific parameters for users to set.
  */
 @Since("1.4.0")
-@DeveloperApi
 trait LDAOptimizer {
 
   /*
@@ -67,8 +59,6 @@ trait LDAOptimizer {
 }
 
 /**
- * :: DeveloperApi ::
- *
  * An online optimizer for LDA. The Optimizer implements the Online variational Bayes LDA
  * algorithm, which processes a subset of the corpus on each iteration, and updates the term-topic
  * distribution adaptively.
@@ -77,7 +67,6 @@ trait LDAOptimizer {
  *   Hoffman, Blei and Bach, "Online Learning for Latent Dirichlet Allocation." NIPS, 2010.
  */
 @Since("1.4.0")
-@DeveloperApi
 final class OnlineLDAOptimizer extends LDAOptimizer with Logging {
 
   // LDA common parameters
@@ -254,6 +243,10 @@ final class OnlineLDAOptimizer extends LDAOptimizer with Logging {
     this.randomGenerator = new Random(lda.getSeed)
 
     this.docs = docs
+    if (this.docs.getStorageLevel == StorageLevel.NONE) {
+      logWarning("The input data is not directly cached, which may hurt performance if its"
+        + " parent RDDs are also uncached.")
+    }
 
     // Initialize the variational distribution q(beta|lambda)
     this.lambda = getGammaMatrix(k, vocabSize)
@@ -296,9 +289,10 @@ final class OnlineLDAOptimizer extends LDAOptimizer with Logging {
     val alpha = this.alpha.asBreeze
     val gammaShape = this.gammaShape
     val optimizeDocConcentration = this.optimizeDocConcentration
+    val seed = randomGenerator.nextLong()
     // If and only if optimizeDocConcentration is set true,
     // we calculate logphat in the same pass as other statistics.
-    // No calculation of loghat happens otherwise.
+    // No calculation of logphat happens otherwise.
     val logphatPartOptionBase = () => if (optimizeDocConcentration) {
                                         Some(BDV.zeros[Double](k))
                                       } else {
@@ -309,9 +303,10 @@ final class OnlineLDAOptimizer extends LDAOptimizer with Logging {
     val stats: RDD[(BDM[Double], Option[BDV[Double]], Long)] =
       if (LDAUtilsXOpt.useOptimizedCalc()) {
         LDAUtilsXOpt.optimizedCalcStats(batch, expElogbetaBc, k, vocabSize, logphatPartOptionBase,
-          alpha, gammaShape)
+          alpha, gammaShape, seed)
     } else {
-      batch.mapPartitions { docs =>
+      batch.mapPartitionsWithIndex {
+        (index, docs) =>
         val nonEmptyDocs = docs.filter(_._2.numNonzeros > 0)
 
         val stat = BDM.zeros[Double](k, vocabSize)
@@ -321,7 +316,7 @@ final class OnlineLDAOptimizer extends LDAOptimizer with Logging {
         nonEmptyDocs.foreach { case (_, termCounts: Vector) =>
           nonEmptyDocCount += 1
           val (gammad, sstats, ids) = OnlineLDAOptimizerXObj.variationalTopicInference(
-            termCounts, expElogbetaBcValue, alpha, gammaShape, k)
+            termCounts, expElogbetaBcValue, alpha, gammaShape, k, seed + index)
           stat(::, ids) := stat(::, ids) + sstats
           logphatPartOption.foreach(_ += LDAUtilsX.dirichletExpectation(gammad))
         }
@@ -357,6 +352,7 @@ final class OnlineLDAOptimizer extends LDAOptimizer with Logging {
 
     if (nonEmptyDocsN == 0) {
       logWarning("No non-empty documents were submitted in the batch.")
+      timer.stop("update-lambda")
       // Therefore, there is no need to update any of the model parameters
       return this
     }
@@ -439,7 +435,8 @@ final class OnlineLDAOptimizer extends LDAOptimizer with Logging {
   }
 
   override private[clustering] def getLDAModel(iterationTimes: Array[Double]): LDAModel = {
-    new LocalLDAModel(Matrices.fromBreeze(lambda).transpose, alpha, eta, gammaShape)
+    new LocalLDAModel(Matrices.fromBreeze(lambda).transpose, alpha, eta)
+      .setSeed(randomGenerator.nextLong())
   }
 
 }
@@ -448,7 +445,7 @@ final class OnlineLDAOptimizer extends LDAOptimizer with Logging {
  * Serializable companion object containing helper methods and shared code for
  * [[OnlineLDAOptimizer]] and [[LocalLDAModel]].
  */
-private[clustering] object OnlineLDAOptimizer {
+private[spark] object OnlineLDAOptimizer {
   /**
    * Uses variational inference to infer the topic distribution `gammad` given the term counts
    * for a document. `termCounts` must contain at least one non-zero entry, otherwise Breeze will
@@ -461,25 +458,24 @@ private[clustering] object OnlineLDAOptimizer {
    * @return Returns a tuple of `gammad` - estimate of gamma, the topic distribution, `sstatsd` -
    *         statistics for updating lambda and `ids` - list of termCounts vector indices.
    */
-  private[clustering] def variationalTopicInference(
-      termCounts: Vector,
+  private[spark] def variationalTopicInference(
+      indices: List[Int],
+      values: Array[Double],
       expElogbeta: BDM[Double],
       alpha: breeze.linalg.Vector[Double],
       gammaShape: Double,
-      k: Int): (BDV[Double], BDM[Double], List[Int]) = {
-    val (ids: List[Int], cts: Array[Double]) = termCounts match {
-      case v: DenseVector => ((0 until v.size).toList, v.values)
-      case v: SparseVector => (v.indices.toList, v.values)
-    }
+      k: Int,
+      seed: Long): (BDV[Double], BDM[Double], List[Int]) = {
     // Initialize the variational distribution q(theta|gamma) for the mini-batch
+    val randBasis = new RandBasis(new org.apache.commons.math3.random.MersenneTwister(seed))
     val gammad: BDV[Double] =
-      new Gamma(gammaShape, 1.0 / gammaShape).samplesVector(k)                   // K
+      new Gamma(gammaShape, 1.0 / gammaShape)(randBasis).samplesVector(k) // K
     val expElogthetad: BDV[Double] = exp(LDAUtils.dirichletExpectation(gammad))  // K
-    val expElogbetad = expElogbeta(ids, ::).toDenseMatrix                        // ids * K
+    val expElogbetad = expElogbeta(indices, ::).toDenseMatrix                        // ids * K
 
     val phiNorm: BDV[Double] = expElogbetad * expElogthetad +:+ 1e-100            // ids
     var meanGammaChange = 1D
-    val ctsVector = new BDV[Double](cts)                                         // ids
+    val ctsVector = new BDV[Double](values)                                         // ids
 
     // Iterate between gamma and phi until convergence
     while (meanGammaChange > 1e-3) {
@@ -493,6 +489,20 @@ private[clustering] object OnlineLDAOptimizer {
     }
 
     val sstatsd = expElogthetad.asDenseMatrix.t * (ctsVector /:/ phiNorm).asDenseMatrix
-    (gammad, sstatsd, ids)
+    (gammad, sstatsd, indices)
+  }
+
+  private[clustering] def variationalTopicInference(
+      termCounts: Vector,
+      expElogbeta: BDM[Double],
+      alpha: breeze.linalg.Vector[Double],
+      gammaShape: Double,
+      k: Int,
+      seed: Long): (BDV[Double], BDM[Double], List[Int]) = {
+    val (ids: List[Int], cts: Array[Double]) = termCounts match {
+      case v: DenseVector => (List.range(0, v.size), v.values)
+      case v: SparseVector => (v.indices.toList, v.values)
+    }
+    variationalTopicInference(ids, cts, expElogbeta, alpha, gammaShape, k, seed)
   }
 }
