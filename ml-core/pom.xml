@@ -6,7 +6,7 @@
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>boostkit-ml-core_2.11</artifactId>
+  <artifactId>boostkit-ml-core_2.12</artifactId>
   <version>2.1.0</version>
   <name>${project.artifactId}</name>
   <description>Spark ml core</description>
@@ -14,7 +14,7 @@
   <dependencies>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>boostkit-ml-kernel-client-core_2.11</artifactId>
+      <artifactId>boostkit-ml-kernel-client-core_2.12</artifactId>
       <version>2.1.0</version>
       <classifier>${spark.version}</classifier>
       <scope>compile</scope>

@@ -1,6 +1,0 @@
-splitDataGraph:
-  graph500_19: ","
-  liveJournal: "\t"
-  com_orkut: "\t"
-splitQueryGraph: ","
-resultNum: 10000
