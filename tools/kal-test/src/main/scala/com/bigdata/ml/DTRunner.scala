@@ -13,15 +13,13 @@ import scala.beans.BeanProperty
 import java.util
 
 import com.bigdata.utils.Utils
-import org.apache.spark.ml.classification.{DecisionTreeClassifier, RandomForestClassifier}
+import org.apache.spark.ml.classification.DecisionTreeClassifier
 import org.apache.spark.ml.evaluation.{MulticlassClassificationEvaluator, RegressionEvaluator}
-import org.apache.spark.ml.feature.{IndexToString, StringIndexer, VectorIndexer}
+import org.apache.spark.ml.feature.StringIndexer
 import org.apache.spark.ml.param.{ParamMap, ParamPair}
-import org.apache.spark.ml.regression.{DecisionTreeRegressor, RandomForestRegressor}
+import org.apache.spark.ml.regression.DecisionTreeRegressor
 import org.apache.spark.mllib.regression.LabeledPoint
-import org.apache.spark.mllib.tree.{DecisionTree, RandomForest}
-import org.apache.spark.mllib.tree.configuration.{Algo, Strategy}
-import org.apache.spark.mllib.tree.impurity.{Gini, Variance}
+import org.apache.spark.mllib.tree.DecisionTree
 import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.storage.StorageLevel
 
@@ -255,6 +253,10 @@ class DTKernel {
           .setCacheNodeIds(useNodeIdCache)
           .setCheckpointInterval(checkpointInterval)
           .setMaxMemoryInMB(maxMemoryInMB)
+        if (params.apiName == "fit"){
+          oldDt.setMaxBins(maxBins)
+          oldDt.setMaxDepth(maxDepth)
+        }
         oldDt
       }
       case "regression" =>{
@@ -266,13 +268,12 @@ class DTKernel {
           .setCacheNodeIds(useNodeIdCache)
           .setCheckpointInterval(checkpointInterval)
           .setMaxMemoryInMB(maxMemoryInMB)
+        if (params.apiName == "fit"){
+          oldDt.setMaxBins(maxBins)
+          oldDt.setMaxDepth(maxDepth)
+        }
         oldDt
       }
-    }
-
-    if (params.apiName == "fit"){
-      dTree.setMaxBins(maxBins)
-      dTree.setMaxDepth(maxDepth)
     }
 
     val pipeline = if (!indexLabelDone && params.algorithmType == "classification") {
@@ -287,17 +288,25 @@ class DTKernel {
         .setStages(Array(dTree))
     }
 
+    val paramMap = ParamMap(dTree.maxDepth ->params. maxDepth)
+      .put(dTree.maxBins, params.maxBins)
+
     val paramMaps = new Array[ParamMap](2)
     for (i <- 0 until paramMaps.size){
-      paramMaps(i) = ParamMap(dTree.maxDepth -> maxDepth)
-        .put(dTree.maxBins, maxBins)
+      paramMaps(i) = ParamMap(dTree.maxDepth -> params.maxDepth)
+        .put(dTree.maxBins, params.maxBins)
     }
 
+    val maxDepthParamPair = ParamPair(dTree.maxDepth, params.maxDepth)
+    val maxBinsParamPair = ParamPair(dTree.maxBins, params.maxBins)
+
     val model = params.apiName match {
-      case "fit" => pipeline.fit(trainingData)
-      case "fit1" =>
+      case "fit1" => pipeline.fit(trainingData, paramMap)
+      case "fit2" =>
         val models = pipeline.fit(trainingData, paramMaps)
         models(0)
+      case "fit3" => pipeline.fit(trainingData, maxDepthParamPair, maxBinsParamPair)
+      case _ => pipeline.fit(trainingData)
     }
 
     val costTime = (System.currentTimeMillis() - startTime) / 1000.0

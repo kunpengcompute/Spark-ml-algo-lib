@@ -1,0 +1,90 @@
+word2vec:
+  spark2.3.2:
+    cate:
+      eval: "alibaba"
+      learningRate: 0.025
+      numPartitions: 276
+      vectorSize: 100
+      minCount: 5
+      window: 10
+      regularization: 0.05
+      repetition: 0
+      numIterations: 3
+
+    item:
+      eval: "alibaba"
+      learningRate: 0.025
+      numPartitions: 282
+      vectorSize: 100
+      minCount: 5
+      window: 10
+      regularization: 0.05
+      repetition: 0
+      numIterations: 1
+
+    node:
+      eval: "alibaba"
+      learningRate: 0.025
+      numPartitions: 276
+      vectorSize: 100
+      minCount: 5
+      window: 10
+      regularization: 0.05
+      repetition: 0
+      numIterations: 3
+
+    taobao:
+      eval: "taobao"
+      learningRate: 0.025
+      numPartitions: 276
+      vectorSize: 100
+      minCount: 5
+      window: 10
+      regularization: 0.05
+      repetition: 7
+      numIterations: 1
+
+  spark3.1.1:
+    cate:
+      eval: "alibaba"
+      learningRate: 0.025
+      numPartitions: 276
+      vectorSize: 100
+      minCount: 5
+      window: 10
+      regularization: 0.05
+      repetition: 0
+      numIterations: 3
+
+    item:
+      eval: "alibaba"
+      learningRate: 0.025
+      numPartitions: 282
+      vectorSize: 100
+      minCount: 5
+      window: 10
+      regularization: 0.05
+      repetition: 0
+      numIterations: 1
+
+    node:
+      eval: "alibaba"
+      learningRate: 0.025
+      numPartitions: 276
+      vectorSize: 100
+      minCount: 5
+      window: 10
+      regularization: 0.05
+      repetition: 3
+      numIterations: 7
+
+    taobao:
+      eval: "taobao"
+      learningRate: 0.025
+      numPartitions: 276
+      vectorSize: 100
+      minCount: 5
+      window: 10
+      regularization: 0.05
+      repetition: 7
+      numIterations: 5

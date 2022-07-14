@@ -1,0 +1,50 @@
+dtb:
+  opt:
+    higgs:
+      genericPt: 276
+      pt: 276
+      maxDepth: 5
+      maxBins: 10000
+      maxMemoryInMB: 256
+      numCopiesInput: 1
+      useNodeIdCache: false
+      checkpointInterval: 10
+      featuresType: array
+      bcVariables: false
+
+    mnist8m:
+      genericPt: 276
+      pt: 276
+      maxDepth: 5
+      maxBins: 10000
+      maxMemoryInMB: 256
+      numCopiesInput: 1
+      useNodeIdCache: false
+      checkpointInterval: 10
+      featuresType: array
+      bcVariables: false
+
+  raw:
+    higgs:
+      genericPt: 232
+      pt: 116
+      maxDepth: 5
+      maxBins: 10000
+      maxMemoryInMB: 256
+      numCopiesInput: 1
+      useNodeIdCache: false
+      checkpointInterval: 10
+      featuresType: array
+      bcVariables: false
+
+    mnist8m:
+      genericPt: 232
+      pt: 232
+      maxDepth: 5
+      maxBins: 10000
+      maxMemoryInMB: 256
+      numCopiesInput: 1
+      useNodeIdCache: false
+      checkpointInterval: 10
+      featuresType: array
+      bcVariables: false

@@ -3,50 +3,41 @@ set -e
 
 case "$1" in
 -h | --help | ?)
-  echo "Usage: <algorithm type> <data structure> <dataset name> <api name>"
-  echo "1st argument: type of algorithm: [classification/regression]"
-  echo "2nd argument: type of data structure: [dataframe/rdd]"
-  echo "3rd argument: name of dataset: e.g. epsilon/higgs/mnist8m"
-  echo "4th argument: name of API: [for dataframe: fit/fit1/fit2/fit3; for rdd: trainClassifier/trainRegressor]"
-  echo "5th argument: optimization algorithm or raw: no/yes"
+  echo "Usage: <dataset name> <api name> <isRaw>"
+  echo "1st argument: name of dataset: cate/node/item/taobao"
+  echo "2nd argument: name of API: fit/fit1/fit2/fit3"
+  echo "3rd argument:optimization algorithm or raw: no/yes"
   exit 0
   ;;
 esac
 
-if [ $# -ne 5 ]; then
-  echo "please input 4 arguments: <algorithm type> <data structure> <dataset name> <api name>"
-  echo "1st argument: type of algorithm: [classification/regression]"
-  echo "2nd argument: type of data structure: [dataframe/rdd]"
-  echo "3rd argument: name of dataset: e.g. epsilon/higgs/mnist8m"
-  echo "4th argument: name of API: [for dataframe: fit/fit1/fit2/fit3; for rdd: trainClassifier/trainRegressor]"
-  echo "5th argument: optimization algorithm or raw: no/yes"
+if [ $# -ne 3 ]; then
+  echo "please input 3 arguments: <dataset name> <api name> <isRaw>"
+  echo "1st argument: name of dataset: cate/node/item/taobao"
+  echo "2nd argument: name of API: fit/fit1/fit2/fit3"
+  echo "3rd argument:optimization algorithm or raw: no/yes"
   exit 0
 fi
 
 
-source conf/ml/dt/dt_spark.properties
+source conf/ml/word2vec/word2vec_spark.properties
 
-algorithm_type=$1
-data_structure=$2
-dataset_name=$3
-api_name=$4
-is_raw=$5
+dataset_name=$1
+api_name=$2
+is_raw=$3
 
 cpu_name=$(lscpu | grep Architecture | awk '{print $2}')
 
-
-model_conf=${algorithm_type}_${data_structure}_${dataset_name}_${api_name}
-
 # concatnate strings as a new variable
-num_executors=${cpu_name}_${algorithm_type}"_"${dataset_name}"_numExectuors"
-executor_cores=${cpu_name}_${algorithm_type}"_"${dataset_name}"_executorCores"
-executor_memory=${cpu_name}_${algorithm_type}"_"${dataset_name}"_executorMemory"
-extra_java_options=${cpu_name}_${algorithm_type}"_"${dataset_name}"_extraJavaOptions"
+num_executors="numExectuors_"${dataset_name}_${cpu_name}
+executor_cores="executorCores_"${dataset_name}_${cpu_name}
+executor_memory="executorMemory_"${dataset_name}_${cpu_name}
+extra_java_options="extraJavaOptions_"${dataset_name}_${cpu_name}
 driver_cores="driverCores"
 driver_memory="driverMemory"
+memory_overhead="execMemOverhead"
 master_="master"
 deploy_mode="deployMode"
-max_failures="maxFailures"
 compress_="compress"
 
 num_executors_val=${!num_executors}
@@ -55,21 +46,20 @@ executor_memory_val=${!executor_memory}
 extra_java_options_val=${!extra_java_options}
 driver_cores_val=${!driver_cores}
 driver_memory_val=${!driver_memory}
+memory_overhead_val=${!memory_overhead}
 master_val=${!master_}
 deploy_mode_val=${!deploy_mode}
-max_failures_val=${!max_failures}
 compress_val=${!compress_}
-
 
 echo "${master_} : ${master_val}"
 echo "${deploy_mode} : ${deploy_mode_val}"
 echo "${driver_cores} : ${driver_cores_val}"
 echo "${driver_memory} : ${driver_memory_val}"
+echo "${memory_overhead} : ${memory_overhead_val}"
 echo "${num_executors} : ${num_executors_val}"
 echo "${executor_cores}: ${executor_cores_val}"
 echo "${executor_memory} : ${executor_memory_val}"
 echo "${extra_java_options} : ${extra_java_options_val}"
-echo "${max_failures} : ${max_failures_val}"
 echo "${compress_} : ${compress_val}"
 echo "cpu_name : ${cpu_name}"
 
@@ -80,13 +70,12 @@ if [ ! ${num_executors_val} ] \
     || [ ! ${driver_cores_val} ] \
     || [ ! ${driver_memory_val} ] \
     || [ ! ${master_val} ] \
-    || [ ! ${max_failures_val} ] \
+    || [ ! ${memory_overhead_val} ] \
     || [ ! ${compress_val} ] \
     || [ ! ${cpu_name} ]; then
   echo "Some values are NULL, please confirm with the property files"
   exit 0
 fi
-
 
 source conf/ml/ml_datasets.properties
 spark_version=sparkVersion
@@ -95,8 +84,17 @@ kal_version=kalVersion
 kal_version_val=${!kal_version}
 scala_version=scalaVersion
 scala_version_val=${!scala_version}
-data_path_val=${!dataset_name}
+
+data_path=alibaba_${dataset_name}
+data_train=alibaba_${dataset_name}_downstreamTrainFile
+data_test=alibaba_${dataset_name}_downstreamTestFile
+data_path_val=${!data_path}
+data_train_val=${!data_train}
+data_test_val=${!data_test}
+
 echo "${dataset_name} : ${data_path_val}"
+echo "downstreamTrainFile : ${data_train_val}"
+echo "downstreamTestFile : ${data_test_val}"
 
 spark_conf=${master_val}_${deploy_mode_val}_${num_executors_val}_${executor_cores_val}_${executor_memory_val}
 
@@ -107,15 +105,16 @@ ssh agent2 "echo 3 > /proc/sys/vm/drop_caches"
 ssh agent3 "echo 3 > /proc/sys/vm/drop_caches"
 sleep 30
 
-echo "start to submit spark jobs --- dt-${model_conf}"
+mkdir -p log
+model_conf=${dataset_name}-${api_name}-${spark_version_val}
+echo "start to submit spark jobs --- word2vec-${model_conf}"
 if [ ${is_raw} == "no" ]; then
-  scp lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent1:/opt/ml_classpath/
-  scp lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent2:/opt/ml_classpath/
-  scp lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent3:/opt/ml_classpath/
+  scp lib/fastutil-8.3.1.jar lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent1:/opt/ml_classpath/
+  scp lib/fastutil-8.3.1.jar lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent2:/opt/ml_classpath/
+  scp lib/fastutil-8.3.1.jar lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent3:/opt/ml_classpath/
 
   spark-submit \
-  --class com.bigdata.ml.DTRunner \
-  --driver-java-options "-Xms15g" \
+  --class com.bigdata.ml.Word2VecRunner \
   --deploy-mode ${deploy_mode_val} \
   --driver-cores ${driver_cores_val} \
   --driver-memory ${driver_memory_val} \
@@ -125,15 +124,17 @@ if [ ${is_raw} == "no" ]; then
   --master ${master_val} \
   --conf "spark.executor.extraJavaOptions=${extra_java_options_val}" \
   --conf "spark.executor.instances=${num_executors_val}" \
-  --conf "spark.taskmaxFailures=${max_failures_val}" \
+  --conf "spark.executor.memory_overhead=${memory_overhead_val}" \
+  --conf "spark.driver.maxResultSize=256G" \
+  --conf "spark.rdd.compress=${compress_val}" \
+  --conf "spark.eventLog.enabled=false" \
   --jars "lib/fastutil-8.3.1.jar,lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar,lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar,lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
   --driver-class-path "lib/kal-test_${scala_version_val}-0.1.jar:lib/fastutil-8.3.1.jar:lib/snakeyaml-1.19.jar:lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
   --conf "spark.executor.extraClassPath=/opt/ml_classpath/fastutil-8.3.1.jar:/opt/ml_classpath/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:/opt/ml_classpath/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:/opt/ml_classpath/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
-  ./lib/kal-test_${scala_version_val}-0.1.jar ${model_conf} ${data_path_val} ${cpu_name} ${is_raw} ${spark_conf} | tee ./log/log
+  ./lib/kal-test_${scala_version_val}-0.1.jar ${data_path_val} ${data_train_val} ${data_test_val} ${model_conf} ${is_raw} ${spark_conf} | tee ./log/log
 else
   spark-submit \
-  --class com.bigdata.ml.DTRunner \
-  --driver-java-options "-Xms15g" \
+  --class com.bigdata.ml.Word2VecRunner \
   --deploy-mode ${deploy_mode_val} \
   --driver-cores ${driver_cores_val} \
   --driver-memory ${driver_memory_val} \
@@ -143,7 +144,10 @@ else
   --master ${master_val} \
   --conf "spark.executor.extraJavaOptions=${extra_java_options_val}" \
   --conf "spark.executor.instances=${num_executors_val}" \
-  --conf "spark.taskmaxFailures=${max_failures_val}" \
+  --conf "spark.executor.memory_overhead=${memory_overhead_val}" \
+  --conf "spark.driver.maxResultSize=256G" \
+  --conf "spark.rdd.compress=${compress_val}" \
+  --conf "spark.eventLog.enabled=false" \
   --driver-class-path "lib/kal-test_${scala_version_val}-0.1.jar:lib/fastutil-8.3.1.jar:lib/snakeyaml-1.19.jar" \
-  ./lib/kal-test_${scala_version_val}-0.1.jar ${model_conf} ${data_path_val} ${cpu_name} ${is_raw} ${spark_conf} | tee ./log/log
+  ./lib/kal-test_${scala_version_val}-0.1.jar ${data_path_val} ${data_train_val} ${data_test_val} ${model_conf} ${is_raw} ${spark_conf} | tee ./log/log
 fi
