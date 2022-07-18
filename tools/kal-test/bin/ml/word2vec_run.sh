@@ -105,8 +105,7 @@ ssh agent2 "echo 3 > /proc/sys/vm/drop_caches"
 ssh agent3 "echo 3 > /proc/sys/vm/drop_caches"
 sleep 30
 
-mkdir -p log
-model_conf=${dataset_name}-${api_name}-${spark_version_val}
+model_conf=${dataset_name}-${api_name}-${scala_version_val}
 echo "start to submit spark jobs --- word2vec-${model_conf}"
 if [ ${is_raw} == "no" ]; then
   scp lib/fastutil-8.3.1.jar lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent1:/opt/ml_classpath/

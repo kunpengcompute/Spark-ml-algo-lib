@@ -1,5 +1,7 @@
 package com.bigdata.ml
 
+import com.bigdata.compare.ml.Word2VecEvaluation
+
 import java.io.{File, FileWriter}
 import java.util
 import org.apache.spark.{SparkConf, SparkContext}
@@ -13,11 +15,10 @@ import scala.beans.BeanProperty
 import com.bigdata.utils.Utils
 import org.apache.spark.ml.feature.{Word2Vec, Word2VecModel}
 import org.apache.spark.ml.param.{ParamMap, ParamPair}
-import org.apache.spark.mllib.Word2VecEvaluation
 import org.apache.spark.mllib.feature.{Word2VecModel => mllibWord2VecModel}
 
 class Word2VecConfig extends Serializable {
-  @BeanProperty var word2vec: util.HashMap[String, util.HashMap[String, util.HashMap[String, Object]]] = _
+  @BeanProperty var word2vec: util.HashMap[String, util.HashMap[String, util.HashMap[String, util.HashMap[String, Object]]]] = _
 }
 
 class Word2VecParams extends Serializable {
@@ -48,17 +49,16 @@ object Word2VecRunner {
       val downstreamTrainFile = args(1)
       val downstreamTestFile = args(2)
       val dataSet = args(3).split("-")
-      val (fieldName, apiName, sparkVersion) = (dataSet(0), dataSet(1), dataSet(2))
+      val (fieldName, apiName, scalaVersion) = (dataSet(0), dataSet(1), dataSet(2))
       val isRaw = args(4)
       val sparkConfSplit = args(5).split("_")
       val (master, deployMode, numExec, execCores, execMem) =
         (sparkConfSplit(0), sparkConfSplit(1), sparkConfSplit(2), sparkConfSplit(3), sparkConfSplit(4))
 
-      val stream = isRaw match {
-        case "no" =>
-          Utils.getStream("conf/ml/word2vec/word2vec.yml")
-        case "yes" =>
-          Utils.getStream("conf/ml/word2vec/word2vec_raw.yml")
+      val stream = Utils.getStream("conf/ml/word2vec/word2vec.yml")
+      val typeRaw = isRaw match {
+        case "no" => "opt"
+        case "yes" => "raw"
       }
 
       val representer = new Representer
@@ -71,7 +71,7 @@ object Word2VecRunner {
 
       val configs: Word2VecConfig = yaml.load(stream).asInstanceOf[Word2VecConfig]
       val params = new Word2VecParams()
-      val paramsMap: util.HashMap[String, Object] = configs.word2vec.get(sparkVersion).get(fieldName)
+      val paramsMap: util.HashMap[String, Object] = configs.word2vec.get(typeRaw).get("scala" + scalaVersion).get(fieldName)
 
       params.setSentenceFile(sentenceFile)
       params.setDownstreamTrainFile(downstreamTrainFile)
