@@ -100,7 +100,6 @@ ssh agent2 "echo 3 > /proc/sys/vm/drop_caches"
 ssh agent3 "echo 3 > /proc/sys/vm/drop_caches"
 sleep 30
 
-mkdir -p log
 model_conf=${dataset_name}-${api_name}-${verify}-${bucketedResPath}
 echo "start to submit spark jobs --- dtb-${model_conf}"
 if [ ${is_raw} == "no" ]; then
@@ -126,9 +125,9 @@ if [ ${is_raw} == "no" ]; then
   --conf "spark.executor.extraClassPath=/opt/ml_classpath/fastutil-8.3.1.jar:/opt/ml_classpath/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:/opt/ml_classpath/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:/opt/ml_classpath/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
   ./lib/kal-test_${scala_version_val}-0.1.jar ${model_conf} ${data_path_val} ${cpu_name} ${is_raw} ${spark_conf} | tee ./log/log
 else
-  scp lib/boostkit-ml-kernel-client_${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent1:/opt/ml_classpath/
-  scp lib/boostkit-ml-kernel-client_${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent2:/opt/ml_classpath/
-  scp lib/boostkit-ml-kernel-client_${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent3:/opt/ml_classpath/
+  scp lib/boostkit-ml-kernel-client_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar root@agent1:/opt/ml_classpath/
+  scp lib/boostkit-ml-kernel-client_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar root@agent2:/opt/ml_classpath/
+  scp lib/boostkit-ml-kernel-client_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar root@agent3:/opt/ml_classpath/
 
   spark-submit \
   --class com.bigdata.ml.DTBRunner \
@@ -144,6 +143,6 @@ else
   --conf "spark.executor.instances=${num_executors_val}" \
   --conf "spark.taskmaxFailures=${max_failures_val}" \
   --driver-class-path "lib/kal-test_${scala_version_val}-0.1.jar:lib/fastutil-8.3.1.jar:lib/snakeyaml-1.19.jar" \
-  --conf "spark.executor.extraClassPath=/opt/ml_classpath/boostkit-ml-kernel-client_${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+  --conf "spark.executor.extraClassPath=/opt/ml_classpath/boostkit-ml-kernel-client_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar" \
   ./lib/kal-test_${scala_version_val}-0.1.jar ${model_conf} ${data_path_val} ${cpu_name} ${is_raw} ${spark_conf} | tee ./log/log
 fi

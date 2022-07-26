@@ -1,4 +1,4 @@
-package org.apache.spark.mllib
+package com.bigdata.compare.ml
 
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import org.apache.spark.broadcast.Broadcast
@@ -44,7 +44,7 @@ object Word2VecEvaluation extends Serializable {
     // 构造特征: [u, v, |u - v|]
     import spark.implicits._
     val trainData = sc.objectFile[(Double, Array[String])](downstreamTrainFile, pt)
-      .map{case (label, sentence) =>
+      .map { case (label, sentence) =>
         val localW2vModel = bcW2vModel.value
         val featureVectors = sentence.map(localW2vModel)
         val feature = meanVectors(featureVectors, 0, featureVectors.length - 1).map(_.toDouble)
@@ -55,7 +55,7 @@ object Word2VecEvaluation extends Serializable {
       .toDF("label", "features")
       .cache()
     val testData = sc.objectFile[(Double, Array[String])](downstreamTestFile, pt)
-      .map{case (label, sentence) =>
+      .map { case (label, sentence) =>
         val featureVectors = sentence.map(bcW2vModel.value)
         val feature = meanVectors(featureVectors, 0, featureVectors.length - 1).map(_.toDouble)
         val target = featureVectors.last.map(_.toDouble)
@@ -89,7 +89,6 @@ object Word2VecEvaluation extends Serializable {
     val bcFieldIds = sc.broadcast(fieldNames.map(fieldNameIdMap))
 
     // 构造特征: [u, v, |u - v|]
-    import spark.implicits._
     val trainData = readAlibabaDownstreamData(spark, bcFieldIds, downstreamTrainFile, bcW2vModels, pt).cache()
     val testData = readAlibabaDownstreamData(spark, bcFieldIds, downstreamTestFile, bcW2vModels, pt).cache()
 
@@ -111,22 +110,22 @@ object Word2VecEvaluation extends Serializable {
 
     import spark.implicits._
     sc.objectFile[(Double, Array[(String, Array[String])])](downstreamFile, pt)
-      .map {case (label, fieldVectors) =>
+      .map { case (label, fieldVectors) =>
         (label, bcFieldIds.value.map(id => fieldVectors(id)))
-      }.map {case (label, fieldVectors) =>
-        val fieldNum = fieldVectors.length
-        val features = new Array[Double](fieldNum * (2 * vectorSize + 1))
-        var offset = 0
-        for (i <- 0 until fieldNum) {
-          val adVector = bcW2vModels(i).value(fieldVectors(i)._1).map(_.toDouble)
-          val historyVector = meanVectors(fieldVectors(i)._2.map(bcW2vModels(i).value)).map(_.toDouble)
-          System.arraycopy(adVector, 0, features, offset, vectorSize)
-          System.arraycopy(historyVector, 0, features, offset + vectorSize, vectorSize)
-          features(offset + 2 * vectorSize) = cosDistance(adVector, historyVector)
-          offset += 2 * vectorSize + 1
-        }
+      }.map { case (label, fieldVectors) =>
+      val fieldNum = fieldVectors.length
+      val features = new Array[Double](fieldNum * (2 * vectorSize + 1))
+      var offset = 0
+      for (i <- 0 until fieldNum) {
+        val adVector = bcW2vModels(i).value(fieldVectors(i)._1).map(_.toDouble)
+        val historyVector = meanVectors(fieldVectors(i)._2.map(bcW2vModels(i).value)).map(_.toDouble)
+        System.arraycopy(adVector, 0, features, offset, vectorSize)
+        System.arraycopy(historyVector, 0, features, offset + vectorSize, vectorSize)
+        features(offset + 2 * vectorSize) = cosDistance(adVector, historyVector)
+        offset += 2 * vectorSize + 1
+      }
       (label, Vectors.dense(features))
-      }.repartition(pt)
-        .toDF("label", "features")
+    }.repartition(pt)
+      .toDF("label", "features")
   }
 }
