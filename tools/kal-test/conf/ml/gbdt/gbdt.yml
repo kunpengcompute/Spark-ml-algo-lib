@@ -1,119 +1,78 @@
 #GBDT model params
 
 gbdt:
-  epsilon_aarch64:
-    numPartitions: 228
-    maxIter: 100
-    maxDepth: 5
-    maxBins: 20
-    stepSize: 0.1
-    cacheNodeIds: true
-    maxMemoryInMB: 2048
-    minInstancesPerNode: 1
-    minInfoGain: 0.0
-    subsamplingRate: 1.0
-    featureSubsetStrategy: "auto"
+  opt:
+    epsilon:
+      numPartitions: 228
+      maxIter: 100
+      maxDepth: 5
+      maxBins: 20
+      stepSize: 0.1
+      cacheNodeIds: true
+      maxMemoryInMB: 2048
+      minInstancesPerNode: 1
+      minInfoGain: 0.0
+      subsamplingRate: 1.0
+      featureSubsetStrategy: "auto"
+    rcv:
+      numPartitions: 228
+      maxIter: 100
+      maxDepth: 5
+      maxBins: 20
+      stepSize: 0.1
+      cacheNodeIds: true
+      maxMemoryInMB: 2048
+      minInstancesPerNode: 1
+      minInfoGain: 0.0
+      subsamplingRate: 1.0
+      featureSubsetStrategy: "auto"
+    D10M4096libsvm:
+      numPartitions: 276
+      maxIter: 100
+      maxDepth: 5
+      maxBins: 64
+      stepSize: 0.1
+      cacheNodeIds: true
+      maxMemoryInMB: 2048
+      minInstancesPerNode: 1
+      minInfoGain: 0.0
+      subsamplingRate: 1.0
+      featureSubsetStrategy: "auto"
 
-  epsilon_x86_64:
-    numPartitions: 228
-    maxIter: 100
-    maxDepth: 5
-    maxBins: 20
-    stepSize: 0.1
-    cacheNodeIds: true
-    maxMemoryInMB: 2048
-    minInstancesPerNode: 1
-    minInfoGain: 0.0
-    subsamplingRate: 1.0
-    featureSubsetStrategy: "auto"
-
-  rcv_aarch64:
-    numPartitions: 228
-    maxIter: 100
-    maxDepth: 5
-    maxBins: 20
-    stepSize: 0.1
-    cacheNodeIds: true
-    maxMemoryInMB: 2048
-    minInstancesPerNode: 1
-    minInfoGain: 0.0
-    subsamplingRate: 1.0
-    featureSubsetStrategy: "auto"
-
-  rcv_x86_64:
-    numPartitions: 228
-    maxIter: 100
-    maxDepth: 5
-    maxBins: 20
-    stepSize: 0.1
-    cacheNodeIds: true
-    maxMemoryInMB: 2048
-    minInstancesPerNode: 1
-    minInfoGain: 0.0
-    subsamplingRate: 1.0
-    featureSubsetStrategy: "auto"
-
-  epsilon_raw:
-    numPartitions: 66
-    maxIter: 100
-    maxDepth: 5
-    maxBins: 20
-    stepSize: 0.1
-    cacheNodeIds: true
-    maxMemoryInMB: 2048
-    minInstancesPerNode: 1
-    minInfoGain: 0.0
-    subsamplingRate: 1.0
-    featureSubsetStrategy: "auto"
-
-  rcv_raw:
-    numPartitions: 66
-    maxIter: 100
-    maxDepth: 5
-    maxBins: 20
-    stepSize: 0.1
-    cacheNodeIds: true
-    maxMemoryInMB: 2048
-    minInstancesPerNode: 1
-    minInfoGain: 0.0
-    subsamplingRate: 1.0
-    featureSubsetStrategy: "auto"
-
-  D10M4096libsvm_aarch64:
-    numPartitions: 276
-    maxIter: 100
-    maxDepth: 5
-    maxBins: 64
-    stepSize: 0.1
-    cacheNodeIds: true
-    maxMemoryInMB: 2048
-    minInstancesPerNode: 1
-    minInfoGain: 0.0
-    subsamplingRate: 1.0
-    featureSubsetStrategy: "auto"
-
-  D10M4096libsvm_x86_64:
-    numPartitions: 228
-    maxIter: 100
-    maxDepth: 5
-    maxBins: 64
-    stepSize: 0.1
-    cacheNodeIds: true
-    maxMemoryInMB: 2048
-    minInstancesPerNode: 1
-    minInfoGain: 0.0
-    subsamplingRate: 1.0
-    featureSubsetStrategy: "auto"
-
-  D10M4096libsvm_raw:
-    numPartitions: 228
-    maxIter: 100
-    maxDepth: 5
-    maxBins: 64
-    stepSize: 0.1
-    cacheNodeIds: true
-    maxMemoryInMB: 2048
-    minInstancesPerNode: 1
-    minInfoGain: 0.0
-    subsamplingRate: 1.0
-    featureSubsetStrategy: "auto"
+  raw:
+    epsilon:
+      numPartitions: 66
+      maxIter: 100
+      maxDepth: 5
+      maxBins: 20
+      stepSize: 0.1
+      cacheNodeIds: true
+      maxMemoryInMB: 2048
+      minInstancesPerNode: 1
+      minInfoGain: 0.0
+      subsamplingRate: 1.0
+      featureSubsetStrategy: "auto"
+    rcv:
+      numPartitions: 66
+      maxIter: 100
+      maxDepth: 5
+      maxBins: 20
+      stepSize: 0.1
+      cacheNodeIds: true
+      maxMemoryInMB: 2048
+      minInstancesPerNode: 1
+      minInfoGain: 0.0
+      subsamplingRate: 1.0
+      featureSubsetStrategy: "auto"
+    D10M4096libsvm:
+      numPartitions: 228
+      maxIter: 100
+      maxDepth: 5
+      maxBins: 64
+      stepSize: 0.1
+      cacheNodeIds: true
+      maxMemoryInMB: 2048
+      minInstancesPerNode: 1
+      minInfoGain: 0.0
+      subsamplingRate: 1.0
+      featureSubsetStrategy: "auto"

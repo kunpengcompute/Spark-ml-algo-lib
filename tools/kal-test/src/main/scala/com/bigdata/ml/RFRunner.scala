@@ -26,7 +26,7 @@ import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.storage.StorageLevel
 
 class RFConfig extends Serializable {
-  @BeanProperty var rf: util.HashMap[String, util.HashMap[String, util.HashMap[String, util.HashMap[String, Object]]]] = _
+  @BeanProperty var rf: util.HashMap[String, util.HashMap[String, util.HashMap[String, util.HashMap[String, util.HashMap[String, Object]]]]] = _
 }
 
 class RFParams extends Serializable {
@@ -73,14 +73,7 @@ object RFRunner {
       val (master, deployMode, numExec, execCores, execMem) =
         (sparkConfSplit(0), sparkConfSplit(1), sparkConfSplit(2), sparkConfSplit(3), sparkConfSplit(4))
 
-      val stream = (cpuName, isRaw) match {
-        case ("aarch64", "no") =>
-          Utils.getStream("conf/ml/rf/rf_arm.yml")
-        case ("x86_64", "no") =>
-          Utils.getStream("conf/ml/rf/rf_x86.yml")
-        case ("x86_64", "yes") =>
-          Utils.getStream("conf/ml/rf/rf_x86_raw.yml")
-      }
+      val stream = Utils.getStream("conf/ml/rf/rf.yml")
       val representer = new Representer
       representer.addClassTag(classOf[RFParams], Tag.MAP)
       val options = new DumperOptions
@@ -91,7 +84,10 @@ object RFRunner {
       val configs: RFConfig = yaml.load(stream).asInstanceOf[RFConfig]
       val params = new RFParams()
 
-      val rfParamMap: util.HashMap[String, Object] = configs.rf.get(algorithmType).get(dataStructure).get(datasetName)
+      val rfParamMap: util.HashMap[String, Object] = configs.rf.get(isRaw match {
+        case "no" => "opt"
+        case _ => "raw"
+      }).get(algorithmType).get(dataStructure).get(datasetName)
       params.setGenericPt(rfParamMap.getOrDefault("genericPt", "1000").asInstanceOf[Int])
       params.setMaxMemoryInMB(rfParamMap.getOrDefault("maxMemoryInMB", "256").asInstanceOf[Int])
       params.setPt(rfParamMap.getOrDefault("pt", "1000").asInstanceOf[Int])
@@ -113,6 +109,11 @@ object RFRunner {
       params.setCpuName(cpuName)
       params.setIsRaw(isRaw)
       params.setAlgorithmName("RF")
+
+      if (apiName != "fit") {
+        params.setNumTrees(5)
+        params.setMaxDepth(3)
+      }
 
       var appName = s"RF_${algorithmType}_${datasetName}_${dataStructure}_${apiName}"
       if (isRaw.equals("yes")){
@@ -210,18 +211,14 @@ class RFKernel {
       .setOutputCol("predictedLabel")
       .setLabels(labelIndexer.labels)
 
-    // for implementing different fit APIs
-    val numTreesJY = 5
-    val maxDepthJY = 3
-
     // Train a RandomForest model
     val rf = params.algorithmType match {
       case "classification" =>{
         val oldRf = new RandomForestClassifier()
           .setLabelCol("indexedLabel")
           .setFeaturesCol("features")
-          .setNumTrees(numTreesJY)
-          .setMaxDepth(maxDepthJY)
+          .setNumTrees(numTrees)
+          .setMaxDepth(maxDepth)
           .setMaxBins(maxBins)
           .setCacheNodeIds(useNodeIdCache)
           .setCheckpointInterval(checkpointInterval)
@@ -234,8 +231,8 @@ class RFKernel {
         val oldRf = new RandomForestRegressor()
           .setLabelCol("indexedLabel")
           .setFeaturesCol("features")
-          .setNumTrees(numTreesJY)
-          .setMaxDepth(maxDepthJY)
+          .setNumTrees(numTrees)
+          .setMaxDepth(maxDepth)
           .setMaxBins(maxBins)
           .setCacheNodeIds(useNodeIdCache)
           .setCheckpointInterval(checkpointInterval)
@@ -246,20 +243,13 @@ class RFKernel {
       }
     }
 
-    if (params.apiName == "fit"){
-      rf.setNumTrees(numTrees)
-      rf.setMaxDepth(maxDepth)
-    }
-
     val pipeline = new Pipeline()
       .setStages(Array(labelIndexer, rf, labelConverter))
 
     val paramMap = ParamMap(rf.maxDepth -> maxDepth)
       .put(rf.numTrees, numTrees)
-    val maxDepth1 = maxDepthJY
-    val maxDepth2 = maxDepth
-    val firstParamPair = ParamPair(rf.maxDepth, maxDepth1)
-    val otherParamPairs_1st = ParamPair(rf.maxDepth, maxDepth2)
+    val firstParamPair = ParamPair(rf.maxDepth, maxDepth)
+    val otherParamPairs_1st = ParamPair(rf.maxDepth, maxDepth)
     val otherParamPairs_2nd = ParamPair(rf.numTrees, numTrees)
     val paramMaps = new Array[ParamMap](2)
     for (i <- 0 until paramMaps.size){

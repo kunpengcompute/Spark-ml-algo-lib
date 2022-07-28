@@ -24,7 +24,7 @@ import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.storage.StorageLevel
 
 class DTConfig extends Serializable {
-  @BeanProperty var dt: util.HashMap[String, util.HashMap[String, util.HashMap[String, util.HashMap[String, Object]]]] = _
+  @BeanProperty var dt: util.HashMap[String, util.HashMap[String, util.HashMap[String, util.HashMap[String, util.HashMap[String, Object]]]]] = _
 }
 
 class DTParams extends Serializable {
@@ -72,14 +72,7 @@ object DTRunner {
       val (master, deployMode, numExec, execCores, execMem) =
         (sparkConfSplit(0), sparkConfSplit(1), sparkConfSplit(2), sparkConfSplit(3), sparkConfSplit(4))
 
-      val stream = (cpuName, isRaw) match {
-        case ("aarch64", "no") =>
-          Utils.getStream("conf/ml/dt/dt_arm.yml")
-        case ("x86_64", "no") =>
-          Utils.getStream("conf/ml/dt/dt_x86.yml")
-        case ("x86_64", "yes") =>
-          Utils.getStream("conf/ml/dt/dt_x86_raw.yml")
-      }
+      val stream = Utils.getStream("conf/ml/dt/dt.yml")
 
       val representer = new Representer
       representer.addClassTag(classOf[DTParams], Tag.MAP)
@@ -92,7 +85,10 @@ object DTRunner {
       val configs: DTConfig = yaml.load(stream).asInstanceOf[DTConfig]
       val params = new DTParams()
 
-      val dtParamMap: util.HashMap[String, Object] = configs.dt.get(algorithmType).get(dataStructure).get(datasetName)
+      val dtParamMap: util.HashMap[String, Object] = configs.dt.get(isRaw match {
+        case "no" => "opt"
+        case _ => "raw"
+      }).get(algorithmType).get(dataStructure).get(datasetName)
       params.setGenericPt(dtParamMap.getOrDefault("genericPt", "1000").asInstanceOf[Int])
       params.setMaxMemoryInMB(dtParamMap.getOrDefault("maxMemoryInMB", "256").asInstanceOf[Int])
       params.setPt(dtParamMap.getOrDefault("pt", "1000").asInstanceOf[Int])
