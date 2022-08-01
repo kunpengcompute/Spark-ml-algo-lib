@@ -30,7 +30,6 @@ class CDParams extends Serializable {
 }
 
 object CycleDetectionWithConstrainsRunner {
-  private val CD_RESULT_SPLIT = ","
   private val CD_PARAM_FILEPATH = "conf/graph/cd/cd.yml"
 
   def main(args: Array[String]): Unit = {
@@ -90,7 +89,7 @@ object CycleDetectionWithConstrainsRunner {
       val result = CycleDetectionWithConstrains.run(input, partition, params.minLoopLen,params.maxLoopLen,
         params.minRate,params.maxRate)
 
-      Util.saveDataToHDFS(result.map(_.mkString(CD_RESULT_SPLIT)), outputPath)
+      Util.saveDataToHDFS(result.map(_.mkString(",")), outputPath)
 
       val costTime = (System.currentTimeMillis() - startTime) / 1000.0
       params.setCostTime(costTime)

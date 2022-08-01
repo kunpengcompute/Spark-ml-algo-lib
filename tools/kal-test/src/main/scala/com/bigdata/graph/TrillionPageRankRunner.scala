@@ -83,13 +83,11 @@ object TrillionPageRankRunner {
         (urls(0).split("_")(0).toLong, (urls(0).split("_")(1).toDouble, urls.drop(1).map(_.toLong)))
       })
 
-      if (isRaw == "no") {
-        val attr = TrillionPageRank.run(data, params.numPartitions, params.numIter, params.resetProb, params.isOnlySrc)
-        attr.map(i => i._1 + "\t" + i._2.formatted("%.6f")).saveAsTextFile(params.outputPath)
-      } else {
-        val attr = openCompute(data, params.numPartitions, params.numIter, params.resetProb)
-        attr.map(i => i._1 + "\t" + i._2.formatted("%.6f")).saveAsTextFile(params.outputPath)
+      val attr = isRaw match {
+        case "no" => TrillionPageRank.run(data, params.numPartitions, params.numIter, params.resetProb, params.isOnlySrc)
+        case _ => openCompute(data, params.numPartitions, params.numIter, params.resetProb)
       }
+      attr.map(i => i._1 + "\t" + i._2.formatted("%.6f")).saveAsTextFile(params.outputPath)
 
       val costTime = (System.currentTimeMillis() - startTime) / 1000.0
       println("TrillionPageRank costTime = " + costTime + "s")

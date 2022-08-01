@@ -3,26 +3,25 @@ set -e
 
 case "$1" in
 -h | --help | ?)
-  echo "Usage: <algorithm type> <data structure> <dataset name> <api name>"
+  echo "Usage: <algorithm type> <data structure> <dataset name> <api name>  <isRaw>"
   echo "1st argument: type of algorithm: [classification/regression]"
   echo "2nd argument: type of data structure: [dataframe/rdd]"
-  echo "3rd argument: name of dataset: e.g. epsilon/higgs/mnist8m"
+  echo "3rd argument: name of dataset: [epsilon/higgs/mnist8m]"
   echo "4th argument: name of API: [for dataframe: fit/fit1/fit2/fit3; for rdd: trainClassifier/trainRegressor]"
-  echo "5th argument: optimization algorithm or raw: no/yes"
+  echo "5th argument: optimization algorithm or raw: [no/yes]"
   exit 0
   ;;
 esac
 
 if [ $# -ne 5 ]; then
-  echo "please input 4 arguments: <algorithm type> <data structure> <dataset name> <api name>"
+  echo "please input 4 arguments: <algorithm type> <data structure> <dataset name> <api name>  <isRaw>"
   echo "1st argument: type of algorithm: [classification/regression]"
   echo "2nd argument: type of data structure: [dataframe/rdd]"
-  echo "3rd argument: name of dataset: e.g. epsilon/higgs/mnist8m"
+  echo "3rd argument: name of dataset: [epsilon/higgs/mnist8m]"
   echo "4th argument: name of API: [for dataframe: fit/fit1/fit2/fit3; for rdd: trainClassifier/trainRegressor]"
-  echo "5th argument: optimization algorithm or raw: no/yes"
+  echo "5th argument: optimization algorithm or raw: [no/yes]"
   exit 0
 fi
-
 
 source conf/ml/dt/dt_spark.properties
 
@@ -33,7 +32,6 @@ api_name=$4
 is_raw=$5
 
 cpu_name=$(lscpu | grep Architecture | awk '{print $2}')
-
 
 model_conf=${algorithm_type}_${data_structure}_${dataset_name}_${api_name}
 
@@ -60,7 +58,6 @@ deploy_mode_val=${!deploy_mode}
 max_failures_val=${!max_failures}
 compress_val=${!compress_}
 
-
 echo "${master_} : ${master_val}"
 echo "${deploy_mode} : ${deploy_mode_val}"
 echo "${driver_cores} : ${driver_cores_val}"
@@ -86,7 +83,6 @@ if [ ! ${num_executors_val} ] \
   echo "Some values are NULL, please confirm with the property files"
   exit 0
 fi
-
 
 source conf/ml/ml_datasets.properties
 spark_version=sparkVersion
