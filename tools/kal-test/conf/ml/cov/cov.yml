@@ -1,47 +1,22 @@
 #Covariance model params
 
 cov:
-  CP10M1K_aarch64:
-    numPartitions: 280
-    saveDataPath: hdfs:///tmp/ml/result/cov/CP10M1K
-    verifiedDataPath: None
+  opt:
+    CP10M1K:
+      numPartitions: 280
 
-  CP2M5K_aarch64:
-    numPartitions: 280
-    saveDataPath: hdfs:///tmp/ml/result/cov/CP2M5K
-    verifiedDataPath: None
+    CP2M5K:
+      numPartitions: 280
 
-  CP1M10K_aarch64:
-    numPartitions: 280
-    saveDataPath: hdfs:///tmp/ml/result/cov/CP1M10K
-    verifiedDataPath: None
+    CP1M10K:
+      numPartitions: 280
 
-  CP10M1K_x86_64:
-    numPartitions: 234
-    saveDataPath: hdfs:///tmp/ml/result/cov/CP10M1K
-    verifiedDataPath: None
+  raw:
+    CP10M1K:
+      numPartitions: 234
 
-  CP2M5K_x86_64:
-    numPartitions: 234
-    saveDataPath: hdfs:///tmp/ml/result/cov/CP2M5K
-    verifiedDataPath: None
+    CP2M5K:
+      numPartitions: 234
 
-  CP1M10K_x86_64:
-    numPartitions: 234
-    saveDataPath: hdfs:///tmp/ml/result/cov/CP1M10K
-    verifiedDataPath: None
-
-  CP10M1K_raw:
-    numPartitions: 234
-    saveDataPath: hdfs:///tmp/ml/result/cov/CP10M1K/raw
-    verifiedDataPath: hdfs:///tmp/ml/result/verified/cov/CP10M1K
-
-  CP2M5K_raw:
-    numPartitions: 234
-    saveDataPath: hdfs:///tmp/ml/result/cov/CP2M5K/raw
-    verifiedDataPath: hdfs:///tmp/ml/result/verified/cov/CP2M5K
-
-  CP1M10K_raw:
-    numPartitions: 234
-    saveDataPath: hdfs:///tmp/ml/result/cov/CP1M10K/raw
-    verifiedDataPath: hdfs:///tmp/ml/result/verified/cov/CP1M10K
+    CP1M10K:
+      numPartitions: 234

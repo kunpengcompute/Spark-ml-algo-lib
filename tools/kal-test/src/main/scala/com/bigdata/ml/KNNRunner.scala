@@ -1,9 +1,7 @@
 package com.bigdata.ml
 
-import java.io.{File, FileWriter, PrintWriter}
-import java.util
-
 import com.bigdata.utils.Utils
+
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.ml.neighbors.KNN
@@ -13,6 +11,8 @@ import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
 
+import java.io.{File, FileWriter, PrintWriter}
+import java.util
 import scala.beans.BeanProperty
 
 class KNNConfig extends Serializable {
@@ -41,28 +41,25 @@ class KNNParams extends Serializable {
   @BeanProperty var loadDataTime: Double = _
   @BeanProperty var algorithmName: String = _
   @BeanProperty var testcaseType: String = _
+  @BeanProperty var saveDataPath: String = _
+  @BeanProperty var verifiedDataPath: String = _
 }
 
 object KNNRunner {
   def main(args: Array[String]): Unit = {
 
     try {
-      val datasetName = args(0)
-
+      val modelConfSplit = args(0).split("-")
+      val (datasetName, isRaw) =
+        (modelConfSplit(0), modelConfSplit(1))
       val inputDataPath = args(1)
-
       val cpuName = args(2)
-      val isRaw = args(3)
-      val sparkConfSplit = args(4).split("_")
+      val sparkConfSplit = args(3).split("_")
       val (master, deployMode, numExec, execCores, execMem) =
         (sparkConfSplit(0), sparkConfSplit(1), sparkConfSplit(2), sparkConfSplit(3), sparkConfSplit(4))
-
-      val stream = isRaw match {
-        case "no" =>
-          Utils.getStream("conf/ml/knn/knn.yml")
-        case "yes" =>
-          Utils.getStream("conf/ml/knn/knn_raw.yml")
-      }
+      val saveResultPath = args(4)
+      
+      val stream = Utils.getStream("conf/ml/knn/knn.yml")
       val representer = new Representer
       representer.addClassTag(classOf[KNNParams], Tag.MAP)
       val options = new DumperOptions
@@ -72,34 +69,36 @@ object KNNRunner {
       yaml.addTypeDescription(description)
       val configs: KNNConfig = yaml.load(stream).asInstanceOf[KNNConfig]
       val params = new KNNParams()
-
-      val knnParamMap: util.HashMap[String, Object] = configs.knn.get(cpuName).get(datasetName)
-      params.setPt(knnParamMap.getOrDefault("pt", "200").asInstanceOf[Int])
-      params.setK(knnParamMap.getOrDefault("k", "10").asInstanceOf[Int])
-      params.setTestNum(knnParamMap.getOrDefault("testNum", "100000").asInstanceOf[Int])
-      params.setTestBatchSize(knnParamMap.getOrDefault("testBatchSize", "10").asInstanceOf[Int])
-      params.setTopTreeSizeRate(knnParamMap.getOrDefault("topTreeSizeRate", "10.0").asInstanceOf[Double])
-      params.setTopTreeLeafSize(knnParamMap.getOrDefault("topTreeLeafSize", "10").asInstanceOf[Int])
-      params.setSubTreeLeafSize(knnParamMap.getOrDefault("subTreeLeafSize", "30").asInstanceOf[Int])
+      val paramsMap: util.HashMap[String, Object] = configs.knn.get(isRaw match {
+        case "no" => "opt"
+        case "yes" => "raw"
+      }).get(datasetName)
+      params.setPt(paramsMap.getOrDefault("pt", "200").asInstanceOf[Int])
+      params.setK(paramsMap.getOrDefault("k", "10").asInstanceOf[Int])
+      params.setTestNum(paramsMap.getOrDefault("testNum", "100000").asInstanceOf[Int])
+      params.setTestBatchSize(paramsMap.getOrDefault("testBatchSize", "10").asInstanceOf[Int])
+      params.setTopTreeSizeRate(paramsMap.getOrDefault("topTreeSizeRate", "10.0").asInstanceOf[Double])
+      params.setTopTreeLeafSize(paramsMap.getOrDefault("topTreeLeafSize", "10").asInstanceOf[Int])
+      params.setSubTreeLeafSize(paramsMap.getOrDefault("subTreeLeafSize", "30").asInstanceOf[Int])
       params.setFeaturesCol("features")
       params.setDistanceCol("distances")
       params.setNeighborsCol("neighbors")
-
       params.setInputDataPath(inputDataPath)
       params.setDatasetName(datasetName)
       params.setCpuName(cpuName)
       params.setIsRaw(isRaw)
       params.setAlgorithmName("KNN")
-
-      var appName = s"KNN_${datasetName}"
-      if (isRaw == "yes") {
-        appName = s"KNN_${datasetName}_raw"
+      params.setSaveDataPath(s"${saveResultPath}/${params.algorithmName}/${datasetName}")
+      params.setVerifiedDataPath(s"${params.saveDataPath}_raw")
+      var appName = s"${params.algorithmName}_${datasetName}"
+      if (isRaw.equals("yes")){
+        appName = s"${params.algorithmName}_${datasetName}_raw"
+        params.setVerifiedDataPath(params.saveDataPath)
+        params.setSaveDataPath(s"${params.saveDataPath}_raw")
       }
       params.setTestcaseType(appName)
 
-      val conf = new SparkConf()
-        .setAppName(appName).setMaster(master)
-
+      val conf = new SparkConf().setAppName(appName).setMaster(master)
       val commonParas = Array (
         ("spark.submit.deployMode", deployMode),
         ("spark.executor.instances", numExec),
@@ -116,12 +115,8 @@ object KNNRunner {
       }
       params.setCostTime(costTime)
 
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
-      val writer = new FileWriter(s"report/knn_${
+      Utils.checkDirs("report")
+      val writer = new FileWriter(s"report/${params.testcaseType}_${
         Utils.getDateStrFromUTC("yyyyMMdd_HHmmss",
           System.currentTimeMillis())
       }.yml")

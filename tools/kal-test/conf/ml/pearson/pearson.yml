@@ -1,7 +1,7 @@
 #Pearson model params
 
 pearson:
-  aarch64:
+  opt:
     dataframe:
       CP10M1K:
         pt: 280
@@ -18,7 +18,7 @@ pearson:
       CP1M10K:
         pt: 280
 
-  x86_64:
+  raw:
     dataframe:
       CP10M1K:
         pt: 234

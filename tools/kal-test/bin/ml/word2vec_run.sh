@@ -1,31 +1,29 @@
 #!/bin/bash
 set -e
 
-case "$1" in
--h | --help | ?)
+function usage() {
   echo "Usage: <dataset name> <api name> <isRaw>"
   echo "1st argument: name of dataset: cate/node/item/taobao"
   echo "2nd argument: name of API: fit/fit1/fit2/fit3"
   echo "3rd argument:optimization algorithm or raw: no/yes"
+}
+
+case "$1" in
+-h | --help | ?)
+  usage
   exit 0
   ;;
 esac
 
 if [ $# -ne 3 ]; then
-  echo "please input 3 arguments: <dataset name> <api name> <isRaw>"
-  echo "1st argument: name of dataset: cate/node/item/taobao"
-  echo "2nd argument: name of API: fit/fit1/fit2/fit3"
-  echo "3rd argument:optimization algorithm or raw: no/yes"
+  usage
   exit 0
 fi
 
-
 source conf/ml/word2vec/word2vec_spark.properties
-
 dataset_name=$1
 api_name=$2
 is_raw=$3
-
 cpu_name=$(lscpu | grep Architecture | awk '{print $2}')
 
 # concatnate strings as a new variable

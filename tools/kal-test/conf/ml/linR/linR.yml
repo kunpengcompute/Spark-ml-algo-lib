@@ -1,7 +1,7 @@
 #Linear Regression model params
 
 linR:
-  aarch64:
+  opt:
     mnist8m:
       pt: 276
       numFeatures: 784
@@ -29,9 +29,9 @@ linR:
       maxIter: 400
       tolerance: 1E-6
 
-  x86_64:
+  raw:
     mnist8m:
-      pt: 228
+      pt: 276
       numFeatures: 784
       loss: "huber"
       regParam: 0.01
@@ -40,7 +40,7 @@ linR:
       tolerance: 1E-6
 
     Twitter:
-      pt: 228
+      pt: 276
       numFeatures: 9866
       loss: "squaredError"
       regParam: 0.01
@@ -49,7 +49,7 @@ linR:
       tolerance: 1E-6
 
     rcv:
-      pt: 228
+      pt: 276
       numFeatures: 47236
       loss: "squaredError"
       regParam: 0.01

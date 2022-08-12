@@ -1,41 +1,39 @@
 #!/bin/bash
 set -e
 
-ifRaw="opt"
+function usage() {
+  echo "Usage: <dataset name> <isRaw> <isCheck>"
+  echo "1rd argument: name of dataset: e.g. D10m200m"
+  echo "2th argument: optimization algorithm or raw: [no/yes]"
+  echo "3th argument: Whether to Compare Results [no/yes]"
+}
+
 case "$1" in
 -h | --help | ?)
-  echo "Usage: <dataset name> <if checkModel>"
-  echo "1rd argument: name of dataset: e.g. D10m200m"
-  echo "2st argument: if checkModel: e.g. false"
-  echo "Note: If you are sure you want to check the result(model), please run the idf_run_raw.sh script at least once first."
-  echo "This script will save the model in \${workspace}/output/models/\${datasetName}/${ifRaw}/"
+  usage
   exit 0
 esac
 
-if [ $# -ne 2 ]; then
-  echo "Usage: <dataset name> <if checkModel>"
-  echo "1rd argument: name of dataset: e.g. D10m200m"
-  echo "2st argument: if checkModel: e.g. false"
-  echo "Note: If you are sure you want to check the result(model), please run the idf_run_raw.sh script at least once first."
-  echo "This script will save the model in \${workspace}/output/models/\${datasetName}/${ifRaw}/"
+if [ $# -ne 3 ]; then
+  usage
   exit 0
 fi
 
 
 source conf/ml/idf/idf_spark.properties
-
 dataset_name=$1
-ifCheckModel=$2
-
+is_raw=$2
+if_check=$3
 cpu_name=$(lscpu | grep Architecture | awk '{print $2}')
+model_conf=${dataset_name}-${is_raw}-${if_check}
 
 # concatnate strings as a new variable
-num_executors=${cpu_name}_${ifRaw}"_"${dataset_name}"_numExecutors"
-executor_cores=${cpu_name}_${ifRaw}"_"${dataset_name}"_executorCores"
-executor_memory=${cpu_name}_${ifRaw}"_"${dataset_name}"_executorMemory"
-executor_extra_java_options=${cpu_name}_${ifRaw}"_"${dataset_name}"_extraJavaOptions"
-driver_cores=${cpu_name}_${ifRaw}"_"${dataset_name}"_driverCores"
-driver_memory=${cpu_name}_${ifRaw}"_"${dataset_name}"_driverMemory"
+num_executors=${cpu_name}_${dataset_name}"_numExecutors"
+executor_cores=${cpu_name}_${dataset_name}"_executorCores"
+executor_memory=${cpu_name}_${dataset_name}"_executorMemory"
+executor_extra_java_options=${cpu_name}_${dataset_name}"_extraJavaOptions"
+driver_cores=${cpu_name}_${dataset_name}"_driverCores"
+driver_memory=${cpu_name}_${dataset_name}"_driverMemory"
 
 num_executors_val=${!num_executors}
 executor_cores_val=${!executor_cores}
@@ -71,15 +69,15 @@ fi
 source conf/ml/ml_datasets.properties
 spark_version=sparkVersion
 spark_version_val=${!spark_version}
+kal_version=kalVersion
+kal_version_val=${!kal_version}
+scala_version=scalaVersion
+scala_version_val=${!scala_version}
+save_resultPath=saveResultPath
+save_resultPath_val=${!save_resultPath}
 data_path_val=${!dataset_name}
-models_path=${dataset_name}_modelsPath
-models_path_val=${!models_path}
 echo "${dataset_name} : ${data_path_val}"
-echo "spark_version : ${spark_version_val}"
-echo "Is raw? ${ifRaw}"
-echo "If checkoutModels? ${ifCheckModel}"
-echo "models_path : ${models_path_val}"
-echo "start to submit spark jobs"
+
 
 echo "start to clean cache and sleep 3s"
 ssh server1 "echo 3 > /proc/sys/vm/drop_caches"
@@ -88,18 +86,40 @@ ssh agent2 "echo 3 > /proc/sys/vm/drop_caches"
 ssh agent3 "echo 3 > /proc/sys/vm/drop_caches"
 sleep 3
 
-mkdir -p log
-spark-submit \
---class com.bigdata.ml.IDFRunner \
---master ${master} \
---deploy-mode ${deployMode} \
---driver-cores ${driver_cores_val} \
---driver-memory ${driver_memory_val} \
---num-executors ${num_executors_val} \
---executor-cores ${executor_cores_val} \
---executor-memory ${executor_memory_val} \
---conf spark.executor.extraJavaOptions=${executor_extra_java_options_val} \
---driver-java-options "-Xms15g" \
---driver-class-path "lib/json4s-ext_2.11-3.2.11.jar:lib/boostkit-ml-acc_2.11-${kalVersion}-${spark_version_val}.jar:lib/boostkit-ml-core_2.11-${kalVersion}-${spark_version_val}.jar:lib/boostkit-ml-kernel-2.11-${kalVersion}-${spark_version_val}-${cpu_name}.jar" \
---jars "lib/json4s-ext_2.11-3.2.11.jar,lib/boostkit-ml-acc_2.11-${kalVersion}-${spark_version_val}.jar,lib/boostkit-ml-core_2.11-${kalVersion}-${spark_version_val}.jar,lib/boostkit-ml-kernel-2.11-${kalVersion}-${spark_version_val}-${cpu_name}.jar" \
-./lib/kal-test_2.11-0.1.jar ${ifRaw} ${dataset_name} ${data_path_val} ${models_path_val} ${ifCheckModel}| tee ./log/log
+echo "start to submit spark jobs --- idf-${model_conf}"
+if [ ${is_raw} == "no" ]; then
+  scp lib/json4s-ext_2.11-3.2.11.jar lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent1:/opt/ml_classpath/
+  scp lib/json4s-ext_2.11-3.2.11.jar lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent2:/opt/ml_classpath/
+  scp lib/json4s-ext_2.11-3.2.11.jar lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent3:/opt/ml_classpath/
+
+  mkdir -p log
+  spark-submit \
+  --class com.bigdata.ml.IDFRunner \
+  --master ${master} \
+  --deploy-mode ${deployMode} \
+  --driver-cores ${driver_cores_val} \
+  --driver-memory ${driver_memory_val} \
+  --num-executors ${num_executors_val} \
+  --executor-cores ${executor_cores_val} \
+  --executor-memory ${executor_memory_val} \
+  --conf spark.executor.extraJavaOptions=${executor_extra_java_options_val} \
+  --driver-java-options "-Xms15g" \
+  --driver-class-path "lib/snakeyaml-1.19.jar:lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+  --jars "lib/snakeyaml-1.19.jar,lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar,lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar,lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+  ./lib/kal-test_${scala_version_val}-0.1.jar ${model_conf} ${data_path_val} ${cpu_name} ${save_resultPath_val}| tee ./log/log
+else
+  spark-submit \
+  --class com.bigdata.ml.IDFRunner \
+  --master ${master} \
+  --deploy-mode ${deployMode} \
+  --driver-cores ${driver_cores_val} \
+  --driver-memory ${driver_memory_val} \
+  --num-executors ${num_executors_val} \
+  --executor-cores ${executor_cores_val} \
+  --executor-memory ${executor_memory_val} \
+  --conf spark.executor.extraJavaOptions=${executor_extra_java_options_val} \
+  --driver-java-options "-Xms15g" \
+  --driver-class-path "lib/snakeyaml-1.19.jar" \
+  --jars "lib/snakeyaml-1.19.jar,lib/fastutil-8.3.1.jar" \
+  ./lib/kal-test_${scala_version_val}-0.1.jar ${model_conf} ${data_path_val} ${cpu_name} ${save_resultPath_val}| tee ./log/log
+fi

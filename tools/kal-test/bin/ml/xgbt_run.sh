@@ -1,33 +1,33 @@
 #!/bin/bash
 set -e
 
+function usage() {
+  echo "Usage: <dataset name> <algorithm type> <isRaw> <isCheck>"
+  echo "1rd argument: name of dataset: e.g. higgs/mnist8m"
+  echo "2st argument: type of algorithm: [classification/regression]"
+  echo "3th argument: optimization algorithm or raw: [no/yes]"
+  echo "4th argument: Whether to Compare Results [no/yes]"
+}
+
 case "$1" in
 -h | --help | ?)
-  echo "Usage: <dataset name> <algorithm type>"
-  echo "1rd argument: name of dataset: e.g. higgs"
-  echo "2st argument: type of algorithm: [classification/regression]"
+  usage
   exit 0
   ;;
 esac
 
-if [ $# -ne 2 ]; then
-  echo "please input 2 arguments: <dataset name> <algorithm type>"
-  echo "1rd argument: name of dataset: e.g. higgs"
-  echo "2st argument: type of algorithm: [classification/regression]"
+if [ $# -ne 4 ]; then
+  usage
   exit 0
 fi
 
-
 source conf/ml/xgbt/xgbt_spark.properties
-
 dataset_name=$1
 algorithm_type=$2
-
+is_raw=$3
+if_check=$4
 cpu_name=$(lscpu | grep Architecture | awk '{print $2}')
-
-
-
-model_conf=${algorithm_type}_${dataset_name}
+model_conf=${algorithm_type}-${dataset_name}-${is_raw}-${if_check}
 
 # concatnate strings as a new variable
 num_executors=${cpu_name}_${algorithm_type}"_"${dataset_name}"_numExecutors"
@@ -84,10 +84,16 @@ fi
 source conf/ml/ml_datasets.properties
 spark_version=sparkVersion
 spark_version_val=${!spark_version}
+kal_version=kalVersion
+kal_version_val=${!kal_version}
+scala_version=scalaVersion
+scala_version_val=${!scala_version}
+save_resultPath=saveResultPath
+save_resultPath_val=${!save_resultPath}
 data_path_val=${!dataset_name}
 echo "${dataset_name} : ${data_path_val}"
-is_raw="no"
-echo "-Is raw? -${is_raw}"
+
+
 echo "start to submit spark jobs"
 
 spark_conf=${master_val}_${deploy_mode_val}_${num_executors_val}_${executor_cores_val}_${executor_memory_val}_${extra_java_options_val}_${driver_cores_val}_${driver_memory_val}_${task_cpus_val}_${num_partitions_val}
@@ -99,23 +105,49 @@ ssh agent2 "echo 3 > /proc/sys/vm/drop_caches"
 ssh agent3 "echo 3 > /proc/sys/vm/drop_caches"
 sleep 30
 
-mkdir -p log
-spark-submit \
---class com.bigdata.ml.XGBTRunner \
---deploy-mode ${deploy_mode_val} \
---driver-cores ${driver_cores_val} \
---driver-memory ${driver_memory_val} \
---num-executors ${num_executors_val} \
---executor-cores ${executor_cores_val} \
---executor-memory ${executor_memory_val} \
---master ${master_val} \
---conf spark.task.cpus=${task_cpus_val} \
---conf spark.executor.extraJavaOptions=${extra_java_options_val} \
---conf spark.executorEnv.LD_LIBRARY_PATH="./lib/:${LD_LIBRARY_PATH}" \
---conf spark.executor.extraLibraryPath="./lib" \
---conf spark.driver.extraLibraryPath="./lib" \
---files=lib/libboostkit_xgboost_kernel.so  \
---jars "lib/boostkit-xgboost4j-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar,lib/boostkit-xgboost4j_2.11-1.3.0-${cpu_name}.jar,lib/boostkit-xgboost4j-${spark_version_val}_2.11-1.3.0-${cpu_name}.jar,lib/snakeyaml-1.19.jar,lib/kal-test_2.11-0.1.jar" \
---conf spark.executor.extraClassPath="boostkit-xgboost4j-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar:boostkit-xgboost4j_2.11-1.3.0-${cpu_name}.jar:boostkit-xgboost4j-${spark_version_val}_2.11-1.3.0-${cpu_name}.jar:snakeyaml-1.19.jar" \
---conf spark.driver.extraClassPath="lib/kal-test_2.11-0.1.jar:lib/boostkit-xgboost4j-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar:lib/boostkit-xgboost4j_2.11-1.3.0-${cpu_name}.jar:lib/boostkit-xgboost4j-${spark_version_val}_2.11-1.3.0-${cpu_name}.jar:lib/snakeyaml-1.19.jar" \
-./lib/kal-test_2.11-0.1.jar ${model_conf} ${data_path_val} ${cpu_name} ${is_raw} ${spark_conf} | tee ./log/log
+echo "start to submit spark jobs --- XGBT-${model_conf}"
+if [ ${is_raw} == "no" ]; then
+  scp lib/snakeyaml-1.19.jar lib/boostkit-xgboost4j-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar lib/boostkit-xgboost4j_${scala_version_val}-${kal_version_val}-${cpu_name}.jar lib/boostkit-xgboost4j-${spark_version_val}_${scala_version_val}-${kal_version_val}-${cpu_name}.jar root@agent1:/opt/ml_classpath/
+  scp lib/snakeyaml-1.19.jar lib/boostkit-xgboost4j-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar lib/boostkit-xgboost4j_${scala_version_val}-${kal_version_val}-${cpu_name}.jar lib/boostkit-xgboost4j-${spark_version_val}_${scala_version_val}-${kal_version_val}-${cpu_name}.jar root@agent2:/opt/ml_classpath/
+  scp lib/snakeyaml-1.19.jar lib/boostkit-xgboost4j-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar lib/boostkit-xgboost4j_${scala_version_val}-${kal_version_val}-${cpu_name}.jar lib/boostkit-xgboost4j-${spark_version_val}_${scala_version_val}-${kal_version_val}-${cpu_name}.jar root@agent3:/opt/ml_classpath/
+
+  spark-submit \
+  --class com.bigdata.ml.XGBTRunner \
+  --deploy-mode ${deploy_mode_val} \
+  --driver-cores ${driver_cores_val} \
+  --driver-memory ${driver_memory_val} \
+  --num-executors ${num_executors_val} \
+  --executor-cores ${executor_cores_val} \
+  --executor-memory ${executor_memory_val} \
+  --master ${master_val} \
+  --conf spark.task.cpus=${task_cpus_val} \
+  --conf spark.executor.extraJavaOptions=${extra_java_options_val} \
+  --conf spark.executorEnv.LD_LIBRARY_PATH="./lib/:${LD_LIBRARY_PATH}" \
+  --conf spark.executor.extraLibraryPath="./lib" \
+  --conf spark.driver.extraLibraryPath="./lib" \
+  --files=lib/libboostkit_xgboost_kernel.so  \
+  --jars "lib/boostkit-xgboost4j-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar,lib/boostkit-xgboost4j_${scala_version_val}-${kal_version_val}-${cpu_name}.jar,lib/boostkit-xgboost4j-${spark_version_val}_${scala_version_val}-${kal_version_val}-${cpu_name}.jar,lib/snakeyaml-1.19.jar,lib/kal-test_${scala_version_val}-0.1.jar" \
+  --driver-class-path "lib/kal-test_${scala_version_val}-0.1.jar:lib/boostkit-xgboost4j-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar:lib/boostkit-xgboost4j_${scala_version_val}-${kal_version_val}-${cpu_name}.jar:lib/boostkit-xgboost4j-${spark_version_val}_${scala_version_val}-${kal_version_val}-${cpu_name}.jar:lib/snakeyaml-1.19.jar" \
+  --conf "spark.executor.extraClassPath=/opt/ml_classpath/boostkit-xgboost4j-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar:/opt/ml_classpath/boostkit-xgboost4j_${scala_version_val}-${kal_version_val}-${cpu_name}.jar:/opt/ml_classpath/boostkit-xgboost4j-${spark_version_val}_${scala_version_val}-${kal_version_val}-${cpu_name}.jar:/opt/ml_classpath/snakeyaml-1.19.jar" \
+  ./lib/kal-test_${scala_version_val}-0.1.jar ${model_conf} ${data_path_val} ${cpu_name} ${spark_conf} ${save_resultPath_val} | tee ./log/log
+else
+  scp lib/snakeyaml-1.19.jar lib/xgboost4j_${scala_version_val}-1.1.0.jar lib/xgboost4j-spark_${scala_version_val}-1.1.0.jar root@agent1:/opt/ml_classpath/
+  scp lib/snakeyaml-1.19.jar lib/xgboost4j_${scala_version_val}-1.1.0.jar lib/xgboost4j-spark_${scala_version_val}-1.1.0.jar root@agent2:/opt/ml_classpath/
+  scp lib/snakeyaml-1.19.jar lib/xgboost4j_${scala_version_val}-1.1.0.jar lib/xgboost4j-spark_${scala_version_val}-1.1.0.jar root@agent3:/opt/ml_classpath/
+
+  spark-submit \
+  --class com.bigdata.ml.XGBTRunner \
+  --deploy-mode ${deploy_mode_val} \
+  --driver-cores ${driver_cores_val} \
+  --driver-memory ${driver_memory_val} \
+  --num-executors ${num_executors_val} \
+  --executor-cores ${executor_cores_val} \
+  --executor-memory ${executor_memory_val} \
+  --master ${master_val} \
+  --conf spark.task.cpus=${task_cpus_val} \
+  --conf spark.executor.extraJavaOptions=${extra_java_options_val} \
+  --jars "lib/xgboost4j_${scala_version_val}-1.1.0.jar,lib/xgboost4j-spark_${scala_version_val}-1.1.0.jar,lib/snakeyaml-1.19.jar,lib/kal-test_${scala_version_val}-0.1.jar" \
+  --driver-class-path "lib/kal-test_${scala_version_val}-0.1.jar:lib/xgboost4j_${scala_version_val}-1.1.0.jar:lib/xgboost4j-spark_${scala_version_val}-1.1.0.jar:lib/snakeyaml-1.19.jar" \
+  --conf "spark.executor.extraClassPath=/opt/ml_classpath/xgboost4j_${scala_version_val}-1.1.0.jar:/opt/ml_classpath/xgboost4j-spark_${scala_version_val}-1.1.0.jar:/opt/ml_classpath/snakeyaml-1.19.jar" \
+  ./lib/kal-test_${scala_version_val}-0.1.jar ${model_conf} ${data_path_val} ${cpu_name} ${spark_conf} ${save_resultPath_val} | tee ./log/log
+fi
