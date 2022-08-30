@@ -5,17 +5,20 @@ case "$1" in
 -h | --help | ?)
   echo "Usage: <isRaw>"
   echo "1st argument: optimization algorithm or raw: no/yes"
+  echo "2nd argument: Whether to Compare Results: no/yes"
   exit 0
   ;;
 esac
 
-if [ $# -ne 1 ]; then
+if [ $# -ne 2 ]; then
   echo "please input 1 arguments: <isRaw>"
   echo "1st argument: optimization algorithm or raw: no/yes"
+  echo "2nd argument: Whether to Compare Results: no/yes"
   exit 0
 fi
 
 is_raw=$1
+if_check=$2
 type=arm
 if [ $is_raw == "yes" ]; then
   type=raw
@@ -41,76 +44,76 @@ ssh_mkdir agent2 $ml_classpath
 ssh_mkdir agent3 $ml_classpath
 
 # gbdt
-./bin/ml/gbdt_run.sh classification dataframe epsilon fit  ${is_raw} 2>&1 | tee -a logs/gbdtc_epsilon_fit_${type}.log
-./bin/ml/gbdt_run.sh classification dataframe epsilon fit1 ${is_raw} 2>&1 | tee -a logs/gbdtc_epsilon_fit1_${type}.log
-./bin/ml/gbdt_run.sh classification dataframe epsilon fit2 ${is_raw} 2>&1 | tee -a logs/gbdtc_epsilon_fit2_${type}.log
-./bin/ml/gbdt_run.sh classification dataframe epsilon fit3 ${is_raw} 2>&1 | tee -a logs/gbdtc_epsilon_fit3_${type}.log
+./bin/ml/gbdt_run.sh classification dataframe epsilon fit  ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtc_epsilon_fit_${type}.log
+./bin/ml/gbdt_run.sh classification dataframe epsilon fit1 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtc_epsilon_fit1_${type}.log
+./bin/ml/gbdt_run.sh classification dataframe epsilon fit2 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtc_epsilon_fit2_${type}.log
+./bin/ml/gbdt_run.sh classification dataframe epsilon fit3 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtc_epsilon_fit3_${type}.log
 
-./bin/ml/gbdt_run.sh classification dataframe rcv fit  ${is_raw} 2>&1 | tee -a logs/gbdtc_rcv_fit_${type}.log
-./bin/ml/gbdt_run.sh classification dataframe rcv fit1 ${is_raw} 2>&1 | tee -a logs/gbdtc_rcv_fit1_${type}.log
-./bin/ml/gbdt_run.sh classification dataframe rcv fit2 ${is_raw} 2>&1 | tee -a logs/gbdtc_rcv_fit2_${type}.log
-./bin/ml/gbdt_run.sh classification dataframe rcv fit3 ${is_raw} 2>&1 | tee -a logs/gbdtc_rcv_fit3_${type}.log
+./bin/ml/gbdt_run.sh classification dataframe rcv fit  ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtc_rcv_fit_${type}.log
+./bin/ml/gbdt_run.sh classification dataframe rcv fit1 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtc_rcv_fit1_${type}.log
+./bin/ml/gbdt_run.sh classification dataframe rcv fit2 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtc_rcv_fit2_${type}.log
+./bin/ml/gbdt_run.sh classification dataframe rcv fit3 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtc_rcv_fit3_${type}.log
 
-./bin/ml/gbdt_run.sh classification dataframe D10M4096libsvm fit  ${is_raw} 2>&1 | tee -a logs/gbdtc_D10M4096libsvm_fit_${type}.log
-./bin/ml/gbdt_run.sh classification dataframe D10M4096libsvm fit1 ${is_raw} 2>&1 | tee -a logs/gbdtc_D10M4096libsvm_fit1_${type}.log
-./bin/ml/gbdt_run.sh classification dataframe D10M4096libsvm fit2 ${is_raw} 2>&1 | tee -a logs/gbdtc_D10M4096libsvm_fit2_${type}.log
-./bin/ml/gbdt_run.sh classification dataframe D10M4096libsvm fit3 ${is_raw} 2>&1 | tee -a logs/gbdtc_D10M4096libsvm_fit3_${type}.log
+./bin/ml/gbdt_run.sh classification dataframe D10M4096libsvm fit  ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtc_D10M4096libsvm_fit_${type}.log
+./bin/ml/gbdt_run.sh classification dataframe D10M4096libsvm fit1 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtc_D10M4096libsvm_fit1_${type}.log
+./bin/ml/gbdt_run.sh classification dataframe D10M4096libsvm fit2 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtc_D10M4096libsvm_fit2_${type}.log
+./bin/ml/gbdt_run.sh classification dataframe D10M4096libsvm fit3 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtc_D10M4096libsvm_fit3_${type}.log
 
-./bin/ml/gbdt_run.sh regression dataframe epsilon fit  ${is_raw} 2>&1 | tee -a logs/gbdtr_epsilon_fit_${type}.log
-./bin/ml/gbdt_run.sh regression dataframe epsilon fit1 ${is_raw} 2>&1 | tee -a logs/gbdtr_epsilon_fit1_${type}.log
-./bin/ml/gbdt_run.sh regression dataframe epsilon fit2 ${is_raw} 2>&1 | tee -a logs/gbdtr_epsilon_fit2_${type}.log
-./bin/ml/gbdt_run.sh regression dataframe epsilon fit3 ${is_raw} 2>&1 | tee -a logs/gbdtr_epsilon_fit3_${type}.log
+./bin/ml/gbdt_run.sh regression dataframe epsilon fit  ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtr_epsilon_fit_${type}.log
+./bin/ml/gbdt_run.sh regression dataframe epsilon fit1 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtr_epsilon_fit1_${type}.log
+./bin/ml/gbdt_run.sh regression dataframe epsilon fit2 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtr_epsilon_fit2_${type}.log
+./bin/ml/gbdt_run.sh regression dataframe epsilon fit3 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtr_epsilon_fit3_${type}.log
 
-./bin/ml/gbdt_run.sh regression dataframe rcv fit  ${is_raw} 2>&1 | tee -a logs/gbdtr_rcv_fit_${type}.log
-./bin/ml/gbdt_run.sh regression dataframe rcv fit1 ${is_raw} 2>&1 | tee -a logs/gbdtr_rcv_fit1_${type}.log
-./bin/ml/gbdt_run.sh regression dataframe rcv fit2 ${is_raw} 2>&1 | tee -a logs/gbdtr_rcv_fit2_${type}.log
-./bin/ml/gbdt_run.sh regression dataframe rcv fit3 ${is_raw} 2>&1 | tee -a logs/gbdtr_rcv_fit3_${type}.log
+./bin/ml/gbdt_run.sh regression dataframe rcv fit  ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtr_rcv_fit_${type}.log
+./bin/ml/gbdt_run.sh regression dataframe rcv fit1 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtr_rcv_fit1_${type}.log
+./bin/ml/gbdt_run.sh regression dataframe rcv fit2 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtr_rcv_fit2_${type}.log
+./bin/ml/gbdt_run.sh regression dataframe rcv fit3 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtr_rcv_fit3_${type}.log
 
-./bin/ml/gbdt_run.sh regression dataframe D10M4096libsvm fit  ${is_raw} 2>&1 | tee -a logs/gbdtr_D10M4096libsvm_fit_${type}.log
-./bin/ml/gbdt_run.sh regression dataframe D10M4096libsvm fit1 ${is_raw} 2>&1 | tee -a logs/gbdtr_D10M4096libsvm_fit1_${type}.log
-./bin/ml/gbdt_run.sh regression dataframe D10M4096libsvm fit2 ${is_raw} 2>&1 | tee -a logs/gbdtr_D10M4096libsvm_fit2_${type}.log
-./bin/ml/gbdt_run.sh regression dataframe D10M4096libsvm fit3 ${is_raw} 2>&1 | tee -a logs/gbdtr_D10M4096libsvm_fit3_${type}.log
+./bin/ml/gbdt_run.sh regression dataframe D10M4096libsvm fit  ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtr_D10M4096libsvm_fit_${type}.log
+./bin/ml/gbdt_run.sh regression dataframe D10M4096libsvm fit1 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtr_D10M4096libsvm_fit1_${type}.log
+./bin/ml/gbdt_run.sh regression dataframe D10M4096libsvm fit2 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtr_D10M4096libsvm_fit2_${type}.log
+./bin/ml/gbdt_run.sh regression dataframe D10M4096libsvm fit3 ${is_raw} ${if_check} 2>&1 | tee -a logs/gbdtr_D10M4096libsvm_fit3_${type}.log
 
-# rf
-./bin/ml/rf_run.sh classification dataframe epsilon fit  ${is_raw} 2>&1 | tee -a logs/rfc_epsilon_fit_${type}.log
-./bin/ml/rf_run.sh classification dataframe epsilon fit1 ${is_raw} 2>&1 | tee -a logs/rfc_epsilon_fit1_${type}.log
-./bin/ml/rf_run.sh classification dataframe epsilon fit2 ${is_raw} 2>&1 | tee -a logs/rfc_epsilon_fit2_${type}.log
-./bin/ml/rf_run.sh classification dataframe epsilon fit3 ${is_raw} 2>&1 | tee -a logs/rfc_epsilon_fit3_${type}.log
+# RF
+./bin/ml/rf_run.sh classification dataframe epsilon fit  ${is_raw} ${if_check} 2>&1 | tee -a logs/rfc_epsilon_fit_${type}.log
+./bin/ml/rf_run.sh classification dataframe epsilon fit1 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfc_epsilon_fit1_${type}.log
+./bin/ml/rf_run.sh classification dataframe epsilon fit2 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfc_epsilon_fit2_${type}.log
+./bin/ml/rf_run.sh classification dataframe epsilon fit3 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfc_epsilon_fit3_${type}.log
 
-./bin/ml/rf_run.sh classification dataframe higgs fit  ${is_raw} 2>&1 | tee -a logs/rfc_higgs_fit_${type}.log
-./bin/ml/rf_run.sh classification dataframe higgs fit1 ${is_raw} 2>&1 | tee -a logs/rfc_higgs_fit1_${type}.log
-./bin/ml/rf_run.sh classification dataframe higgs fit2 ${is_raw} 2>&1 | tee -a logs/rfc_higgs_fit2_${type}.log
-./bin/ml/rf_run.sh classification dataframe higgs fit3 ${is_raw} 2>&1 | tee -a logs/rfc_higgs_fit3_${type}.log
+./bin/ml/rf_run.sh classification dataframe higgs fit  ${is_raw} ${if_check} 2>&1 | tee -a logs/rfc_higgs_fit_${type}.log
+./bin/ml/rf_run.sh classification dataframe higgs fit1 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfc_higgs_fit1_${type}.log
+./bin/ml/rf_run.sh classification dataframe higgs fit2 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfc_higgs_fit2_${type}.log
+./bin/ml/rf_run.sh classification dataframe higgs fit3 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfc_higgs_fit3_${type}.log
 
-./bin/ml/rf_run.sh classification dataframe mnist8m fit  ${is_raw} 2>&1 | tee -a logs/rfc_mnist8m_fit_${type}.log
-./bin/ml/rf_run.sh classification dataframe mnist8m fit1 ${is_raw} 2>&1 | tee -a logs/rfc_mnist8m_fit1_${type}.log
-./bin/ml/rf_run.sh classification dataframe mnist8m fit2 ${is_raw} 2>&1 | tee -a logs/rfc_mnist8m_fit2_${type}.log
-./bin/ml/rf_run.sh classification dataframe mnist8m fit3 ${is_raw} 2>&1 | tee -a logs/rfc_mnist8m_fit3_${type}.log
+./bin/ml/rf_run.sh classification dataframe mnist8m fit  ${is_raw} ${if_check} 2>&1 | tee -a logs/rfc_mnist8m_fit_${type}.log
+./bin/ml/rf_run.sh classification dataframe mnist8m fit1 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfc_mnist8m_fit1_${type}.log
+./bin/ml/rf_run.sh classification dataframe mnist8m fit2 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfc_mnist8m_fit2_${type}.log
+./bin/ml/rf_run.sh classification dataframe mnist8m fit3 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfc_mnist8m_fit3_${type}.log
 
-./bin/ml/rf_run.sh classification dataframe rcv fit  ${is_raw} 2>&1 | tee -a logs/rfc_rcv_fit_${type}.log
-./bin/ml/rf_run.sh classification dataframe rcv fit1 ${is_raw} 2>&1 | tee -a logs/rfc_rcv_fit1_${type}.log
-./bin/ml/rf_run.sh classification dataframe rcv fit2 ${is_raw} 2>&1 | tee -a logs/rfc_rcv_fit2_${type}.log
-./bin/ml/rf_run.sh classification dataframe rcv fit3 ${is_raw} 2>&1 | tee -a logs/rfc_rcv_fit3_${type}.log
+./bin/ml/rf_run.sh classification dataframe rcv fit  ${is_raw} ${if_check} 2>&1 | tee -a logs/rfc_rcv_fit_${type}.log
+./bin/ml/rf_run.sh classification dataframe rcv fit1 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfc_rcv_fit1_${type}.log
+./bin/ml/rf_run.sh classification dataframe rcv fit2 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfc_rcv_fit2_${type}.log
+./bin/ml/rf_run.sh classification dataframe rcv fit3 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfc_rcv_fit3_${type}.log
 
-./bin/ml/rf_run.sh regression dataframe epsilon fit  ${is_raw} 2>&1 | tee -a logs/rfr_epsilon_fit_${type}.log
-./bin/ml/rf_run.sh regression dataframe epsilon fit1 ${is_raw} 2>&1 | tee -a logs/rfr_epsilon_fit1_${type}.log
-./bin/ml/rf_run.sh regression dataframe epsilon fit2 ${is_raw} 2>&1 | tee -a logs/rfr_epsilon_fit2_${type}.log
-./bin/ml/rf_run.sh regression dataframe epsilon fit3 ${is_raw} 2>&1 | tee -a logs/rfr_epsilon_fit3_${type}.log
+./bin/ml/rf_run.sh regression dataframe epsilon fit  ${is_raw} ${if_check} 2>&1 | tee -a logs/rfr_epsilon_fit_${type}.log
+./bin/ml/rf_run.sh regression dataframe epsilon fit1 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfr_epsilon_fit1_${type}.log
+./bin/ml/rf_run.sh regression dataframe epsilon fit2 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfr_epsilon_fit2_${type}.log
+./bin/ml/rf_run.sh regression dataframe epsilon fit3 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfr_epsilon_fit3_${type}.log
 
-./bin/ml/rf_run.sh regression dataframe higgs fit  ${is_raw} 2>&1 | tee -a logs/rfr_higgs_fit_${type}.log
-./bin/ml/rf_run.sh regression dataframe higgs fit1 ${is_raw} 2>&1 | tee -a logs/rfr_higgs_fit1_${type}.log
-./bin/ml/rf_run.sh regression dataframe higgs fit2 ${is_raw} 2>&1 | tee -a logs/rfr_higgs_fit2_${type}.log
-./bin/ml/rf_run.sh regression dataframe higgs fit3 ${is_raw} 2>&1 | tee -a logs/rfr_higgs_fit3_${type}.log
+./bin/ml/rf_run.sh regression dataframe higgs fit  ${is_raw} ${if_check} 2>&1 | tee -a logs/rfr_higgs_fit_${type}.log
+./bin/ml/rf_run.sh regression dataframe higgs fit1 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfr_higgs_fit1_${type}.log
+./bin/ml/rf_run.sh regression dataframe higgs fit2 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfr_higgs_fit2_${type}.log
+./bin/ml/rf_run.sh regression dataframe higgs fit3 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfr_higgs_fit3_${type}.log
 
-./bin/ml/rf_run.sh regression dataframe mnist8m fit  ${is_raw} 2>&1 | tee -a logs/rfr_mnist8m_fit_${type}.log
-./bin/ml/rf_run.sh regression dataframe mnist8m fit1 ${is_raw} 2>&1 | tee -a logs/rfr_mnist8m_fit1_${type}.log
-./bin/ml/rf_run.sh regression dataframe mnist8m fit2 ${is_raw} 2>&1 | tee -a logs/rfr_mnist8m_fit2_${type}.log
-./bin/ml/rf_run.sh regression dataframe mnist8m fit3 ${is_raw} 2>&1 | tee -a logs/rfr_mnist8m_fit3_${type}.log
+./bin/ml/rf_run.sh regression dataframe mnist8m fit  ${is_raw} ${if_check} 2>&1 | tee -a logs/rfr_mnist8m_fit_${type}.log
+./bin/ml/rf_run.sh regression dataframe mnist8m fit1 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfr_mnist8m_fit1_${type}.log
+./bin/ml/rf_run.sh regression dataframe mnist8m fit2 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfr_mnist8m_fit2_${type}.log
+./bin/ml/rf_run.sh regression dataframe mnist8m fit3 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfr_mnist8m_fit3_${type}.log
 
-./bin/ml/rf_run.sh regression dataframe rcv fit  ${is_raw} 2>&1 | tee -a logs/rfr_rcv_fit_${type}.log
-./bin/ml/rf_run.sh regression dataframe rcv fit1 ${is_raw} 2>&1 | tee -a logs/rfr_rcv_fit1_${type}.log
-./bin/ml/rf_run.sh regression dataframe rcv fit2 ${is_raw} 2>&1 | tee -a logs/rfr_rcv_fit2_${type}.log
-./bin/ml/rf_run.sh regression dataframe rcv fit3 ${is_raw} 2>&1 | tee -a logs/rfr_rcv_fit3_${type}.log
+./bin/ml/rf_run.sh regression dataframe rcv fit  ${is_raw} ${if_check} 2>&1 | tee -a logs/rfr_rcv_fit_${type}.log
+./bin/ml/rf_run.sh regression dataframe rcv fit1 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfr_rcv_fit1_${type}.log
+./bin/ml/rf_run.sh regression dataframe rcv fit2 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfr_rcv_fit2_${type}.log
+./bin/ml/rf_run.sh regression dataframe rcv fit3 ${is_raw} ${if_check} 2>&1 | tee -a logs/rfr_rcv_fit3_${type}.log
 
 # dt
 ./bin/ml/dt_run.sh classification dataframe epsilon fit  ${is_raw} 2>&1 | tee -a logs/dtc_epsilon_fit_${type}.log
