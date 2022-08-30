@@ -17,6 +17,8 @@ import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.tree.configuration.BoostingStrategy
 import org.apache.spark.mllib.tree.GradientBoostedTrees
 import com.bigdata.utils.Utils
+import com.bigdata.compare.ml.EvaluationVerify
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
@@ -43,23 +45,119 @@ class GBDTParams extends Serializable {
   @BeanProperty var minInfoGain: Double = _
   @BeanProperty var subsamplingRate: Double = _
   @BeanProperty var featureSubsetStrategy: String = _
+
   @BeanProperty var trainingDataPath: String = _
   @BeanProperty var testDataPath: String = _
   @BeanProperty var algorithmType: String = _
   @BeanProperty var apiName: String = _
   @BeanProperty var datasetName: String = _
-  @BeanProperty var isRaw: String = _
+  @BeanProperty var isRaw: String = "no"
   @BeanProperty var evaluation: Double = _
   @BeanProperty var costTime: Double = _
   @BeanProperty var algorithmName: String = _
   @BeanProperty var testcaseType: String = _
+  @BeanProperty var saveDataPath: String = _
+  @BeanProperty var verifiedDataPath: String = _
+  @BeanProperty var ifCheck: String = _
+  @BeanProperty var isCorrect: String = _
 }
 
 
-class GBDTKernel {
-  
-  def gbdtDataframeJob(spark: SparkSession, params: GBDTParams): (Double, Double) = {
+object GBDTRunner {
+  def main(args: Array[String]): Unit = {
 
+    try {
+      val modelConfSplit = args(0).split("_")
+      val (algorithmType, dataStructure, datasetName, apiName, isRaw, ifCheck) =
+        (modelConfSplit(0), modelConfSplit(1), modelConfSplit(2), modelConfSplit(3), modelConfSplit(4), modelConfSplit(5))
+      val dataPath = args(1)
+      val dataPathSplit = dataPath.split(",")
+      val (trainingDataPath, testDataPath) = (dataPathSplit(0), dataPathSplit(1))
+      val saveResultPath = args(2)
+
+      val stream = Utils.getStream("conf/ml/gbdt/gbdt.yml")
+      val representer = new Representer
+      representer.addClassTag(classOf[GBDTParams], Tag.MAP)
+      val options = new DumperOptions
+      options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK)
+      val yaml = new Yaml(new Constructor(classOf[GBDTConfig]), representer, options)
+      val description = new TypeDescription(classOf[GBDTParams])
+      yaml.addTypeDescription(description)
+      val configs: GBDTConfig = yaml.load(stream).asInstanceOf[GBDTConfig]
+      val paramsMap = configs.gbdt.get(isRaw match {
+        case "no" => "opt"
+        case "yes" => "raw"
+      }).get(datasetName).asInstanceOf[HashMap[String, Object]]
+      val params = new GBDTParams()
+      params.setNumPartitions(paramsMap.get("numPartitions").asInstanceOf[Int])
+      params.setMaxIter(paramsMap.get("maxIter").asInstanceOf[Int])
+      params.setMaxDepth(paramsMap.get("maxDepth").asInstanceOf[Int])
+      params.setMaxBins(paramsMap.get("maxBins").asInstanceOf[Int])
+      params.setStepSize(paramsMap.get("stepSize").asInstanceOf[Double])
+      params.setCacheNodeIds(paramsMap.get("cacheNodeIds").asInstanceOf[Boolean])
+      params.setMaxMemoryInMB(paramsMap.get("maxMemoryInMB").asInstanceOf[Int])
+      params.setMinInstancesPerNode(paramsMap.get("minInstancesPerNode").asInstanceOf[Int])
+      params.setMinInfoGain(paramsMap.get("minInfoGain").asInstanceOf[Double])
+      params.setSubsamplingRate(paramsMap.get("subsamplingRate").asInstanceOf[Double])
+      params.setFeatureSubsetStrategy(paramsMap.get("featureSubsetStrategy").asInstanceOf[String])
+      params.setAlgorithmType(algorithmType)
+      params.setApiName(apiName)
+      params.setTrainingDataPath(trainingDataPath)
+      params.setTestDataPath(testDataPath)
+      params.setDatasetName(datasetName)
+      params.setIsRaw(isRaw)
+      params.setIfCheck(ifCheck)
+      params.setAlgorithmName("GBDT")
+      params.setSaveDataPath(s"${saveResultPath}/${params.algorithmName}/${algorithmType}_${dataStructure}_${datasetName}_${apiName}")
+      params.setVerifiedDataPath(s"${params.saveDataPath}_raw")
+      var appName = s"${params.algorithmName}_${algorithmType}_${dataStructure}_${datasetName}_${apiName}"
+      if (isRaw == "yes") {
+        params.setVerifiedDataPath(params.saveDataPath)
+        params.setSaveDataPath(s"${params.saveDataPath}_raw")
+        appName = s"${params.algorithmName}_${algorithmType}_${dataStructure}_${datasetName}_${apiName}_RAW"
+      }
+      params.setTestcaseType(appName)
+
+      val conf = new SparkConf().setAppName(appName)
+      val spark = SparkSession.builder.config(conf).getOrCreate()
+
+      val (res, costTime) = dataStructure match {
+        case "dataframe" => new GBDTKernel().runDataframeJob(spark, params)
+        case "rdd" => new GBDTKernel().runRDDJob(spark, params)
+      }
+      params.setEvaluation(res)
+      params.setCostTime(costTime)
+
+      Utils.checkDirs("report")
+      if(ifCheck.equals("yes")){
+        params.setIsCorrect(EvaluationVerify.compareRes(params.saveDataPath, params.verifiedDataPath, spark))
+        val writerIsCorrect = new FileWriter(s"report/!ml_isCorrect.txt", true)
+        writerIsCorrect.write(s"${params.testcaseType} ${params.isCorrect} \n")
+        writerIsCorrect.close()
+      }
+
+      val writer = new FileWriter(s"report/${params.testcaseType}_${
+        Utils.getDateStrFromUTC("yyyyMMdd_HHmmss",
+          System.currentTimeMillis())
+      }.yml")
+      yaml.dump(params, writer)
+
+      println(s"Exec Successful: costTime: ${costTime}s; evaluation: ${res};isCorrect: ${params.isCorrect}")
+    } catch {
+      case e: Throwable =>
+        println(s"Exec Failure: ${e.getMessage}")
+        throw e
+    }
+  }
+}
+
+
+
+class GBDTKernel {
+
+  def runDataframeJob(spark: SparkSession, params: GBDTParams): (Double, Double) = {
+    val sc = spark.sparkContext
+    println(s"Initialized spark session.")
     val startTime = System.currentTimeMillis()
 
     val trainingData = spark
@@ -174,14 +272,15 @@ class GBDTKernel {
           .setMetricName ("rmse")
     }
     val res = evaluator.evaluate(predictions)
+
+    EvaluationVerify.saveRes(res, params.saveDataPath, sc)
+
     (res, costTime)
-}
+  }
 
-  def gbdtRDDJob(spark: SparkSession, params: GBDTParams): (Double, Double) = {
-
+  def runRDDJob(spark: SparkSession, params: GBDTParams): (Double, Double) = {
     val sc = spark.sparkContext
     val startTime = System.currentTimeMillis()
-
     val trainingData = MLUtils.loadLibSVMFile(sc, params.trainingDataPath).repartition(params.numPartitions)
     val trainingLabelPositive = trainingData.map(i => if (i.label < 0) {
       LabeledPoint(0.0, i.features)
@@ -226,91 +325,8 @@ class GBDTKernel {
       case "classification" => labeleAndPreds.filter(r => r._1 == r._2).count.toDouble / testLabelPositive.count()
       case "regression" => math.sqrt(labeleAndPreds.map{ case(v, p) => math.pow((v - p), 2)}.mean())
     }
+    EvaluationVerify.saveRes(res, params.saveDataPath, sc)
+
     (res, costTime)
-  }
-}
-
-object GBDTRunner {
-  def main(args: Array[String]): Unit = {
-
-    try {
-      val modelConfSplit = args(0).split("-")
-      val (algorithmType, dataStructure, datasetName, apiName, isRaw) =
-        (modelConfSplit(0), modelConfSplit(1), modelConfSplit(2), modelConfSplit(3), modelConfSplit(4))
-
-      val dataPath = args(1)
-      val dataPathSplit = dataPath.split(",")
-      val (trainingDataPath, testDataPath) = (dataPathSplit(0), dataPathSplit(1))
-
-      val stream = Utils.getStream("conf/ml/gbdt/gbdt.yml")
-      val representer = new Representer
-      representer.addClassTag(classOf[GBDTParams], Tag.MAP)
-
-      val options = new DumperOptions
-      options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK)
-      val yaml = new Yaml(new Constructor(classOf[GBDTConfig]), representer, options)
-      val description = new TypeDescription(classOf[GBDTParams])
-      yaml.addTypeDescription(description)
-      val config: GBDTConfig = yaml.load(stream).asInstanceOf[GBDTConfig]
-      val paramsMap = config.gbdt.get(isRaw match {
-        case "no" => "opt"
-        case _ => "raw"
-      }).get(datasetName).asInstanceOf[HashMap[String, Object]]
-
-      val params = new GBDTParams()
-
-      params.setAlgorithmType(algorithmType)
-      params.setApiName(apiName)
-      params.setTrainingDataPath(trainingDataPath)
-      params.setTestDataPath(testDataPath)
-      params.setDatasetName(datasetName)
-      params.setIsRaw(isRaw)
-      params.setAlgorithmName("GBDT")
-
-      params.setNumPartitions(paramsMap.get("numPartitions").toString.toInt)
-      params.setMaxIter(paramsMap.get("maxIter").toString.toInt)
-      params.setMaxDepth(paramsMap.get("maxDepth").toString.toInt)
-      params.setMaxBins(paramsMap.get("maxBins").toString.toInt)
-      params.setStepSize(paramsMap.get("stepSize").toString.toDouble)
-      params.setCacheNodeIds(paramsMap.get("cacheNodeIds").toString.toBoolean)
-      params.setMaxMemoryInMB(paramsMap.get("maxMemoryInMB").toString.toInt)
-      params.setMinInstancesPerNode(paramsMap.get("minInstancesPerNode").toString.toInt)
-      params.setMinInfoGain(paramsMap.get("minInfoGain").toString.toDouble)
-      params.setSubsamplingRate(paramsMap.get("subsamplingRate").toString.toDouble)
-      params.setFeatureSubsetStrategy(paramsMap.get("featureSubsetStrategy").toString)
-
-      var appName = s"GBDT_${algorithmType}_${dataStructure}_${datasetName}_${apiName}"
-      if (isRaw.equals("yes")){
-        appName = s"GBDT_RAW_${algorithmType}_${dataStructure}_${datasetName}_${apiName}"
-      }
-      params.setTestcaseType(appName)
-
-      val conf = new SparkConf()
-        .setAppName(appName)
-      val spark = SparkSession.builder.config(conf).getOrCreate()
-
-      val (res, costTime) = dataStructure match {
-        case "dataframe" => new GBDTKernel().gbdtDataframeJob(spark, params)
-        case "rdd" => new GBDTKernel().gbdtRDDJob(spark, params)
-      }
-      params.setEvaluation(res)
-      params.setCostTime(costTime)
-
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
-      val writer = new FileWriter(s"report/GBDT_${
-        Utils.getDateStrFromUTC("yyyyMMdd_HHmmss",
-          System.currentTimeMillis())
-      }.yml")
-      yaml.dump(params, writer)
-      println(s"Exec Successful: costTime: ${costTime}s; evaluation: ${res}")
-    } catch {
-      case e: Throwable =>
-        println(s"Exec Failure: ${e.getMessage}")
-        throw e
-    }
   }
 }
