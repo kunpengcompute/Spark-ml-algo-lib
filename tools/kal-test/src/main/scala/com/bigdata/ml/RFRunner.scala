@@ -1,18 +1,16 @@
 package com.bigdata.ml
-import java.io.{File, FileWriter}
 
-import org.apache.spark.SparkConf
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.ml.Pipeline
+import com.bigdata.utils.Utils
+import com.bigdata.compare.ml.EvaluationVerify
+
 import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
-
-import scala.beans.BeanProperty
-import java.util
-
-import com.bigdata.utils.Utils
+import org.apache.spark.SparkConf
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.ml.Pipeline
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.ml.classification.RandomForestClassifier
 import org.apache.spark.ml.evaluation.{MulticlassClassificationEvaluator, RegressionEvaluator}
 import org.apache.spark.ml.feature.{IndexToString, StringIndexer, VectorIndexer}
@@ -24,6 +22,12 @@ import org.apache.spark.mllib.tree.configuration.{Algo, Strategy}
 import org.apache.spark.mllib.tree.impurity.{Gini, Variance}
 import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.storage.StorageLevel
+
+import java.io.{File, FileWriter, PrintWriter}
+import java.nio.file.{Paths, Files}
+import java.util
+import scala.beans.BeanProperty
+import scala.io.Source
 
 class RFConfig extends Serializable {
   @BeanProperty var rf: util.HashMap[String, util.HashMap[String, util.HashMap[String, util.HashMap[String, util.HashMap[String, Object]]]]] = _
@@ -37,12 +41,13 @@ class RFParams extends Serializable {
   @BeanProperty var numTrees: Int = _
   @BeanProperty var maxDepth: Int = _
   @BeanProperty var maxBins: Int = _
-  @BeanProperty var numClasses: Int = _
   @BeanProperty var useNodeIdCache: Boolean = _
   @BeanProperty var checkpointInterval: Int = _
+  @BeanProperty var numClasses: Int = _
+  @BeanProperty var bcVariables: Boolean = _
   @BeanProperty var featureSubsetStrategy: String = _
   @BeanProperty var featuresType: String = _
-  @BeanProperty var bcVariables: Boolean = _
+
   @BeanProperty var trainingDataPath: String = _
   @BeanProperty var testDataPath: String = _
   @BeanProperty var algorithmType: String = _
@@ -54,24 +59,26 @@ class RFParams extends Serializable {
   @BeanProperty var isRaw: String = _
   @BeanProperty var algorithmName: String = _
   @BeanProperty var testcaseType: String = _
+  @BeanProperty var saveDataPath: String = _
+  @BeanProperty var verifiedDataPath: String = _
+  @BeanProperty var ifCheck: String = _
+  @BeanProperty var isCorrect: String = _
 }
 
 object RFRunner {
   def main(args: Array[String]): Unit = {
     try {
-      val modelConfSplit = args(0).split("_")
-      val (algorithmType, dataStructure, datasetName, apiName) =
-        (modelConfSplit(0), modelConfSplit(1), modelConfSplit(2), modelConfSplit(3))
-
+      val modelConfSplit = args(0).split("-")
+      val (algorithmType, dataStructure, datasetName, apiName, isRaw, ifCheck) =
+        (modelConfSplit(0), modelConfSplit(1), modelConfSplit(2), modelConfSplit(3), modelConfSplit(4), modelConfSplit(5))
       val dataPath = args(1)
       val dataPathSplit = dataPath.split(",")
       val (trainingDataPath, testDataPath) = (dataPathSplit(0), dataPathSplit(1))
-
       val cpuName = args(2)
-      val isRaw = args(3)
-      val sparkConfSplit = args(4).split("_")
+      val sparkConfSplit = args(3).split("_")
       val (master, deployMode, numExec, execCores, execMem) =
         (sparkConfSplit(0), sparkConfSplit(1), sparkConfSplit(2), sparkConfSplit(3), sparkConfSplit(4))
+      val saveResultPath = args(4)
 
       val stream = Utils.getStream("conf/ml/rf/rf.yml")
       val representer = new Representer
@@ -83,24 +90,23 @@ object RFRunner {
       yaml.addTypeDescription(description)
       val configs: RFConfig = yaml.load(stream).asInstanceOf[RFConfig]
       val params = new RFParams()
-
-      val rfParamMap: util.HashMap[String, Object] = configs.rf.get(isRaw match {
+      val paramsMap: util.HashMap[String, Object] = configs.rf.get(isRaw match {
         case "no" => "opt"
-        case _ => "raw"
+        case "yes" => "raw"
       }).get(algorithmType).get(dataStructure).get(datasetName)
-      params.setGenericPt(rfParamMap.getOrDefault("genericPt", "1000").asInstanceOf[Int])
-      params.setMaxMemoryInMB(rfParamMap.getOrDefault("maxMemoryInMB", "256").asInstanceOf[Int])
-      params.setPt(rfParamMap.getOrDefault("pt", "1000").asInstanceOf[Int])
-      params.setNumCopiesInput(rfParamMap.getOrDefault("numCopiesInput", "1").asInstanceOf[Int])
-      params.setNumTrees(rfParamMap.getOrDefault("numTrees", "20").asInstanceOf[Int])
-      params.setMaxDepth(rfParamMap.getOrDefault("maxDepth", "5").asInstanceOf[Int])
-      params.setMaxBins(rfParamMap.getOrDefault("maxBins", "32").asInstanceOf[Int])
-      params.setNumClasses(rfParamMap.get("numClasses").asInstanceOf[Int])
-      params.setUseNodeIdCache(rfParamMap.getOrDefault("useNodeIdCache", "false").asInstanceOf[Boolean])
-      params.setCheckpointInterval(rfParamMap.getOrDefault("checkpointInterval", "10").asInstanceOf[Int])
-      params.setFeatureSubsetStrategy(rfParamMap.getOrDefault("featureSubsetStrategy", "auto").asInstanceOf[String])
-      params.setFeaturesType(rfParamMap.getOrDefault("featuresType", "array").asInstanceOf[String])
-      params.setBcVariables(rfParamMap.getOrDefault("bcVariables", "false").asInstanceOf[Boolean])
+      params.setGenericPt(paramsMap.getOrDefault("genericPt", "1000").asInstanceOf[Int])
+      params.setMaxMemoryInMB(paramsMap.getOrDefault("maxMemoryInMB", "256").asInstanceOf[Int])
+      params.setPt(paramsMap.getOrDefault("pt", "1000").asInstanceOf[Int])
+      params.setNumCopiesInput(paramsMap.getOrDefault("numCopiesInput", "1").asInstanceOf[Int])
+      params.setNumTrees(paramsMap.getOrDefault("numTrees", "20").asInstanceOf[Int])
+      params.setMaxDepth(paramsMap.getOrDefault("maxDepth", "5").asInstanceOf[Int])
+      params.setMaxBins(paramsMap.getOrDefault("maxBins", "32").asInstanceOf[Int])
+      params.setNumClasses(paramsMap.get("numClasses").asInstanceOf[Int])
+      params.setUseNodeIdCache(paramsMap.getOrDefault("useNodeIdCache", "false").asInstanceOf[Boolean])
+      params.setCheckpointInterval(paramsMap.getOrDefault("checkpointInterval", "10").asInstanceOf[Int])
+      params.setFeatureSubsetStrategy(paramsMap.getOrDefault("featureSubsetStrategy", "auto").asInstanceOf[String])
+      params.setFeaturesType(paramsMap.getOrDefault("featuresType", "array").asInstanceOf[String])
+      params.setBcVariables(paramsMap.getOrDefault("bcVariables", "false").asInstanceOf[Boolean])
       params.setTrainingDataPath(trainingDataPath)
       params.setTestDataPath(testDataPath)
       params.setAlgorithmType(algorithmType)
@@ -108,19 +114,21 @@ object RFRunner {
       params.setDatasetName(datasetName)
       params.setCpuName(cpuName)
       params.setIsRaw(isRaw)
+      params.setIfCheck(ifCheck)
       params.setAlgorithmName("RF")
-
+      params.setSaveDataPath(s"${saveResultPath}/${params.algorithmName}/${algorithmType}_${datasetName}_${dataStructure}_${apiName}")
+      params.setVerifiedDataPath(s"${params.saveDataPath}_raw")
+      var appName = s"${params.algorithmName}_${algorithmType}_${datasetName}_${dataStructure}_${apiName}"
+      if (isRaw.equals("yes")){
+        appName = s"${params.algorithmName}_${algorithmType}_${datasetName}_${dataStructure}_${apiName}_raw"
+        params.setVerifiedDataPath(params.saveDataPath)
+        params.setSaveDataPath(s"${params.saveDataPath}_raw")
+      }
+      params.setTestcaseType(appName)
       if (apiName != "fit") {
         params.setNumTrees(5)
         params.setMaxDepth(3)
       }
-
-      var appName = s"RF_${algorithmType}_${datasetName}_${dataStructure}_${apiName}"
-      if (isRaw.equals("yes")){
-        appName = s"RF_RAW_${algorithmType}_${datasetName}_${dataStructure}_${apiName}"
-      }
-      params.setTestcaseType(appName)
-
 
       val conf = new SparkConf().setAppName(appName).setMaster(master)
       val commonParas = Array (
@@ -130,15 +138,15 @@ object RFRunner {
         ("spark.executor.memory", execMem)
       )
       conf.setAll(commonParas)
-      if ("no" == isRaw.asInstanceOf[String]) {
+      if (isRaw.equals("no")) {
         conf.set("spark.boostkit.ml.rf.binnedFeaturesDataType",
-          rfParamMap.get("featuresType").asInstanceOf[String])
+          paramsMap.get("featuresType").asInstanceOf[String])
         conf.set("spark.boostkit.ml.rf.numTrainingDataCopies",
-          rfParamMap.get("numCopiesInput").asInstanceOf[Int].toString)
+          paramsMap.get("numCopiesInput").asInstanceOf[Int].toString)
         conf.set("spark.boostkit.ml.rf.numPartsPerTrainingDataCopy",
-          rfParamMap.get("pt").asInstanceOf[Int].toString)
+          paramsMap.get("pt").asInstanceOf[Int].toString)
         conf.set("spark.boostkit.ml.rf.broadcastVariables",
-          rfParamMap.get("bcVariables").asInstanceOf[Boolean].toString)
+          paramsMap.get("bcVariables").asInstanceOf[Boolean].toString)
       }
       val spark = SparkSession.builder.config(conf).getOrCreate()
 
@@ -149,18 +157,20 @@ object RFRunner {
       params.setEvaluation(res)
       params.setCostTime(costTime)
 
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
+      Utils.checkDirs("report")
+      if(ifCheck.equals("yes")){
+        params.setIsCorrect(EvaluationVerify.compareRes(params.saveDataPath, params.verifiedDataPath, spark))
+        val writerIsCorrect = new FileWriter(s"report/!ml_isCorrect.txt", true)
+        writerIsCorrect.write(s"${params.testcaseType} ${params.isCorrect} \n")
+        writerIsCorrect.close()
       }
-      val writer = new FileWriter(s"report/RF_${
+
+      val writer = new FileWriter(s"report/${params.testcaseType}_${
         Utils.getDateStrFromUTC("yyyyMMdd_HHmmss",
           System.currentTimeMillis())
       }.yml")
-
       yaml.dump(params, writer)
-      println(s"Exec Successful: costTime: ${costTime}s; evaluation: ${res}")
+      println(s"Exec Successful: costTime: ${costTime}s; evaluation: ${res};isCorrect: ${params.isCorrect}")
     } catch {
       case e: Throwable =>
         println(s"Exec Failure: ${e.getMessage}")
@@ -170,6 +180,7 @@ object RFRunner {
 
 class RFKernel {
   def rfDataframeJob(spark: SparkSession, params: RFParams): (Double, Double) = {
+    val sc = spark.sparkContext
     val pt = params.pt
     val trainingDataPath = params.trainingDataPath
     val testDataPath = params.testDataPath
@@ -182,6 +193,7 @@ class RFKernel {
     val featureSubsetStrategy = params.featureSubsetStrategy
     val genericPt = params.genericPt
 
+    println(s"Initialized spark session.")
     val startTime = System.currentTimeMillis()
 
     val reader = spark.read.format("libsvm")
@@ -266,17 +278,14 @@ class RFKernel {
       case "fit3" => pipeline.fit(trainingData, firstParamPair, otherParamPairs_1st, otherParamPairs_2nd)
 
     }
-
     val costTime = (System.currentTimeMillis() - startTime) / 1000.0
 
     val testData = reader
       .load(testDataPath)
       .repartition(genericPt)
       .persist(StorageLevel.MEMORY_AND_DISK_SER)
-
     // Make predictions.
     val predictions = model.transform(testData)
-
     // Select (prediction, true label) and compute test error.
     val evaluator = params.algorithmType match {
       case "classification" =>
@@ -284,7 +293,6 @@ class RFKernel {
           .setLabelCol ("indexedLabel")
           .setPredictionCol ("prediction")
           .setMetricName ("accuracy")
-
       case "regression" =>
         new RegressionEvaluator()
           .setLabelCol ("indexedLabel")
@@ -292,6 +300,7 @@ class RFKernel {
           .setMetricName ("rmse")
     }
     val res = evaluator.evaluate(predictions)
+    Utils.saveEvaluation(res, params.saveDataPath, sc)
     (res, costTime)
   }
 
@@ -330,7 +339,6 @@ class RFKernel {
       LabeledPoint (i.label, i.features)
     })
 
-
     val model = params.algorithmType match {
       case "classification" =>
         val seed = "org.apache.spark.ml.classification.RandomForestClassifier".hashCode
@@ -366,9 +374,7 @@ class RFKernel {
             RandomForest.trainRegressor(trainingLabelPositive.toJavaRDD, categoricalFeaturesInfo,
               numTrees, featureSubsetStrategy, "variance", maxDepth, maxBins, seed)
         }
-
     }
-
     val costTime = (System.currentTimeMillis() - startTime) / 1000.0
 
     val testData = MLUtils.loadLibSVMFile(sc, testDataPath)
@@ -379,7 +385,6 @@ class RFKernel {
     } else {
       LabeledPoint (i.label, i.features)
     })
-
     val labeleAndPreds = testLabelPositive.map{ point =>
       val prediction = model.predict(point.features)
       (point.label, prediction)
@@ -388,7 +393,7 @@ class RFKernel {
       case "classification" => 1.0 - labeleAndPreds.filter(r => r._1 == r._2).count.toDouble / testLabelPositive.count()
       case "regression" => math.sqrt(labeleAndPreds.map{ case(v, p) => math.pow((v - p), 2)}.mean())
     }
+    Utils.saveEvaluation(res, params.saveDataPath, sc)
     (res, costTime)
   }
-
 }
