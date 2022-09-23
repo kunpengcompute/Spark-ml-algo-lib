@@ -1,17 +1,18 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter}
+import java.io.FileWriter
 import java.util
 
+import scala.beans.BeanProperty
+
 import com.bigdata.utils.Utils
-import org.apache.spark.graphx.lib.WeakCliqueEnumeration
-import org.apache.spark.{SparkConf, SparkContext}
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 
-import scala.beans.BeanProperty
+import org.apache.spark.graphx.lib.WeakCliqueEnumeration
+import org.apache.spark.{SparkConf, SparkContext}
 
 class WceConfig extends Serializable {
   @BeanProperty var wce: util.HashMap[String, Object] = _
@@ -39,6 +40,8 @@ object WCERunner {
       val sc = new SparkContext(sparkConf)
 
       val datasetName = args(0)
+      val inputPath = args(1)
+      val outputPath = args(2)
 
       // record start time
       val startTime = System.currentTimeMillis()
@@ -57,8 +60,6 @@ object WCERunner {
 
       val params = new WceParams()
 
-      val inputPath = paramsMap.get("inputPath").toString
-      val outputPath = paramsMap.get("outputPath").toString
       val splitGraph = paramsMap.get("splitGraph").toString
       val maxIterations = paramsMap.get("maxIterations").toString.toInt
       val maxDegree = paramsMap.get("maxDegree").toString.toInt
@@ -87,11 +88,7 @@ object WCERunner {
 
       params.setCostTime(costTime)
 
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+      Utils.checkDirs("report")
       val writer = new FileWriter(s"report/WCE_${
         Utils.getDateStrFromUTC("yyyyMMdd_HHmmss",
           System.currentTimeMillis())

@@ -1,23 +1,27 @@
 #!/bin/bash
 set -e
-case "$1" in 
+
+function alg_usage() {
+  echo "Usage:<dataset name>"
+  echo "dataset name: graph500_23, graph500_24, graph500_25"
+}
+
+case "$1" in
 -h | --help | ?)
- echo "Usage:<dataset name>"
- echo "dataset name:graph500_23,or graph500_24,or graph500_25"
- exit 0
- ;;
+  alg_usage
+  exit 0
+  ;;
 esac
 
 if [ $# -ne 1 ];then
-	echo "please input dataset name:graph500_23,or graph500_24,or graph500_25"
+  alg_usage
 	exit 0
 fi
+
 dataset_name=$1
 cpu_name=$(lscpu | grep Architecture | awk '{print $2}')
 
-BIN_DIR="$(cd "$(dirname "$0")";pwd)"
-CONF_DIR="${BIN_DIR}/../../conf/graph"
-source ${CONF_DIR}/mce/mce_spark.properties
+source conf/graph/mce/mce_spark.properties
 num_executors_val="numExecutors_${cpu_name}"
 executor_cores_val="executorCores"
 executor_memory_val="executorMemory_${cpu_name}"
@@ -46,13 +50,19 @@ echo "${executor_cores_val}:${executor_cores}"
 echo "${executor_memory_val}:${executor_memory}"
 echo "${extra_java_options_val}:${extra_java_options}"
 
-source ${CONF_DIR}/graph_datasets.properties
+source conf/graph/graph_datasets.properties
 spark_version=sparkVersion
 spark_version_val=${!spark_version}
+kal_version=kalVersion
+kal_version_val=${!kal_version}
+scala_version=scalaVersion
+scala_version_val=${!scala_version}
+
 input_path=${!dataset_name}
-output_path_val="${dataset_name}_mce"
-output_path=${!output_path_val}
-echo "${dataset_name}: ${input_path},${output_path}"
+output_path="${output_path_prefix}/mce/${dataset_name}"
+echo "${dataset_name} : ${input_path}"
+echo "outputPath : ${output_path}"
+hdfs dfs -rm -r -f ${output_path}
 
 echo "start to clean exist output"
 hdfs dfs -rm -r -f -skipTrash ${output_path}
@@ -64,8 +74,11 @@ ssh agent2 "echo 3 > /proc/sys/vm/drop_caches"
 ssh agent3 "echo 3 > /proc/sys/vm/drop_caches"
 sleep 30
 
-mkdir -p log
-echo "start to submit spark jobs"
+scp lib/fastutil-8.3.1.jar lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent1:/opt/graph_classpath/
+scp lib/fastutil-8.3.1.jar lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent2:/opt/graph_classpath/
+scp lib/fastutil-8.3.1.jar lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent3:/opt/graph_classpath/
+
+echo "start to submit spark jobs -- mce-${dataset_name}"
 spark-submit \
 --class com.bigdata.graph.MaximalCliqueEnumerationRunner \
 --deploy-mode ${deploy_mode} \
@@ -77,10 +90,10 @@ spark-submit \
 --conf spark.locality.wait=10 \
 --conf spark.rdd.compress=false \
 --conf spark.io.compression.codec=lz4 \
---jars "lib/fastutil-8.3.1.jar,lib/boostkit-graph-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar" \
---driver-class-path "lib/fastutil-8.3.1.jar:lib/kal-test_2.11-0.1.jar:lib/snakeyaml-1.19.jar:lib/boostkit-graph-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar" \
---conf "spark.executor.extraClassPath=fastutil-8.3.1.jar:boostkit-graph-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar" \
-./lib/kal-test_2.11-0.1.jar ${dataset_name} ${input_path} ${output_path} | tee ./log/log
+--jars "lib/fastutil-8.3.1.jar,lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+--driver-class-path "lib/fastutil-8.3.1.jar:lib/kal-test_${scala_version_val}-0.1.jar:lib/snakeyaml-1.19.jar:lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+--conf "spark.executor.extraClassPath=/opt/graph_classpath/fastutil-8.3.1.jar:/opt/graph_classpath/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+./lib/kal-test_${scala_version_val}-0.1.jar ${dataset_name} ${input_path} ${output_path} | tee ./log/log
 
 
 

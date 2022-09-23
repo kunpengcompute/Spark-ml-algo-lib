@@ -1,20 +1,24 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter}
+import java.io.FileWriter
 import java.util.{HashMap => JHashMap}
-import com.bigdata.utils.Utils
-import org.apache.spark.SparkConf
-import org.apache.spark.graphx.Graph
-import org.apache.spark.graphx.lib.TriangleCount
 
 import scala.beans.BeanProperty
-import org.apache.spark.sql.SparkSession
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
+
+import com.bigdata.utils.Utils
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
+
+import org.apache.spark.SparkConf
+import org.apache.spark.graphx.Graph
+import org.apache.spark.graphx.lib.TriangleCount
+import org.apache.spark.sql.SparkSession
 
 class TriangleCountParams extends Serializable {
+  @BeanProperty var inputPath: String = _
+  @BeanProperty var outputPath: String = _
   @BeanProperty var partition: Int = _
   @BeanProperty var split: JHashMap[String, String] = new JHashMap[String, String]
   @BeanProperty var datasetName: String = _
@@ -30,20 +34,16 @@ object TriangleCountRunner {
   private val TC_RESULT_SPLIT = ","
 
   def main(args: Array[String]): Unit = {
-    if (args.length < 4) {
+    if (args.length < 5) {
       println(args.mkString(","))
-      println("Usage:TriangleCountRunner <dataset_name><input_path><api_name>")
+      println("Usage:TriangleCountRunner <dataset_name><input_path><api_name><isRaw>")
       System.exit(-1)
     }
     val dataset = args(0)
     val inputPath = args(1)
     val outputPath = args(2)
     val api = args(3)
-    val isRaw = if (args.length > 4) {
-      args(4)
-    } else {
-      "no"
-    }
+    val isRaw = args(4)
 
     val representer = new Representer
     representer.addClassTag(classOf[TriangleCountParams], Tag.MAP)
@@ -57,7 +57,7 @@ object TriangleCountRunner {
     val split = params.getSplit.get(dataset)
     try {
       var appName = s"TC_${api}_${dataset}"
-      if (isRaw.equals("yes")){
+      if (isRaw.equals("yes")) {
         appName = s"TC_RAW_${api}_${dataset}"
       }
       val conf = new SparkConf().setAppName(appName)
@@ -83,17 +83,16 @@ object TriangleCountRunner {
       Util.saveDataToHDFS(result, TC_RESULT_SPLIT, outputPath)
 
       val costTime = (System.currentTimeMillis() - startTime) / 1000.0
+      params.setInputPath(inputPath)
+      params.setOutputPath(outputPath)
       params.setCostTime(costTime)
       params.setDatasetName(dataset)
       params.setApiName(api)
       params.setIsRaw(isRaw)
       params.setAlgorithmName("TriangleCount")
       params.setTestcaseType(appName)
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+
+      Utils.checkDirs("report")
       val writer = new FileWriter(s"report/TC_${
         Utils.getDateStrFromUTC("yyyyMMdd_HHmmss",
           System.currentTimeMillis())

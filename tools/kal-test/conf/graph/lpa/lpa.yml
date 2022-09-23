@@ -1,12 +1,9 @@
 partition:
-  graph500_22_x86_64_yes: 472
-  graph500_22_x86_64_no: 235
-  graph500_22_aarch64_no: 282
-  graph500_24_x86_64_yes: 702
-  graph500_24_x86_64_no: 225
-  graph500_24_aarch64_no: 282
-  graph500_25_x86_64_yes: 472
-  graph500_25_x86_64_no: 225
-  graph500_25_aarch64_no: 282
+  graph500_22_x86_64: 472
+  graph500_22_aarch64: 282
+  graph500_24_x86_64: 702
+  graph500_24_aarch64: 282
+  graph500_25_x86_64: 472
+  graph500_25_aarch64: 282
 split: " "
 maxSteps: 10

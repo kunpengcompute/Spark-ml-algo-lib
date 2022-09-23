@@ -11,12 +11,14 @@ The Kunpeng algorithm library test tool can be used to test machine learning and
 1.  The Maven compilation environment has been configured.
 2.  The algorithm software package has been obtained.
 #### Procedure
-1.  Go to the Spark-ml-algo-lib/tools/kal-test directory in the compilation environment.
-2.  Install the dependencies.<br/>
-    mvn install:install-file -DgroupId=org.apache.spark.graphx.lib -DartifactId=boostkit-graph-kernel-client_2.11 -Dversion=2.1.0 -Dfile=lib/boostkit-graph-kernel-client_2.11-1.2.0.jar -Dpackaging=jar**_
-3.  Run the compile command:<br/>
-    mvn clean install -DskipTests_**
-4.  View the kal-test_2.11-0.1.jar file generated in Spark-ml-algo-lib/tools/kal-test/target.
+1. Go to the Spark-ml-algo-lib/tools/kal-test directory in the compilation environment.
+2. Install the dependencies.<br/>
+Take spark 2.3.2 as an example, the install command is as follows:<br/>
+&emsp;&emsp;mvn install:install-file -DgroupId=org.apache.spark -DartifactId=boostkit-graph-kernel-client_2.11 -Dversion -Dclassifier=spark2.3.2 -Dfile=boostkit-graph-kernel-client_2.11-2.1.0-spark2.3.2.jar -Dpackaging=jar -DgeneratePom=true<br/>
+&emsp;&emsp;mvn install:install-file -DgroupId=org.apache.spark -DartifactId=boostkit-ml-kernel-client_2.11 -Dversion -Dclassifier=spark2.3.2 -Dfile=boostkit-ml-kernel-client_2.11-2.1.0-spark2.3.2.jar -Dpackaging=jar -DgeneratePom=true
+3. Run the compile command:<br/>
+    mvn clean install
+4. View the kal-test_2.11-0.1.jar file generated in Spark-ml-algo-lib/tools/kal-test/target.
 
 ### Deployment and Usage Description
 

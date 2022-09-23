@@ -1,4 +1,3 @@
-partition: 300
 split:
   cit_patents: "\t"
   enwiki_2018: "\t"

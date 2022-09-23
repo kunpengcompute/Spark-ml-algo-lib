@@ -2,37 +2,31 @@
 
 louvain:
   graph500_22:
-    outputPath: hdfs:///tmp/graph/result/louvain/graph500_22
     splitGraph: " "
     maxIterations: 20
     isDirected: false
 
   graph500_24:
-    outputPath: hdfs:///tmp/graph/result/louvain/graph500_24
     splitGraph: " "
     maxIterations: 20
     isDirected: false
 
   graph500_25:
-    outputPath: hdfs:///tmp/graph/result/louvain/graph500_25
     splitGraph: " "
     maxIterations: 20
     isDirected: false
 
   cit_patents:
-    outputPath: hdfs:///tmp/graph/result/louvain/cit_patents
     splitGraph: "\t"
     maxIterations: 20
     isDirected: true
 
   uk_2002:
-    outputPath: hdfs:///tmp/graph/result/louvain/uk_2002
     splitGraph: "\t"
     maxIterations: 20
     isDirected: true
 
   arabic_2005:
-    outputPath: hdfs:///tmp/graph/result/louvain/arabic_2005
     splitGraph: "\t"
     maxIterations: 20
     isDirected: true

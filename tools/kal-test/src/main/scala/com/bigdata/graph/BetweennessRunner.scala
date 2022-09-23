@@ -1,17 +1,19 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter, InputStreamReader}
+import java.io.{FileWriter, InputStreamReader}
 import java.util
 
+import scala.beans.BeanProperty
+
+import com.bigdata.compare.graph.BetweennessClosenessVerify
 import com.bigdata.utils.Utils
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.graphx.lib.Betweenness
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 
-import scala.beans.BeanProperty
+import org.apache.spark.graphx.lib.Betweenness
+import org.apache.spark.{SparkConf, SparkContext}
 
 class BetweennessConfig extends Serializable{
   @BeanProperty var betweenness: util.HashMap[String, Object] = _
@@ -31,9 +33,8 @@ class BetweennessParams extends Serializable{
   @BeanProperty var groundTruthPath: String = _
   @BeanProperty var algorithmName: String = _
   @BeanProperty var testcaseType: String = _
+  @BeanProperty var accuracy: Double = _
 }
-
-
 
 object BetweennessRunner {
 
@@ -43,7 +44,7 @@ object BetweennessRunner {
       val isRaw = args(1)
       val partition = args(2).toInt
       val inputPath = args(3)
-      val computeTopK = args(4)
+      val check = args(4)
       val outputPath = args(5)
       val groundTruthPath = args(6)
 
@@ -68,7 +69,7 @@ object BetweennessRunner {
       params.setInputPath(inputPath)
       params.setK(paramsMap.get("k").toString.toInt)
       params.setP(paramsMap.get("p").toString.toFloat)
-      params.setComputeTopK(computeTopK)
+      params.setComputeTopK(check)
       params.setIsRaw(isRaw)
       params.setComputePartitions(partition)
       params.setOutputPath(outputPath)
@@ -89,22 +90,13 @@ object BetweennessRunner {
       val costTime = (System.currentTimeMillis() - startTime) / 1000.0
 
       params.setCostTime(costTime)
-      if (computeTopK.equals("yes")) {
-        val groundTruthSet = Util.readTopKResultFromHDFS(sc,
-          groundTruthPath, ",", partition).collect().toSet
-        val resultSet = Util.readTopKResultFromHDFS(sc,
-          outputPath, ",", partition).collect().toSet
-        val accuracy = groundTruthSet.intersect(resultSet).size.toDouble / groundTruthSet.size
+      println(s"Betweenness_${datasetName} Exec Successful: costTime: ${costTime}")
+      if (check.equals("yes")) {
+        val acc = BetweennessClosenessVerify.main(Array(groundTruthPath, outputPath, partition.toString))
+        params.setAccuracy(acc)
+      }
 
-        println(s"Top-K Betweenness Computing Finished. Accuracy ${accuracy}.\nExec Successful: costTime: ${costTime}")
-      } else {
-        println(s"Exec Successful: costTime: ${costTime}")
-      }
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+      Utils.checkDirs("report")
       val writer = new FileWriter(
         s"report/Betweenness_${Utils.getDateStrFromUTC("yyyyMMdd_HHmmss", System.currentTimeMillis())}.yml")
       yaml.dump(params, writer)

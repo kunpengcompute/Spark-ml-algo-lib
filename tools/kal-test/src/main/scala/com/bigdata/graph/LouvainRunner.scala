@@ -1,18 +1,18 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter}
+import java.io.FileWriter
 import java.util
 
+import scala.beans.BeanProperty
+
 import com.bigdata.utils.Utils
-import org.apache.spark.graphx.Graph
-import org.apache.spark.graphx.lib.Louvain
-import org.apache.spark.{SparkConf, SparkContext}
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 
-import scala.beans.BeanProperty
+import org.apache.spark.graphx.lib.Louvain
+import org.apache.spark.{SparkConf, SparkContext}
 
 class LouvainConfig extends Serializable {
   @BeanProperty var louvain: util.HashMap[String, Object] = _
@@ -43,6 +43,7 @@ object LouvainRunner {
       val numPartitions = args(1).toInt
       val isRaw = args(2)
       val inputPath = args(3)
+      val outputPath = args(4)
 
       val stream = Utils.getStream("conf/graph/louvain/louvain.yml")
 
@@ -61,7 +62,6 @@ object LouvainRunner {
 
       val params = new LouvainParams()
 
-      val outputPath = paramsMap.get("outputPath").toString
       val splitGraph = paramsMap.get("splitGraph").toString
       val maxIterations = paramsMap.get("maxIterations").toString.toInt
       val isDirected = paramsMap.get("isDirected").toString.toBoolean
@@ -101,11 +101,7 @@ object LouvainRunner {
       params.setModularity(q)
       params.setCommunityNum(commNum)
 
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+      Utils.checkDirs("report")
       val writer = new FileWriter(
         s"report/Louvain_${Utils.getDateStrFromUTC("yyyyMMdd_HHmmss", System.currentTimeMillis())}.yml")
       yaml.dump(params, writer)

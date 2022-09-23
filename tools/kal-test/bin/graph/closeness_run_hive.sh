@@ -17,6 +17,10 @@ fi
 source conf/graph/graph_datasets.properties
 spark_version=sparkVersion
 spark_version_val=${!spark_version}
+kal_version=kalVersion
+kal_version_val=${!kal_version}
+scala_version=scalaVersion
+scala_version_val=${!scala_version}
 
 table_name=$1
 col1=$2
@@ -61,7 +65,7 @@ spark-submit \
 --conf spark.shuffle.compress=true \
 --conf spark.shuffle.spill.compress=true \
 --conf spark.io.compression.codec=lz4 \
---jars "lib/fastutil-8.3.1.jar,lib/boostkit-graph-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar" \
---driver-class-path "lib/kal-test_2.11-0.1.jar:lib/boostkit-graph-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar" \
---conf "spark.executor.extraClassPath=fastutil-8.3.1.jar:boostkit-graph-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar" \
-./lib/kal-test_2.11-0.1.jar ${table_name} ${col1} ${col2} ${colWeight} ${weighted} ${k} ${p} ${partition} ${save_mode} ${save_arg}
+--jars "lib/fastutil-8.3.1.jar,lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+--driver-class-path "lib/kal-test_${scala_version_val}-0.1.jar:lib/snakeyaml-1.19.jar:lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+--conf "spark.executor.extraClassPath=/opt/graph_classpath/fastutil-8.3.1.jar:/opt/graph_classpath/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+./lib/kal-test_${scala_version_val}-0.1.jar ${table_name} ${col1} ${col2} ${colWeight} ${weighted} ${k} ${p} ${partition} ${save_mode} ${save_arg}

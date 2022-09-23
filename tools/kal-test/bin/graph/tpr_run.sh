@@ -1,20 +1,22 @@
 #!/bin/bash
 set -e
 
-case "$1" in
--h | --help | ?)
+function alg_usage() {
   echo "Usage: <dataset name> <isRaw>"
   echo "1st argument: name of dataset: twitter_tpr"
   echo "2nd argument: optimization algorithm or raw: no/yes"
+}
+
+case "$1" in
+-h | --help | ?)
+  alg_usage
   exit 0
   ;;
 esac
 
-if [ $# -ne 2 ]; then
-  echo "please input 2 arguments: <dataset name> <isRaw>"
-  echo "1st argument: name of dataset: twitter_tpr"
-  echo "2nd argument: optimization algorithm or raw: no/yes"
-  exit 0
+if [ $# -ne 2 ];then
+  alg_usage
+	exit 0
 fi
 
 source conf/graph/tpr/tpr_spark.properties
@@ -63,8 +65,8 @@ data_path=${dataset_name}
 data_path_val=${!data_path}
 echo "${dataset_name} : ${data_path_val}"
 
-outputPath="/tmp/graph/result/tpr/${dataset_name}/${is_raw}"
-hdfs dfs -rm -r -f ${outputPath}
+output_path="${output_path_prefix}/tpr/${is_raw}/${dataset_name}"
+hdfs dfs -rm -r -f ${output_path}
 
 echo "start to clean cache and sleep 30s"
 ssh server1 "echo 3 > /proc/sys/vm/drop_caches"
@@ -96,7 +98,7 @@ if [ ${is_raw} == "no" ]; then
   --jars "lib/fastutil-8.3.1.jar,lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
   --driver-class-path "lib/kal-test_${scala_version_val}-0.1.jar:lib/snakeyaml-1.19.jar:lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
   --conf "spark.executor.extraClassPath=/opt/graph_classpath/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
-  ./lib/kal-test_${scala_version_val}-0.1.jar ${dataset_name} ${data_path_val} ${outputPath} ${is_raw} | tee ./log/log
+  ./lib/kal-test_${scala_version_val}-0.1.jar ${dataset_name} ${data_path_val} ${output_path} ${is_raw} | tee ./log/log
 else
   scp lib/kal-test_${scala_version_val}-0.1.jar root@agent1:/opt/graph_classpath/
   scp lib/kal-test_${scala_version_val}-0.1.jar root@agent2:/opt/graph_classpath/
@@ -118,5 +120,5 @@ else
   --conf "spark.executor.extraJavaOptions=${extra_java_options_val}" \
   --driver-class-path "lib/snakeyaml-1.19.jar" \
   --conf "spark.executor.extraClassPath=/opt/graph_classpath/kal-test_${scala_version_val}-0.1.jar" \
-  ./lib/kal-test_${scala_version_val}-0.1.jar ${dataset_name} ${data_path_val} ${outputPath} ${is_raw} | tee ./log/log
+  ./lib/kal-test_${scala_version_val}-0.1.jar ${dataset_name} ${data_path_val} ${output_path} ${is_raw} | tee ./log/log
 fi

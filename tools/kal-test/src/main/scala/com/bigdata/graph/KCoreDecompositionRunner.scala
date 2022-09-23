@@ -1,19 +1,22 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter}
+import java.io.FileWriter
 import java.util.{HashMap => JHashMap}
-
-import com.bigdata.utils.Utils
-import org.apache.spark.graphx.lib.KCoreDecomposition
-import org.apache.spark.{SparkConf, SparkContext}
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
-import org.yaml.snakeyaml.constructor.Constructor
-import org.yaml.snakeyaml.nodes.Tag
-import org.yaml.snakeyaml.representer.Representer
 
 import scala.beans.BeanProperty
 
+import com.bigdata.utils.Utils
+import org.yaml.snakeyaml.constructor.Constructor
+import org.yaml.snakeyaml.nodes.Tag
+import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
+
+import org.apache.spark.graphx.lib.KCoreDecomposition
+import org.apache.spark.{SparkConf, SparkContext}
+
 class KCoreParams extends Serializable {
+  @BeanProperty var inputPath: String = _
+  @BeanProperty var outputPath: String = _
   @BeanProperty var partition = new JHashMap[String, Int]
   @BeanProperty var split = new JHashMap[String, String]
   @BeanProperty var iterNum = new JHashMap[String, Int]
@@ -69,16 +72,15 @@ object KCoreDecompositionRunner {
 
       println(s"Exec Successful: KCore Decomposition costTime: ${costTime}s")
 
+      params.setInputPath(inputPath)
+      params.setOutputPath(outputPath)
       params.setDatasetName(dataset)
       params.setIsRaw(isRaw)
       params.setCurPartition(s"$partition")
       params.setAlgorithmName("KCore")
       params.setTestcaseType(s"KCore_${dataset}")
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+
+      Utils.checkDirs("report")
       val writer = new FileWriter(s"report/KCORE_${
         Utils.getDateStrFromUTC("yyyyMMdd_HHmmss",
           System.currentTimeMillis())

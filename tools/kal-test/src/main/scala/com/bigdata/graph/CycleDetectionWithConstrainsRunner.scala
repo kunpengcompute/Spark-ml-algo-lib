@@ -1,19 +1,22 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter}
+import java.io.FileWriter
 import java.util.{HashMap => JHashMap}
 
-import com.bigdata.utils.Utils
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.graphx.lib.CycleDetectionWithConstrains
-
 import scala.beans.BeanProperty
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
+
+import com.bigdata.utils.Utils
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
+
+import org.apache.spark.graphx.lib.CycleDetectionWithConstrains
+import org.apache.spark.{SparkConf, SparkContext}
 
 class CDParams extends Serializable {
+  @BeanProperty var inputPath: String = _
+  @BeanProperty var outputPath: String = _
   @BeanProperty var partition = new JHashMap[String, Int]
   @BeanProperty var split = new JHashMap[String, String]
   @BeanProperty var minLoopLen: Int = _
@@ -86,23 +89,22 @@ object CycleDetectionWithConstrainsRunner {
 
             }
       }
-      val result = CycleDetectionWithConstrains.run(input, partition, params.minLoopLen,params.maxLoopLen,
-        params.minRate,params.maxRate)
+      val result = CycleDetectionWithConstrains.run(input, partition, params.minLoopLen,
+        params.maxLoopLen, params.minRate, params.maxRate)
 
       Util.saveDataToHDFS(result.map(_.mkString(",")), outputPath)
 
       val costTime = (System.currentTimeMillis() - startTime) / 1000.0
+      params.setInputPath(inputPath)
+      params.setOutputPath(outputPath)
       params.setCostTime(costTime)
       params.setDatasetName(dataset)
       params.setApiName(api)
       params.setIsRaw(isRaw)
       params.setAlgorithmName("CD")
       params.setTestcaseType(s"CD_${dataset}")
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+
+      Utils.checkDirs("report")
       val writer = new FileWriter(s"report/CD_${
         Utils.getDateStrFromUTC("yyyyMMdd_HHmmss",
           System.currentTimeMillis())

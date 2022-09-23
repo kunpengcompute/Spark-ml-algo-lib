@@ -1,18 +1,17 @@
 package com.bigdata.utils
 
 import org.apache.hadoop.fs.{FileSystem, Path}
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.mllib.linalg._
-import org.apache.spark.rdd.RDD
 
 import java.io.{File, FileInputStream, InputStreamReader, PrintWriter}
 import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Paths}
 import java.text.SimpleDateFormat
 import java.util.{Date, TimeZone}
-import java.nio.file.{Files, Paths}
+
 import scala.io.Source
 
+import org.apache.spark.SparkContext
+import org.apache.spark.mllib.linalg._
 
 object Utils {
   /**

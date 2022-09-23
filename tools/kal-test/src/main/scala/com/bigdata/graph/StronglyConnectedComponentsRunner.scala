@@ -1,20 +1,23 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter}
+import java.io.FileWriter
 import java.util.{HashMap => JHashMap}
 
-import com.bigdata.utils.Utils
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.graphx.Graph
-import org.apache.spark.graphx.lib.StronglyConnectedComponents
-
 import scala.beans.BeanProperty
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
+
+import com.bigdata.utils.Utils
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
+
+import org.apache.spark.graphx.Graph
+import org.apache.spark.graphx.lib.StronglyConnectedComponents
+import org.apache.spark.{SparkConf, SparkContext}
 
 class SCCParams extends Serializable {
+  @BeanProperty var inputPath: String = _
+  @BeanProperty var outputPath: String = _
   @BeanProperty var partition: Int = _
   @BeanProperty var split: JHashMap[String, String] = new JHashMap[String, String]
 
@@ -42,11 +45,8 @@ object StronglyConnectedComponentsRunner {
     val api = args(3)
     val isRaw = args(4)
     val cpuName = args(5)
-    val paramFilepath = if ("aarch64".equals(cpuName)) {
-      "conf/graph/scc/scc.yml"
-    } else {
-      "conf/graph/scc/scc_x86.yml"
-    }
+    val partNum = args(6).toInt
+    val paramFilepath = "conf/graph/scc/scc.yml"
 
     val representer = new Representer
     representer.addClassTag(classOf[SCCParams], Tag.MAP)
@@ -62,24 +62,23 @@ object StronglyConnectedComponentsRunner {
       val sc = new SparkContext(new SparkConf().setAppName(appName))
       val startTime = System.currentTimeMillis()
 
-      val input = Util.readUndirectDataFromHDFS(sc, inputPath, split, params.getPartition)
+      val input = Util.readUndirectDataFromHDFS(sc, inputPath, split, partNum)
         .flatMap(x => Iterator((x._1.toLong, x._2.toLong)))
       val graph = Graph.fromEdgeTuples(input, 0)
       val result = StronglyConnectedComponents.run(graph, SCC_NUM_ITER)
       Util.saveDataToHDFS(result.vertices, SCC_RESULT_SPLIT, outputPath)
 
       val costTime = (System.currentTimeMillis() - startTime) / 1000.0
+      params.setInputPath(inputPath)
+      params.setOutputPath(outputPath)
       params.setCostTime(costTime)
       params.setDatasetName(dataset)
       params.setApiName(api)
       params.setIsRaw(isRaw)
       params.setAlgorithmName("SCC")
       params.setTestcaseType(s"SCC_${dataset}")
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+
+      Utils.checkDirs("report")
       val writer = new FileWriter(s"report/SCC_${
         Utils.getDateStrFromUTC("yyyyMMdd_HHmmss",
           System.currentTimeMillis())

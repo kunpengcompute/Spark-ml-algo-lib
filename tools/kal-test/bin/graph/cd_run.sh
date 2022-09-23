@@ -1,17 +1,23 @@
 #!/bin/bash
 set -e
-case "$1" in 
--h | --help | ?)
+
+function alg_usage() {
  echo "Usage:<dataset name>"
- echo "dataset name: simulate1 or simulate2 or usaRoad"
- exit 0
- ;;
+ echo "dataset name: simulate1,simulate2,usaRoad"
+}
+
+case "$1" in
+-h | --help | ?)
+  alg_usage
+  exit 0
+  ;;
 esac
 
 if [ $# -ne 1 ];then
-	echo "please input dataset name: simulate1 or simulate2 or usaRoad"
+  alg_usage
 	exit 0
 fi
+
 dataset_name=$1
 if [ $dataset_name != 'simulate1' ] && [ $dataset_name != 'simulate2' ] && [ $dataset_name != 'usaRoad' ];
 then
@@ -22,13 +28,11 @@ fi
 
 cpu_name=$(lscpu | grep Architecture | awk '{print $2}')
 
-BIN_DIR="$(cd "$(dirname "$0")";pwd)"
-CONF_DIR="${BIN_DIR}/../../conf/graph"
-source ${CONF_DIR}/cd/cd_spark_${cpu_name}.properties
-num_executors_val="numExecutors_${dataset_name}"
-executor_cores_val="executorCores_${dataset_name}"
-executor_memory_val="executorMemory_${dataset_name}"
-executor_extra_javaopts_val="executorExtraJavaopts_${dataset_name}"
+source conf/graph/cd/cd_spark.properties
+num_executors_val="numExecutors_${dataset_name}_${cpu_name}"
+executor_cores_val="executorCores_${dataset_name}_${cpu_name}"
+executor_memory_val="executorMemory_${dataset_name}_${cpu_name}"
+executor_extra_javaopts_val="executorExtraJavaopts_${dataset_name}_${cpu_name}"
 
 master_val="master"
 deploy_mode_val="deployMode"
@@ -54,15 +58,24 @@ echo "${executor_cores_val}:${executor_cores}"
 echo "${executor_memory_val}:${executor_memory}"
 echo "${executor_extra_javaopts_val}:${executor_extra_javaopts}"
 
-source ${CONF_DIR}/graph_datasets.properties
+source conf/graph/graph_datasets.properties
 spark_version=sparkVersion
 spark_version_val=${!spark_version}
+kal_version=kalVersion
+kal_version_val=${!kal_version}
+scala_version=scalaVersion
+scala_version_val=${!scala_version}
+
 input_path=${!dataset_name}
 output_path="${output_path_prefix}/cd/${dataset_name}"
 echo "${dataset_name}: ${input_path},${output_path}"
 
 echo "start to clean exist output"
 hdfs dfs -rm -r -f -skipTrash ${output_path}
+
+scp lib/fastutil-8.3.1.jar lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent1:/opt/graph_classpath/
+scp lib/fastutil-8.3.1.jar lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent2:/opt/graph_classpath/
+scp lib/fastutil-8.3.1.jar lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent3:/opt/graph_classpath/
 
 echo "start to clean cache and sleep 30s"
 ssh server1 "echo 3 > /proc/sys/vm/drop_caches"
@@ -71,9 +84,7 @@ ssh agent2 "echo 3 > /proc/sys/vm/drop_caches"
 ssh agent3 "echo 3 > /proc/sys/vm/drop_caches"
 sleep 30
 
-mkdir -p log
-
-echo "start to submit spark jobs"
+echo "start to submit spark jobs -- cd-${dataset_name}"
 spark-submit \
 --class com.bigdata.graph.CycleDetectionWithConstrainsRunner \
 --deploy-mode ${deploy_mode} \
@@ -96,7 +107,7 @@ spark-submit \
 --conf spark.rdd.compress=true \
 --conf spark.executor.memoryOverhead=5g \
 --conf "spark.executor.extraJavaOptions=${executor_extra_javaopts}" \
---jars "lib/fastutil-8.3.1.jar,lib/boostkit-graph-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar" \
---driver-class-path "lib/kal-test_2.11-0.1.jar:lib/snakeyaml-1.19.jar:lib/boostkit-graph-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar" \
---conf "spark.executor.extraClassPath=fastutil-8.3.1.jar:boostkit-graph-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar" \
-./lib/kal-test_2.11-0.1.jar ${dataset_name} ${input_path} ${output_path} "run" "no" ${cpu_name} | tee ./log/log
+--jars "lib/fastutil-8.3.1.jar,lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+--driver-class-path "lib/kal-test_${scala_version_val}-0.1.jar:lib/snakeyaml-1.19.jar:lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+--conf "spark.executor.extraClassPath=/opt/graph_classpath/fastutil-8.3.1.jar:/opt/graph_classpath/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+./lib/kal-test_${scala_version_val}-0.1.jar ${dataset_name} ${input_path} ${output_path} "run" "no" ${cpu_name} | tee ./log/log

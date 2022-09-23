@@ -1,19 +1,20 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter, InputStreamReader}
+import java.io.{FileWriter, InputStreamReader}
 import java.util
 
+import scala.beans.BeanProperty
+
 import com.bigdata.utils.Utils
+import org.yaml.snakeyaml.constructor.Constructor
+import org.yaml.snakeyaml.nodes.Tag
+import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
+
 import org.apache.spark.graphx.Graph
 import org.apache.spark.graphx.lib.BFS
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
-import org.yaml.snakeyaml.constructor.Constructor
-import org.yaml.snakeyaml.nodes.Tag
-import org.yaml.snakeyaml.representer.Representer
-
-import scala.beans.BeanProperty
 
 class BFSConfig extends Serializable {
   @BeanProperty var bfs: util.HashMap[String, Object] = _
@@ -42,6 +43,7 @@ object BFSRunner {
       val numPartitions: Int = args(2).toInt
       val isRaw: String = args(3)
       val inputPath: String = args(4)
+      val outputPath: String = args(5)
 
       val stream: InputStreamReader = Utils.getStream("conf/graph/bfs/bfs.yml")
       val representer = new Representer
@@ -59,15 +61,12 @@ object BFSRunner {
 
       val params = new BFSParams()
 
-      val outputPath: String = paramsMap.get("outputPath").toString
       val splitGraph: String = paramsMap.get("splitGraph").toString
       val isDirect: Boolean = paramsMap.get("isDirect").toString.toBoolean
       val depthLimit: Int = paramsMap.get("depthLimit").toString.toInt
 
-      var newOutput = s"${outputPath}_${sourceID}"
-
       params.setInputPath(inputPath)
-      params.setOutputPath(newOutput)
+      params.setOutputPath(outputPath)
       params.setSplitGraph(splitGraph)
       params.setDatasetName(datasetName)
       params.setNumPartitions(numPartitions)
@@ -78,9 +77,9 @@ object BFSRunner {
       params.setAlgorithmName("BFS")
       params.setTestcaseType(s"BFS_${datasetName}_${sourceID}")
       println("inputPath: " + inputPath)
-      println("outputPath: " + newOutput)
+      println("outputPath: " + outputPath)
 
-      var appName = s"BFS_${datasetName}_${sourceID}"
+      val appName = s"BFS_${datasetName}_${sourceID}"
       val sparkConf: SparkConf = new SparkConf()
         .setAppName(appName)
         .setMaster("yarn")
@@ -99,16 +98,12 @@ object BFSRunner {
           .filter(_._2._1 != Integer.MAX_VALUE)
           .map(f => f._1.toString + ";" + f._2._2.mkString(",") + ";" + f._2._1)
 
-      Util.saveDataToHDFS(result, newOutput)
+      Util.saveDataToHDFS(result, outputPath)
 
       val costTime: Double = (System.currentTimeMillis() - startTime) / 1000.0
       params.setCostTime(costTime)
 
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+      Utils.checkDirs("report")
       val writer = new FileWriter(
         s"report/BFS_${Utils.getDateStrFromUTC("yyyyMMdd_HHmmss", System.currentTimeMillis())}.yml")
       yaml.dump(params, writer)
