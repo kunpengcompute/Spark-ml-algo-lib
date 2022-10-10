@@ -2,21 +2,18 @@
 
 pr:
   cit_patents:
-    outputPath: hdfs:///tmp/graph/result/pr/cit_patents
     splitGraph: "\t"
     numIter: 100
     resetProb: 0.15
     tolerance: 1e-7
 
   uk_2002:
-    outputPath: hdfs:///tmp/graph/result/pr/uk_2002
     splitGraph: "\t"
     numIter: 100
     resetProb: 0.15
     tolerance: 1e-7
 
   arabic_2005:
-    outputPath: hdfs:///tmp/graph/result/pr/arabic_2005
     splitGraph: "\t"
     numIter: 100
     resetProb: 0.15

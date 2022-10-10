@@ -1,16 +1,19 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter, InputStreamReader}
+import java.io.{FileWriter, InputStreamReader}
 import java.util
+
+import scala.beans.BeanProperty
+
+import com.bigdata.compare.graph.Node2vecVerify
 import com.bigdata.utils.Utils
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.graphx.lib.{Node2Vec, Params}
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 
-import scala.beans.BeanProperty
+import org.apache.spark.graphx.lib.{Node2Vec, Params}
+import org.apache.spark.{SparkConf, SparkContext}
 
 class Node2VecConfig extends Serializable{
   @BeanProperty var node2vec: util.HashMap[String, Object] = _
@@ -35,6 +38,8 @@ class Node2VecParams extends Serializable{
   @BeanProperty var splitGraph: String = _
   @BeanProperty var algorithmName: String = _
   @BeanProperty var testcaseType: String = _
+  @BeanProperty var groundTruthPath: String = _
+  @BeanProperty var accuracy: Double = _
 }
 
 object Node2VecRunner {
@@ -44,6 +49,9 @@ object Node2VecRunner {
       val modelConfSplit = args(0).split("-")
       val (datasetName, platformName) = (modelConfSplit(0), modelConfSplit(1))
       val inputPath = args(1)
+      val outputPath = args(2)
+      val groundTruthPath = args(3)
+      val check = args(4)
 
       val representer = new Representer
       representer.addClassTag(classOf[Node2VecParams], Tag.MAP)
@@ -63,7 +71,7 @@ object Node2VecRunner {
 
       params.setDatasetName(datasetName)
       params.setInputPath(inputPath)
-      params.setOutputPath(paramsMap.get("outputPath").toString)
+      params.setOutputPath(outputPath)
       params.setPartitions(paramsMap.get("partitions").toString.toInt)
       params.setDirected(paramsMap.get("directed").toString.toBoolean)
       params.setWeighted(paramsMap.get("weighted").toString.toBoolean)
@@ -77,6 +85,7 @@ object Node2VecRunner {
       params.setSplitGraph(paramsMap.get("splitGraph").toString)
       params.setAlgorithmName("Node2Vec")
       params.setTestcaseType(s"Node2Vec_${datasetName}")
+      params.setGroundTruthPath(groundTruthPath)
 
       val conf = new SparkConf().setAppName(s"Node2Vec_${datasetName}_${platformName}")
       val sc = new SparkContext(conf)
@@ -85,21 +94,29 @@ object Node2VecRunner {
 
       val edgeRDD = Util.readEdgeListFromHDFS(sc, inputPath, params.getSplitGraph, params.getWeighted, params.getPartitions)
 
-      val n2vParams = Params(params.getDirected, params.getWeighted, params.getP, params.getQ, params.getWalkLength, params.getNumWalks, params.getIteration, params.getDimension, params.getWindowSize)
+      val n2vParams = Params(params.getDirected,
+        params.getWeighted,
+        params.getP,
+        params.getQ,
+        params.getWalkLength,
+        params.getNumWalks,
+        params.getIteration,
+        params.getDimension,
+        params.getWindowSize)
 
-      val node2vecModel = Node2Vec.run(edgeRDD,n2vParams)
+      val node2vecModel = Node2Vec.run(edgeRDD, n2vParams)
       Util.saveNode2VecModel(node2vecModel, params.getOutputPath)
-
       val costTime = (System.currentTimeMillis() - startTime) / 1000.0
+
+      if (check.equals("yes")) {
+        val acc = Node2vecVerify.main(Array(inputPath, groundTruthPath, outputPath, params.getPartitions.toString))
+        params.setAccuracy(acc)
+      }
 
       params.setCostTime(costTime)
       println(s"Exec Successful: costTime: ${costTime}")
 
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+      Utils.checkDirs("report")
       val writer = new FileWriter(
         s"report/Node2Vec_${Utils.getDateStrFromUTC("yyyyMMdd_HHmmss", System.currentTimeMillis())}.yml")
       yaml.dump(params, writer)

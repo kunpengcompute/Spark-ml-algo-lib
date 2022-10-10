@@ -1,20 +1,21 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter, InputStreamReader}
+import java.io.{FileWriter, InputStreamReader}
 import java.util
 
+import scala.beans.BeanProperty
+
 import com.bigdata.utils.Utils
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.graphx.Graph
-import org.apache.spark.graphx.lib.ClusteringCoefficient
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 
-import scala.beans.BeanProperty
+import org.apache.spark.graphx.Graph
+import org.apache.spark.graphx.lib.ClusteringCoefficient
+import org.apache.spark.{SparkConf, SparkContext}
 class clusteringCoefficientConfig extends Serializable {
-  @BeanProperty var clusteringCoefficient: util.HashMap[String, Object] = _
+  @BeanProperty var clusteringCoefficient: util.HashMap[String, util.HashMap[String, Object]] = _
 }
 class clusteringCoefficientParms extends Serializable {
   @BeanProperty var inputPath: String = _
@@ -35,18 +36,19 @@ class clusteringCoefficientParms extends Serializable {
 object ClusteringCoefficientRunner {
 
   def main(args: Array[String]): Unit = {
-    try{
+    try {
       val datsetName = args(0)
       val computePartitions = args(1).toInt
       val isWeight = args(2)
       val isRaw = args(3)
       val inputPath = args(4)
       val api = args(5)
+      val outputPath = args(6)
 
       val weightedBool = isWeight match {
-        case "weighted"   => true
+        case "weighted" => true
         case "unweighted" => false
-        case _            => throw new Exception("illegal weighted value")
+        case _ => throw new Exception("illegal weighted value")
       }
 
       val stream: InputStreamReader = Utils.getStream("conf/graph/clusteringcoefficient/clusteringcoefficient.yml")
@@ -59,12 +61,15 @@ object ClusteringCoefficientRunner {
       yaml.addTypeDescription(description)
       val config: clusteringCoefficientConfig = yaml.load(stream).asInstanceOf[clusteringCoefficientConfig]
       val paramsMap: util.HashMap[String, Object] = config.clusteringCoefficient
+        .get(isRaw match {
+          case "no" => "opt"
+          case _ => "raw"
+        })
         .get(datsetName)
         .asInstanceOf[util.HashMap[String, Object]]
 
       val params = new clusteringCoefficientParms
 
-      val outputPath: String = paramsMap.get("outputPath").toString
       val splitGraph: String = paramsMap.get("splitGraph").toString
       val isDirect: Boolean = paramsMap.get("isDirect").toString.toBoolean
 
@@ -74,7 +79,7 @@ object ClusteringCoefficientRunner {
       params.setInputPath(inputPath)
       params.setIsRaw(isRaw)
       params.setApiName(api)
-      params.setOutputPath(s"${outputPath}_${isWeight}")
+      params.setOutputPath(outputPath)
       params.setSplitGraph(splitGraph)
       params.setIsDirect(isDirect)
       params.setAlgorithmName("ClusteringCoefficient")
@@ -106,32 +111,26 @@ object ClusteringCoefficientRunner {
           val result = ClusteringCoefficient
             .runLocalClusteringCoefficient(graph, isDirect, weightedBool).vertices
           Util.saveDataToHDFS(result, ",", params.outputPath)
-        case "avgcc" => ClusteringCoefficient
+        case "avgcc" =>
+          val result: Double = ClusteringCoefficient
             .runAverageClusteringCoefficient(graph, isDirect, weightedBool)
-        case "globalcc" => ClusteringCoefficient.runGlobalClusteringCoefficient(graph)
+          params.setAverageClusteringCoefficient(result)
+        case "globalcc" =>
+          val result: Double = ClusteringCoefficient.runGlobalClusteringCoefficient(graph)
+          params.setLocalClusteringCoefficient(result)
         case _ => throw new Exception("illegal api")
       }
 
       val costTime = (System.currentTimeMillis() - startTime) / 1000.0
+      println(s"Exec Successful: costTime: ${costTime}")
       params.setCostTime(costTime)
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+
+      Utils.checkDirs("report")
       val writer = new FileWriter(
         s"report/ClusteringCoefficient_${Utils.getDateStrFromUTC("yyyyMMdd_HHmmss", System.currentTimeMillis())}.yml")
       yaml.dump(params, writer)
 
-      if (api.equals("lcc")){
-        println(s"Exec Successful: costTime: ${costTime}")
-      } else if (api.equals("avgcc")){
-        params.setAverageClusteringCoefficient(result)
-        println("Exec Successful: costTime: \t%.5f\nAvgerageClusteringCoefficient\t%.5f".format(costTime, result))
-      } else {
-        params.setLocalClusteringCoefficient(result)
-        println("Exec Successful: costTime: \t%.5f\nGlobalClusteringCoefficient\t%.5f".format(costTime, result))
-      }
+      sc.stop()
     } catch {
       case e: Throwable =>
         println(s"Exec Failure: ${e.getMessage}")

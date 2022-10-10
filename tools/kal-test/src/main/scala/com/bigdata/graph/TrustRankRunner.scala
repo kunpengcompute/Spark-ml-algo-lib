@@ -1,18 +1,19 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter, InputStreamReader}
+import java.io.{FileWriter, InputStreamReader}
 import java.util
 
+import scala.beans.BeanProperty
+
 import com.bigdata.utils.Utils
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.graphx.lib.TrustRank
-import org.apache.spark.graphx.Graph
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 
-import scala.beans.BeanProperty
+import org.apache.spark.graphx.Graph
+import org.apache.spark.graphx.lib.TrustRank
+import org.apache.spark.{SparkConf, SparkContext}
 
 
 class TrustRankConfig extends Serializable{
@@ -41,13 +42,14 @@ class TrustRankParams extends Serializable{
 object TrustRankRunner {
 
   def main(args: Array[String]): Unit = {
-    try{
+    try {
       val datsetName = args(0)
       val computePartitions = args(1).toInt
       val isRaw = args(2)
       val inputPath = args(3)
       val api = args(4)
       val seedsCnt = args(5)
+      val outputPath = args(6)
 
       val stream: InputStreamReader = Utils.getStream("conf/graph/tr/tr.yml")
 
@@ -68,14 +70,13 @@ object TrustRankRunner {
       val seedsPath: String = paramsMap.get("seedsPath").toString
       val splitGraph: String = paramsMap.get("splitGraph").toString
       val tol: Double = paramsMap.get("tolerance").toString.toDouble
-      val outputPath: String = paramsMap.get("outputPath").toString
       val numIter = paramsMap.get("numIter").toString.toInt
       val resetProb = paramsMap.get("resetProb").toString.toDouble
 
       params.setSeedsCnt(seedsCnt)
       params.setSeedsPath(seedsPath)
       params.setSplitGraph(splitGraph)
-      params.setOutputPath(s"${outputPath}_${api}")
+      params.setOutputPath(outputPath)
       params.setDatasetName(datsetName)
       params.setComputePartitions(computePartitions)
       params.setIsRaw(isRaw)
@@ -114,16 +115,13 @@ object TrustRankRunner {
 
       val costTime = (System.currentTimeMillis() - startTime) / 1000.0
       params.setCostTime(costTime)
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+
+      Utils.checkDirs("report")
       val writer = new FileWriter(
         s"report/TrustRank_${Utils.getDateStrFromUTC("yyyyMMdd_HHmmss", System.currentTimeMillis())}.yml")
       yaml.dump(params, writer)
       println(s"Exec Successful: costTime: ${costTime}")
-    }catch {
+    } catch {
       case e: Throwable =>
         println(s"Exec Failure: ${e.getMessage}")
         throw e

@@ -1,14 +1,16 @@
 package com.bigdata.graph
 
-import org.apache.spark.SparkContext
-import org.apache.spark.rdd.RDD
-import org.apache.spark.graphx.Graph
-import org.apache.spark.graphx.Edge
-import org.apache.spark.graphx.VertexId
-import org.apache.spark.ml.linalg.Vector
 import java.util.regex.Pattern
 
+import scala.collection.Map
 import scala.reflect.ClassTag
+
+import smile.math.MathEx.cos
+
+import org.apache.spark.SparkContext
+import org.apache.spark.graphx.{Edge, Graph, VertexId}
+import org.apache.spark.ml.linalg.{DenseVector, Vector}
+import org.apache.spark.rdd.RDD
 
 object Util {
 
@@ -160,6 +162,25 @@ object Util {
       })
   }
 
+  def readEdgeFileFromHDFS(sc: SparkContext,
+                            filePath: String,
+                            split: String,
+                            partNum: Int): RDD[(Long, Double)] = {
+    sc.textFile(filePath).repartition(partNum)
+      .flatMap(line => {
+        if (line.startsWith("#")) {
+          Iterator.empty
+        } else {
+          val x = line.trim.split(split)
+          if (x.length < 2) {
+            Iterator.empty
+          } else {
+            Iterator.single((x(0).toLong, x(1).toDouble))
+          }
+        }
+      })
+  }
+
   def readTopKResultFromHDFS(sc: SparkContext,
                              filePath: String,
                              split: String,
@@ -200,10 +221,10 @@ object Util {
       })
   }
 
-  def saveNode2VecModel(modelRDD: RDD[(Long, Vector)],output: String):Unit = {
+  def saveNode2VecModel(modelRDD: RDD[(Long, Vector)], output: String): Unit = {
 
     modelRDD
-      .map{ case (u, vec) => s"$u ${vec.toArray.mkString("(",",",")")}"}
+      .map{ case (u, vec) => s"$u ${vec.toArray.mkString("(", ",", ")")}"}
       .saveAsTextFile(output)
   }
 
@@ -263,11 +284,11 @@ object Util {
                                  partition: Int): RDD[(VertexId, VertexId)] = {
     sc.textFile(filePath, partition)
       .flatMap(line => {
-        if (line.startsWith("#") || line.startsWith("%")){
+        if (line.startsWith("#") || line.startsWith("%")) {
           Iterator.empty
         } else {
           val x = line.split(split)
-          if (x.length < 2){
+          if (x.length < 2) {
             Iterator.empty
           } else {
             val node1 = x(0)
@@ -278,4 +299,41 @@ object Util {
       })
   }
 
+  def readEdgeList(sc: SparkContext, filePath: String, split: String, partition: Int): RDD[(Long, Long)] = {
+    sc.textFile(filePath, partition).flatMap(line => {
+      if (line.startsWith("#")) {
+        Iterator.empty
+      } else {
+        val x = line.trim.split(split)
+        if (x.length > 1) {
+          val src = x(0).toLong
+          val dst = x(1).toLong
+          if (src != dst) {
+            Iterator.single((src, dst))
+          } else {
+            Iterator.empty
+          }
+        } else {
+          Iterator.empty
+        }
+      }
+    })
+  }
+
+  def get(modelRDD: RDD[(Long, Vector)]): Map[Long, Vector] = {
+    modelRDD.collectAsMap()
+  }
+
+  def distCos(x: Array[Double], y: Array[Double]): Double = cos(x, y)
+
+  def readNode2VecModel(sc: SparkContext, input: String): RDD[(Long, Vector)] = {
+    val rdd: RDD[(Long, Vector)] = sc.textFile(input).mapPartitions(it => {
+      val regexp = "([0-9]+) \\((.*)\\)".r
+      it.map {
+        case regexp(u, emb) => (u.toLong, new DenseVector(emb.split(",")
+        .map(_.toDouble)): Vector)
+      }
+    }).cache()
+    rdd
+  }
 }

@@ -1,17 +1,18 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter}
+import java.io.FileWriter
 import java.util
 
+import scala.beans.BeanProperty
+
 import com.bigdata.utils.Utils
-import org.apache.spark.graphx.lib.Modularity
-import org.apache.spark.{SparkConf, SparkContext}
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 
-import scala.beans.BeanProperty
+import org.apache.spark.graphx.lib.Modularity
+import org.apache.spark.{SparkConf, SparkContext}
 
 class ModularityConfig extends Serializable {
   @BeanProperty var modularity: util.HashMap[String, Object] = _
@@ -30,6 +31,7 @@ class ModularityParams extends Serializable {
   @BeanProperty var isRaw: String = "no"
   @BeanProperty var algorithmName: String = _
   @BeanProperty var testcaseType: String = _
+  @BeanProperty var modularity: Double = _
 }
 
 object ModularityRunner {
@@ -40,6 +42,8 @@ object ModularityRunner {
       val sc = new SparkContext(sparkConf)
 
       val datasetName = args(0)
+      val inputPath = args(1)
+      val inputCommunity = args(2)
 
       val stream = Utils.getStream("conf/graph/modularity/modularity.yml")
 
@@ -55,8 +59,6 @@ object ModularityRunner {
 
       val params = new ModularityParams()
 
-      val inputPath = paramsMap.get("inputPath").toString
-      val inputCommunity = paramsMap.get("inputCommunity").toString
       val splitGraph = paramsMap.get("splitGraph").toString
       val splitCommunity = paramsMap.get("splitCommunity").toString
       val isWeighted = paramsMap.get("isWeighted").toString.toBoolean
@@ -87,12 +89,9 @@ object ModularityRunner {
       println("modularity: %.5f\nCost time: %.5f".format(q, costTime))
 
       params.setCostTime(costTime)
+      params.setModularity(q)
 
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+      Utils.checkDirs("report")
       val writer = new FileWriter(s"report/Modularity_${
         Utils.getDateStrFromUTC("yyyyMMdd_HHmmss",
           System.currentTimeMillis())

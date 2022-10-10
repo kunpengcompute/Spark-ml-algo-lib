@@ -1,26 +1,24 @@
 #!/bin/bash
 set -e
 
+function alg_usage() {
+  echo "Usage: <dataset name> <api name> <seeds count>"
+  echo "1st argument: name of dataset: cit_patents,uk_2002,arabic_2005"
+  echo "2nd argument: name of api: run,runUntilConvergence"
+  echo "3nd argument: seeds count: 100,500,1000"
+}
+
 case "$1" in
 -h | --help | ?)
-  echo "Usage: <dataset name><api name><seeds count>"
-  echo "1st argument: name of dataset: name of dataset: e.g. cit_patents"
-  echo "2nd argument: name of api: e.g. run,runUntilConvergence"
-  echo "3nd argument: seeds count: e.g. 100,500,1000"
+  alg_usage
   exit 0
   ;;
 esac
 
 if [ $# -ne 3 ];then
-  echo "Usage:<dataset name><api name><seeds count>"
- 	echo "dataset name:cit_patents,uk_2002,arabic_2005"
- 	echo "api name:run,runUntilConvergence"
-  echo "seeds count:100,500,1000"
+  alg_usage
 	exit 0
 fi
-
-current_path=$(dirname $(readlink -f "$0"))
-echo "current folder path: ${current_path}"
 
 source conf/graph/tr/tr_spark.properties
 
@@ -44,10 +42,7 @@ if [ ${seedsCount} != "100" ] && [ ${seedsCount} != "500" ] && [ ${seedsCount} !
   exit 1
 fi
 
-hdfs dfs -rm -r -f "/tmp/graph/result/tr/${dataset_name}_${seedsCount}_${api_name}"
-
 cpu_name=$(lscpu | grep Architecture | awk '{print $2}')
-
 
 # concatnate strings as a new variable
 num_executors="${api_name}_${dataset_name}_${seedsCount}_numExecutors_${cpu_name}"
@@ -85,10 +80,16 @@ fi
 source conf/graph/graph_datasets.properties
 spark_version=sparkVersion
 spark_version_val=${!spark_version}
-data_path_val=${!dataset_name}
-echo "${dataset_name} : ${data_path_val}"
+kal_version=kalVersion
+kal_version_val=${!kal_version}
+scala_version=scalaVersion
+scala_version_val=${!scala_version}
 
-mkdir -p log
+data_path_val=${!dataset_name}
+output_path="${output_path_prefix}/tr/${dataset_name}_${seedsCount}_${api_name}"
+echo "${dataset_name} : ${data_path_val}"
+echo "output_path : ${output_path}"
+hdfs dfs -rm -r -f ${output_path}
 
 echo "start to clean cache and sleep 30s"
 ssh server1 "echo 3 > /proc/sys/vm/drop_caches"
@@ -97,7 +98,7 @@ ssh agent2 "echo 3 > /proc/sys/vm/drop_caches"
 ssh agent3 "echo 3 > /proc/sys/vm/drop_caches"
 sleep 30
 
-echo "start to submit spark jobs"
+echo "start to submit spark jobs -- tr-${dataset_name}-${api_name}-${seedsCount}"
 spark-submit \
 --class com.bigdata.graph.TrustRankRunner \
 --master yarn \
@@ -110,7 +111,7 @@ spark-submit \
 --conf spark.driver.maxResultSize=200g \
 --conf spark.driver.extraJavaOptions="-Xms100G" \
 --conf spark.locality.wait.node=0 \
---jars "lib/fastutil-8.3.1.jar,lib/boostkit-graph-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar" \
---driver-class-path "lib/kal-test_2.11-0.1.jar:lib/snakeyaml-1.19.jar:lib/boostkit-graph-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar" \
---conf "spark.executor.extraClassPath=fastutil-8.3.1.jar:boostkit-graph-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar" \
-./lib/kal-test_2.11-0.1.jar ${dataset_name} ${num_partitions_val} "no" ${data_path_val} ${api_name} ${seedsCount}| tee ./log/log
+--jars "lib/fastutil-8.3.1.jar,lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+--driver-class-path "lib/kal-test_${scala_version_val}-0.1.jar:lib/snakeyaml-1.19.jar:lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+--conf "spark.executor.extraClassPath=/opt/graph_classpath/fastutil-8.3.1.jar:/opt/graph_classpath/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+./lib/kal-test_${scala_version_val}-0.1.jar ${dataset_name} ${num_partitions_val} "no" ${data_path_val} ${api_name} ${seedsCount} ${output_path} | tee ./log/log

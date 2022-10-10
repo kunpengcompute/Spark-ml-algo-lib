@@ -1,22 +1,22 @@
 
 package com.bigdata.graph
 
-import com.bigdata.utils.Utils
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.graphx.Graph
-import org.apache.spark.graphx.lib.IncPageRank
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.storage.StorageLevel
-import org.yaml.snakeyaml.constructor.Constructor
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
-import org.yaml.snakeyaml.nodes.Tag
-import org.yaml.snakeyaml.representer.Representer
-
-import java.io.{File, FileWriter}
+import java.io.FileWriter
 import java.util
+
 import scala.beans.BeanProperty
 import scala.collection.mutable
 
+import com.bigdata.utils.Utils
+import org.yaml.snakeyaml.constructor.Constructor
+import org.yaml.snakeyaml.nodes.Tag
+import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
+
+import org.apache.spark.SparkConf
+import org.apache.spark.graphx.lib.IncPageRank
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.storage.StorageLevel
 
 class IncPrConfig extends Serializable {
   @BeanProperty var incpr: util.HashMap[String, Object] = _
@@ -31,7 +31,6 @@ class IncPrParams extends Serializable {
   @BeanProperty var costTime: Double = _
   @BeanProperty var datasetName: String = _
   @BeanProperty var numPartitions: Int = _
-  @BeanProperty var apiName: String = _
   @BeanProperty var isRaw: String = _
   @BeanProperty var algorithmName: String = _
   @BeanProperty var testcaseType: String = _
@@ -42,10 +41,9 @@ object IncPageRankRunner {
   def main(args: Array[String]): Unit = {
     try {
       val datasetName = args(0)
-      val api = args(1)
-      val isRaw = args(2)
-      val inputPath = args(3)
-      val outputPath = args(4)
+      val inputPath = args(1)
+      val outputPath = args(2)
+      val isRaw = args(3)
 
       val stream = Utils.getStream("conf/graph/incpr/incpr.yml")
 
@@ -66,35 +64,25 @@ object IncPageRankRunner {
       // val outputPath = paramsMap.get("outputPath").toString
       val numIter = paramsMap.get("numIter").toString.toInt
       val resetProb = paramsMap.get("resetProb").toString.toDouble
-      var partNum = paramsMap.get("partNum").toString.toInt
-
-      var newOutput = s"${outputPath}_${api}"
-      if (isRaw == "yes") {
-        newOutput = s"${outputPath}_${api}_raw"
-      }
+      val partNum = paramsMap.get("partNum").toString.toInt
 
       params.setInputPath(inputPath)
-      params.setOutputPath(newOutput)
+      params.setOutputPath(outputPath)
       params.setNumIter(numIter)
       params.setResetProb(resetProb)
       params.setDatasetName(datasetName)
-      params.setApiName(api)
       params.setIsRaw(isRaw)
       params.setAlgorithmName("IncPr")
 
       println("inputPath: " + inputPath)
-      println("outputPath: " + newOutput)
+      println("outputPath: " + outputPath)
 
-      var appName = s"IncPageRank_${datasetName}_${api}"
-      if (isRaw == "yes") {
-        appName = s"IncPageRank_${datasetName}_${api}_raw"
-      }
+      val appName = s"IncPageRank_${datasetName}"
       params.setTestcaseType(appName)
 
       val sparkConf = new SparkConf()
         .setAppName(appName)
         .setMaster("yarn")
-      val sc = new SparkContext(sparkConf)
 
       // record start time
       val startTime = System.currentTimeMillis()
@@ -119,11 +107,7 @@ object IncPageRankRunner {
 
       params.setCostTime(costTime)
 
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+      Utils.checkDirs("report")
       val writer = new FileWriter(
         s"report/IncPR_${Utils.getDateStrFromUTC("yyyyMMdd_HHmmss", System.currentTimeMillis())}.yml")
       yaml.dump(params, writer)

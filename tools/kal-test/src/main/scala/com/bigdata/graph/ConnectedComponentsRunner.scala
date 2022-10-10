@@ -1,20 +1,23 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter}
+import java.io.FileWriter
 import java.util.{HashMap => JHashMap}
-
-import com.bigdata.utils.Utils
-import org.apache.spark.graphx.lib.ConnectedComponents
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.graphx.Graph
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
-import org.yaml.snakeyaml.constructor.Constructor
-import org.yaml.snakeyaml.nodes.Tag
-import org.yaml.snakeyaml.representer.Representer
 
 import scala.beans.BeanProperty
 
+import com.bigdata.utils.Utils
+import org.yaml.snakeyaml.constructor.Constructor
+import org.yaml.snakeyaml.nodes.Tag
+import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
+
+import org.apache.spark.graphx.Graph
+import org.apache.spark.graphx.lib.ConnectedComponents
+import org.apache.spark.{SparkConf, SparkContext}
+
 class CCParams extends Serializable {
+  @BeanProperty var inputPath: String = _
+  @BeanProperty var outputPath: String = _
   @BeanProperty var partition = new JHashMap[String, Int]
   @BeanProperty var split = new JHashMap[String, String]
 
@@ -72,16 +75,15 @@ object ConnectedComponentsRunner {
 
       println(s"Exec Successful: connected components costTime: ${costTime}s")
 
+      params.setInputPath(inputPath)
+      params.setOutputPath(outputPath)
       params.setDatasetName(dataset)
       params.setIsRaw(isRaw)
       params.setCurPartition(s"$partition")
       params.setAlgorithmName("CC")
       params.setTestcaseType(appName)
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+
+      Utils.checkDirs("report")
       val writer = new FileWriter(s"report/CC_${
         Utils.getDateStrFromUTC("yyyyMMdd_HHmmss",
           System.currentTimeMillis())

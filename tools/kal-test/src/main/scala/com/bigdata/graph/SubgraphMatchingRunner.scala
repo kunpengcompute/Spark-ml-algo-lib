@@ -1,16 +1,18 @@
 package com.bigdata.graph
 
+import java.io.FileWriter
+import java.util
+
+import scala.beans.BeanProperty
+
 import com.bigdata.utils.Utils
-import org.apache.spark.graphx.lib.SubgraphMatching
-import org.apache.spark.{SparkConf, SparkContext}
 import org.yaml.snakeyaml.constructor.Constructor
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 
-import java.io.{File, FileWriter}
-import java.util
-import scala.beans.BeanProperty
+import org.apache.spark.graphx.lib.SubgraphMatching
+import org.apache.spark.{SparkConf, SparkContext}
 
 class SubgraphMatchingParams extends Serializable{
   @BeanProperty var inputPath: String = _
@@ -26,6 +28,7 @@ class SubgraphMatchingParams extends Serializable{
   @BeanProperty var algorithmName: String = _
   @BeanProperty var testcaseType: String = _
   @BeanProperty var isIdentical: String = _
+  @BeanProperty var matchResult: Long = _
 }
 
 
@@ -90,17 +93,14 @@ object SubgraphMatchingRunner {
       val (numSubgraphs, subgraphs) =
         SubgraphMatching.run(inputRDD, edgelist, taskNum, resultNum, isIdenticalBool)
 
+      params.setMatchResult(numSubgraphs)
       println("total matched results:\t%d".format(numSubgraphs))
       subgraphs.map(x => x.mkString("\t")).saveAsTextFile(outputPath)
 
       val costTime = (System.currentTimeMillis() - startTime) / 1000.0
       params.setCostTime(costTime)
 
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+      Utils.checkDirs("report")
       val writer = new FileWriter(
         s"report/SGM_${Utils.getDateStrFromUTC("yyyyMMdd_HHmmss", System.currentTimeMillis())}.yml")
       yaml.dump(params, writer)

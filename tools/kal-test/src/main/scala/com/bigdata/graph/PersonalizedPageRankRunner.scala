@@ -1,20 +1,19 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter}
+import java.io.FileWriter
 import java.util
 
-import com.bigdata.ml.ALSParams
-import com.bigdata.utils.Utils
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkConf
-import org.apache.spark.graphx.{Edge, Graph}
-
 import scala.beans.BeanProperty
-import org.apache.spark.graphx.lib.PageRank
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
+
+import com.bigdata.utils.Utils
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
+
+import org.apache.spark.graphx.lib.PageRank
+import org.apache.spark.graphx.{Edge, Graph}
+import org.apache.spark.{SparkConf, SparkContext}
 class PPrConfig extends Serializable {
   @BeanProperty var ppr: util.HashMap[String, Object] = _
 }
@@ -102,8 +101,7 @@ object PersonalizedPageRankRunner {
       val result = api match {
         case "fixMS" =>
           val sourcesId = sc.textFile(sourcesPath).map(_.toLong).collect()
-          PageRank.runParallelPersonalizedPageRank(graph, numIter,
-            resetProb, sourcesId)
+          PageRank.runParallelPersonalizedPageRank(graph, numIter, resetProb, sourcesId)
         case "fixSS" =>
           PageRank.runWithOptions(graph, numIter, resetProb, Option(source.toLong))
         case "conSS" =>
@@ -119,11 +117,7 @@ object PersonalizedPageRankRunner {
       params.setCostTime(costTime)
 
 
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+      Utils.checkDirs("report")
       val writer = new FileWriter(
         s"report/PPR_${Utils.getDateStrFromUTC("yyyyMMdd_HHmmss", System.currentTimeMillis())}.yml")
       yaml.dump(params, writer)

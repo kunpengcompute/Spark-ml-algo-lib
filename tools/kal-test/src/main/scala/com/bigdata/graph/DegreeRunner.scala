@@ -1,17 +1,18 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter}
+import java.io.FileWriter
 import java.util
 
+import scala.beans.BeanProperty
+
 import com.bigdata.utils.Utils
-import org.apache.spark.graphx.Graph
-import org.apache.spark.{SparkConf, SparkContext}
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 
-import scala.beans.BeanProperty
+import org.apache.spark.graphx.Graph
+import org.apache.spark.{SparkConf, SparkContext}
 
 class DegreeConfig extends Serializable {
   @BeanProperty var degree: util.HashMap[String, Object] = _
@@ -39,9 +40,9 @@ object DegreeRunner {
       val numPartitions = args(2).toInt
       val isRaw = args(3)
       val inputPath = args(4)
+      val outputPath = args(5)
 
       val stream = Utils.getStream("conf/graph/degree/degree.yml")
-
       val representer = new Representer
       representer.addClassTag(classOf[DegreeParams], Tag.MAP)
       val options = new DumperOptions
@@ -54,19 +55,11 @@ object DegreeRunner {
         config.degree
           .get(datasetName)
           .asInstanceOf[util.HashMap[String, Object]]
-
-      val params = new DegreeParams()
-
-      val outputPath = paramsMap.get("outputPath").toString
       val splitGraph = paramsMap.get("splitGraph").toString
 
-      var newOutput = s"${outputPath}_${api}"
-      if (isRaw == "yes") {
-        newOutput = s"${outputPath}_${api}_raw"
-      }
-
+      val params = new DegreeParams()
       params.setInputPath(inputPath)
-      params.setOutputPath(newOutput)
+      params.setOutputPath(outputPath)
       params.setSplitGraph(splitGraph)
       params.setDatasetName(datasetName)
       params.setNumPartitions(numPartitions)
@@ -75,7 +68,7 @@ object DegreeRunner {
       params.setAlgorithmName("Degree")
 
       println("inputPath: " + inputPath)
-      println("outputPath: " + newOutput)
+      println("outputPath: " + outputPath)
 
       var appName = s"Degree_${datasetName}_${api}"
       if (isRaw == "yes") {
@@ -93,22 +86,18 @@ object DegreeRunner {
         Util.readDataFromHDFSForDegree(sc, inputPath, splitGraph, numPartitions)
       val graph = Graph.fromEdgeTuples(edgeInfo, 0)
       val result = api match {
-        case "degrees"    => graph.degrees
-        case "inDegrees"  => graph.inDegrees
+        case "degrees" => graph.degrees
+        case "inDegrees" => graph.inDegrees
         case "outDegrees" => graph.outDegrees
-        case _            => throw new Exception("illegal api")
+        case _ => throw new Exception("illegal api")
       }
 
-      Util.saveDataToHDFS(result, ",", newOutput)
+      Util.saveDataToHDFS(result, ",", outputPath)
 
       val costTime = (System.currentTimeMillis() - startTime) / 1000.0
       params.setCostTime(costTime)
 
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+      Utils.checkDirs("report")
       val writer = new FileWriter(
         s"report/Degree_${Utils.getDateStrFromUTC("yyyyMMdd_HHmmss", System.currentTimeMillis())}.yml")
       yaml.dump(params, writer)

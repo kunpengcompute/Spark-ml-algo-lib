@@ -1,18 +1,19 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter}
+import java.io.FileWriter
 import java.util
 
+import scala.beans.BeanProperty
+
 import com.bigdata.utils.Utils
-import org.apache.spark.graphx.Graph
-import org.apache.spark.graphx.lib.PageRank
-import org.apache.spark.{SparkConf, SparkContext}
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 
-import scala.beans.BeanProperty
+import org.apache.spark.graphx.Graph
+import org.apache.spark.graphx.lib.PageRank
+import org.apache.spark.{SparkConf, SparkContext}
 
 class PrConfig extends Serializable {
   @BeanProperty var pr: util.HashMap[String, Object] = _
@@ -43,6 +44,7 @@ object PageRankRunner {
       val numPartitions = args(2).toInt
       val isRaw = args(3)
       val inputPath = args(4)
+      val outputPath = args(5)
 
       val stream = Utils.getStream("conf/graph/pr/pr.yml")
 
@@ -59,19 +61,13 @@ object PageRankRunner {
 
       val params = new PrParams()
 
-      val outputPath = paramsMap.get("outputPath").toString
       val splitGraph = paramsMap.get("splitGraph").toString
       val numIter = paramsMap.get("numIter").toString.toInt
       val resetProb = paramsMap.get("resetProb").toString.toDouble
       var tolerance = paramsMap.get("tolerance").toString.toDouble
 
-      var newOutput = s"${outputPath}_${api}"
-      if (isRaw == "yes") {
-        newOutput = s"${outputPath}_${api}_raw"
-      }
-
       params.setInputPath(inputPath)
-      params.setOutputPath(newOutput)
+      params.setOutputPath(outputPath)
       params.setSplitGraph(splitGraph)
       params.setNumIter(numIter)
       params.setResetProb(resetProb)
@@ -83,7 +79,7 @@ object PageRankRunner {
       params.setAlgorithmName("Pr")
 
       println("inputPath: " + inputPath)
-      println("outputPath: " + newOutput)
+      println("outputPath: " + outputPath)
 
       var appName = s"PageRank_${datasetName}_${api}"
       if (isRaw == "yes") {
@@ -109,21 +105,17 @@ object PageRankRunner {
         case "runUntilConvergence" =>
           PageRank.runUntilConvergence(graph, tolerance, resetProb)
         case "run" => PageRank.run(graph, numIter, resetProb)
-        case _     => throw new Exception("illegal api")
+        case _ => throw new Exception("illegal api")
       }
 
-      result.vertices.map(f => s"${f._1}\t${f._2}").saveAsTextFile(newOutput)
+      result.vertices.map(f => s"${f._1}\t${f._2}").saveAsTextFile(outputPath)
 
       val costTime = (System.currentTimeMillis() - startTime) / 1000.0
       println("pagerank costTime = " + costTime + "s")
 
       params.setCostTime(costTime)
 
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+      Utils.checkDirs("report")
       val writer = new FileWriter(
         s"report/PR_${Utils.getDateStrFromUTC("yyyyMMdd_HHmmss", System.currentTimeMillis())}.yml")
       yaml.dump(params, writer)

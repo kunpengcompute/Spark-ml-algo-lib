@@ -1,22 +1,26 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter}
+import java.io.FileWriter
 import java.util.{HashMap => JHashMap}
 
-import com.bigdata.utils.Utils
-import org.apache.spark.graphx.Graph
-import org.apache.spark.graphx.PartitionStrategy.EdgePartition2D
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.graphx.lib.{LabelPropagation, Modularity}
-
 import scala.beans.BeanProperty
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
+
+import com.bigdata.utils.Utils
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
+
+import org.apache.spark.graphx.Graph
+import org.apache.spark.graphx.PartitionStrategy.EdgePartition2D
+import org.apache.spark.graphx.lib.{LabelPropagation, Modularity}
+import org.apache.spark.{SparkConf, SparkContext}
 
 class LPAParams extends Serializable {
+  @BeanProperty var inputPath: String = _
+  @BeanProperty var outputPath: String = _
   @BeanProperty var partition = new JHashMap[String, Int]
+  @BeanProperty var partitionNum: Int = _
   @BeanProperty var split: String = _
   @BeanProperty var maxSteps: Int = _
 
@@ -54,10 +58,14 @@ object LabelPropagationRunner {
     val description = new TypeDescription(classOf[LPAParams])
     yaml.addTypeDescription(description)
     val params = yaml.load(Utils.getStream(PARAM_FILEPATH)).asInstanceOf[LPAParams]
-    val partition = params.getPartition.get(s"${dataset}_${cpuName}_${isRaw}")
+    val partition = params.getPartition.get(s"${dataset}_${cpuName}")
     val appName = s"LPA_${dataset}_${api}_${cpuName}"
     try {
-      val sc = new SparkContext(new SparkConf().setAppName(appName))
+      val conf = new SparkConf().setAppName(appName)
+      if ("runConvergence".equals(api)) {
+        conf.set("spark.boostkit.graph.lpa.convergence", "true")
+      }
+      val sc = new SparkContext(conf)
       val startTime = System.currentTimeMillis()
 
       val input = Util.readUndirectDataFromHDFS(sc, inputPath, params.getSplit, partition)
@@ -69,30 +77,28 @@ object LabelPropagationRunner {
         Graph.fromEdgeTuples(input, 0)
       }
       val result = LabelPropagation.run(inputGraph, params.maxSteps).vertices
-      Util.saveDataToHDFS(result, RESULT_SPLIT, outputPath)
-
       val costTime = (System.currentTimeMillis() - startTime) / 1000.0
+      Util.saveDataToHDFS(result, RESULT_SPLIT, outputPath)
       params.setCostTime(costTime)
-
       println(s"Exec Successful: label propagation costTime: ${costTime}s")
 
-      if (!"yes".equals(isRaw)) {
+      if ("no".equals(isRaw)) {
         val nodes = Util.readCommFromHDFS(sc, outputPath, RESULT_SPLIT, partition)
         val edges = Util.readGraphFromHDFS(sc, inputPath, params.getSplit, false, partition)
         val modularity = Modularity.run(nodes, edges, false, partition)
         params.setModularity(modularity)
         println(s"Modularity: ${modularity}.")
       }
+      params.setInputPath(inputPath)
+      params.setOutputPath(outputPath)
+      params.setPartitionNum(partition)
       params.setDatasetName(dataset)
       params.setApiName(api)
       params.setIsRaw(isRaw)
       params.setAlgorithmName("LPA")
       params.setTestcaseType(appName)
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+
+      Utils.checkDirs("report")
       val writer = new FileWriter(s"report/LPA_${
         Utils.getDateStrFromUTC("yyyyMMdd_HHmmss",
           System.currentTimeMillis())

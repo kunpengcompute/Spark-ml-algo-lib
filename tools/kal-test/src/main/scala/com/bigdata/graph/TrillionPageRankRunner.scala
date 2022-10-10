@@ -1,22 +1,24 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter}
+import java.io.FileWriter
 import java.util
-import org.apache.spark.{HashPartitioner, SparkConf, SparkContext}
-import org.apache.spark.graphx.{Graph, TripletFields, VertexId}
-import org.apache.spark.graphx.lib.TrillionPageRank
-import org.apache.spark.sql.SparkSession
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
+
+import scala.beans.BeanProperty
+import scala.collection.mutable
+import scala.reflect.ClassTag
+
+import com.bigdata.utils.Utils
 import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
 
-import scala.beans.BeanProperty
-import com.bigdata.utils.Utils
+import org.apache.spark.graphx.lib.TrillionPageRank
+import org.apache.spark.graphx.{Graph, TripletFields, VertexId}
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.storage.StorageLevel
-
-import scala.reflect.ClassTag
+import org.apache.spark.{HashPartitioner, SparkConf, SparkContext}
 
 class TrillionPageRankConfig extends Serializable {
   @BeanProperty var tpr: util.HashMap[String, util.HashMap[String, util.HashMap[String, Object]]] = _
@@ -78,10 +80,24 @@ object TrillionPageRankRunner {
 
       // record start time
       val startTime = System.currentTimeMillis()
-      val data = sc.textFile(inputPath, params.numPartitions).map(f => {
-        val urls = f.split(params.splitGraph)
-        (urls(0).split("_")(0).toLong, (urls(0).split("_")(1).toDouble, urls.drop(1).map(_.toLong)))
-      })
+      val data = datasetName match {
+        case "twitter_2010" =>
+          val spark = SparkSession.builder().config(sparkConf).getOrCreate()
+          implicit val graph = spark.read
+            .orc(inputPath)
+            .rdd
+            .map(row => (row.getAs[Long]("srcId"),
+              (row.getAs[Double]("pr"),
+                row.getAs[mutable.WrappedArray[Long]]("dstId").toArray[Long])))
+            .partitionBy(new HashPartitioner(params.numPartitions))
+            .persist(StorageLevel.MEMORY_ONLY_SER)
+          graph.foreachPartition(f => {})
+          graph
+        case _ => sc.textFile (inputPath, params.numPartitions).map (f => {
+          val urls = f.split (params.splitGraph)
+          (urls (0).split ("_") (0).toLong, (urls (0).split ("_") (1).toDouble, urls.drop (1).map (_.toLong) ) )
+          })
+      }
 
       val attr = isRaw match {
         case "no" => TrillionPageRank.run(data, params.numPartitions, params.numIter, params.resetProb, params.isOnlySrc)
@@ -94,11 +110,7 @@ object TrillionPageRankRunner {
 
       params.setCostTime(costTime)
 
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+      Utils.checkDirs("report")
       val writer = new FileWriter(
         s"report/TPR_${Utils.getDateStrFromUTC("yyyyMMdd_HHmmss", System.currentTimeMillis())}.yml")
       yaml.dump(params, writer)
@@ -126,7 +138,7 @@ object TrillionPageRankRunner {
       graph: Graph[VD, ED],
       numIter: Int,
       resetProb: Double = 0.15,
-      srcId: Option[VertexId] =  None): Graph[Double, Double] = {
+      srcId: Option[VertexId] = None): Graph[Double, Double] = {
     val personalized = srcId.isDefined
     val src: VertexId = srcId.getOrElse(-1L)
 

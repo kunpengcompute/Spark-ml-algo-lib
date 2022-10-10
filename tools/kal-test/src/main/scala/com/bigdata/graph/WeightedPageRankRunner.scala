@@ -1,20 +1,22 @@
 package com.bigdata.graph
 
-import java.io.{File, FileWriter}
+import java.io.FileWriter
 import java.util
-import com.bigdata.utils.Utils
-import org.apache.spark.graphx.{Edge, Graph}
-import org.apache.spark.graphx.lib.WeightedPageRank
-import org.apache.spark.{SparkConf, SparkContext}
-import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
-import org.yaml.snakeyaml.constructor.Constructor
-import org.yaml.snakeyaml.nodes.Tag
-import org.yaml.snakeyaml.representer.Representer
 
 import scala.beans.BeanProperty
 
+import com.bigdata.utils.Utils
+import org.yaml.snakeyaml.constructor.Constructor
+import org.yaml.snakeyaml.nodes.Tag
+import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
+
+import org.apache.spark.graphx.lib.WeightedPageRank
+import org.apache.spark.graphx.{Edge, Graph}
+import org.apache.spark.{SparkConf, SparkContext}
+
 class WprConfig extends Serializable {
-  @BeanProperty var wpr: util.HashMap[String, Object] = _
+  @BeanProperty var wpr: util.HashMap[String, util.HashMap[String, Object]] = _
 }
 
 class WprParams extends Serializable {
@@ -22,7 +24,6 @@ class WprParams extends Serializable {
   @BeanProperty var outputPath: String = _
   @BeanProperty var splitGraph: String = _
   @BeanProperty var numIter: Int = _
-  @BeanProperty var resetProb: Double = _
   @BeanProperty var costTime: Double = _
   @BeanProperty var datasetName: String = _
   @BeanProperty var partitionNum: Int = _
@@ -38,8 +39,11 @@ object WeightedPageRankRunner {
   def main(args: Array[String]): Unit = {
     try {
       val datasetName = args(0)
-      val api = args(1)
-      val isRaw = args(2)
+      val inputPath = args(1)
+      val outputPath = args(2)
+      val api = args(3)
+      val isRaw = args(4)
+      val splitGraph = args(5)
 
       val stream = Utils.getStream("conf/graph/wpr/wpr.yml")
 
@@ -53,40 +57,23 @@ object WeightedPageRankRunner {
       val config: WprConfig = yaml.load(stream).asInstanceOf[WprConfig]
       // 通过算法名字获取对应配置文件的内容
       val paramsMap =
-        config.wpr.get(api).asInstanceOf[util.HashMap[String, Object]]
+        config.wpr.get(api).get(datasetName).asInstanceOf[util.HashMap[String, Object]]
 
       val params = new WprParams()
 
-      val inputPath = paramsMap.get("inputpath").toString
-      val splitGraph = paramsMap.get("splitGraph").toString
-      println(s"splitGraph is : $splitGraph")
       val partitionNum = paramsMap.get("partitionNum").toString.toInt
-      println(s"partitionNum is : $partitionNum")
-      val outputPath = paramsMap.get("outputPath").toString
       val numIter = paramsMap.get("numIter").toString.toInt
-      println(s"numIter is : $numIter")
-      val resetProb = paramsMap.get("resetProb").toString.toDouble
-      println(s"resetProb is : $resetProb")
       val algoTolerance = paramsMap.get("tolerance").toString.toDouble
-      println(s"algoTolerance is : $algoTolerance")
-      var newOutput = s"${outputPath}_${api}"
-      if (isRaw == "yes") {
-        newOutput = s"${outputPath}_${api}_raw"
-      }
 
       params.setInputPath(inputPath)
-      params.setOutputPath(newOutput)
+      params.setOutputPath(outputPath)
       params.setSplitGraph(splitGraph)
       params.setNumIter(numIter)
-      params.setResetProb(resetProb)
       params.setDatasetName(datasetName)
       params.setPartitionNum(partitionNum)
       params.setApiName(api)
       params.setIsRaw(isRaw)
       params.setAlgorithmName("wpr")
-
-      println("inputPath: " + inputPath)
-      println("outputPath: " + newOutput)
 
       var appName = s"WeightedPageRank_${datasetName}_${api}"
       if (isRaw == "yes") {
@@ -113,9 +100,9 @@ object WeightedPageRankRunner {
       })
       val g = Graph.fromEdges(edgeRdd, 1.0)
       val result = if (api.toLowerCase().equals("static")) {
-        org.apache.spark.graphx.lib.WeightedPageRank.run(g, numIter.toInt, 0.15)
+        WeightedPageRank.run(g, numIter, 0.15)
       } else {
-        org.apache.spark.graphx.lib.WeightedPageRank.runUntilConvergence(g, numIter.toDouble, 0.15)
+        WeightedPageRank.runUntilConvergence(g, algoTolerance, 0.15)
       }
       val sumresult = result.vertices.values.sum()
       result.vertices.map(f => s"${f._1},${f._2}").saveAsTextFile(outputPath)
@@ -126,11 +113,7 @@ object WeightedPageRankRunner {
 
       params.setCostTime(costTime)
 
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
+      Utils.checkDirs("report")
       val writer = new FileWriter(
         s"report/WPR_${Utils.getDateStrFromUTC("yyyyMMdd_HHmmss", System.currentTimeMillis())}.yml")
       yaml.dump(params, writer)
