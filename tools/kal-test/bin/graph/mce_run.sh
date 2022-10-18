@@ -25,30 +25,31 @@ source conf/graph/mce/mce_spark.properties
 num_executors_val="numExecutors_${cpu_name}"
 executor_cores_val="executorCores"
 executor_memory_val="executorMemory_${cpu_name}"
-extra_java_options_val="extraJavaOptions"
-master_val="master"
+extra_java_options_val="extraJavaOptions_${cpu_name}"
 deploy_mode_val="deployMode"
 driver_memory_val="driverMemory"
 num_executors=${!num_executors_val}
 executor_cores=${!executor_cores_val}
 executor_memory=${!executor_memory_val}
 extra_java_options=${!extra_java_options_val}
-master=${!master_val}
 driver_memory=${!driver_memory_val}
 deploy_mode=${!deploy_mode_val}
-if [ ! ${num_executors} ] \
-	|| [ ! ${executor_cores} ] \
-  || [ ! ${executor_memory} ] \
-	|| [ ! ${master} ]; then
-   echo "Some values are NUll, please confirm with the property files"
-   exit 0
-fi
-echo "${master_val}:${master}"
+
 echo "${deploy_mode_val}:${deploy_mode}"
+echo "${driver_memory_val}:${driver_memory}"
 echo "${num_executors_val}:${num_executors}"
 echo "${executor_cores_val}:${executor_cores}"
 echo "${executor_memory_val}:${executor_memory}"
 echo "${extra_java_options_val}:${extra_java_options}"
+if [ ! ${num_executors} ] \
+	|| [ ! ${executor_cores} ] \
+  || [ ! ${executor_memory} ] \
+  || [ ! ${driver_memory} ] \
+  || [ ! ${extra_java_options} ] \
+	|| [ ! ${deploy_mode} ]; then
+   echo "Some values are NUll, please confirm with the property files"
+   exit 0
+fi
 
 source conf/graph/graph_datasets.properties
 spark_version=sparkVersion

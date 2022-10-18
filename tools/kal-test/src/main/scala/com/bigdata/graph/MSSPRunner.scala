@@ -97,10 +97,10 @@ object MSSPRunner {
           System.currentTimeMillis())
       }.yml")
       val representer = new Representer
-      representer.addClassTag(classOf[clusteringCoefficientParms], Tag.MAP)
+      representer.addClassTag(classOf[MsspParams], Tag.MAP)
       val options = new DumperOptions
       options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK)
-      val yaml = new Yaml(new Constructor(classOf[clusteringCoefficientConfig]), representer, options)
+      val yaml = new Yaml(new Constructor(classOf[MsspConfig]), representer, options)
       yaml.dump(params, writer)
 
       println(s"Exec Successful: costTime: ${costTime}s")
