@@ -89,6 +89,7 @@ object SimRankRunner {
       val conf = new SparkConf().setAppName(appName)
       val spark = SparkSession.builder.config(conf).getOrCreate()
       val costTime = new SimRankKernel().runJob(spark, params)
+      params.setCostTime(costTime)
 
       Utils.checkDirs("report")
       if(ifCheck.equals("yes")){
@@ -117,6 +118,7 @@ class SimRankKernel {
   def runJob(spark: SparkSession, params: SimRankParams): Double = {
     val sc = spark.sparkContext
     val startTime = System.currentTimeMillis()
+    var costTime: Double = 0
 
     import spark.implicits._
     val userCol = "user"
@@ -135,14 +137,14 @@ class SimRankKernel {
         .setUserCol(userCol)
         .setItemCol(itemCol)
       val simrankRes = simrank.computeSimilarity(df)
-      val costTime = (System.currentTimeMillis() - startTime) / 1000.0
+      costTime = (System.currentTimeMillis() - startTime) / 1000.0
       SimRankVerify.saveRes(simrankRes.userSimilarity, simrankRes.itemSimilarity, params.saveDataPath, sc)
 
     } else {
       val simrankRes = new SimRankOpenSource().execute(df, (userCol, itemCol), params.getDamp, params.getMaxIter)
-      val costTime = (System.currentTimeMillis() - startTime) / 1000.0
+      costTime = (System.currentTimeMillis() - startTime) / 1000.0
       SimRankVerify.saveRes(simrankRes._1, simrankRes._2, params.saveDataPath, sc)
     }
-    params.getCostTime
+    costTime
   }
 }

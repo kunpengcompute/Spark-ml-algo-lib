@@ -37,6 +37,6 @@ spark-submit \
 --executor-cores 23 \
 --executor-memory 79g \
 --conf "spark.executor.extraJavaOptions=-Xms79g" \
---conf "spark.driver.maxResultSize=1024g" \
---driver-java-options "-Xms20g" \
+--conf "spark.driver.maxResultSize=256g" \
+--driver-java-options "-Xms15g" \
 ./lib/kal-test_${scala_version_val}-0.1.jar ${path0} ${path1}

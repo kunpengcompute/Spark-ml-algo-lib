@@ -126,8 +126,3 @@ class DBSCANKernel {
     (numTotal,costTime)
   }
 }
-
-
-
-
-
