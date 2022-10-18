@@ -1,6 +1,7 @@
 package org.apache.spark.ml.clustering
 
 import com.bigdata.utils.Utils
+
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.linalg.{VectorUDT, Vectors}
 import org.apache.spark.sql.{Row, SparkSession}
@@ -34,12 +35,64 @@ class DBSParams extends Serializable {
   @BeanProperty var testcaseType: String = _
 }
 
+object DBSCANRunner {
+
+  def main(args: Array[String]): Unit = {
+
+    try {
+      val modelConfSplit = args(0).split("-")
+      val (datasetName, platformName) = (modelConfSplit(0), modelConfSplit(1))
+      val dataPath = args(1)
+      val datasetCpuName = s"${datasetName}_${platformName}"
+
+      val stream = Utils.getStream("conf/ml/dbscan/dbscan.yml")
+      val representer = new Representer
+      representer.addClassTag(classOf[DBSParams], Tag.MAP)
+      val options = new DumperOptions
+      options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK)
+      val yaml = new Yaml(new Constructor(classOf[DBSCANConfig]), representer, options)
+      val description = new TypeDescription(classOf[DBSParams])
+      yaml.addTypeDescription(description)
+      val config: DBSCANConfig = yaml.load(stream).asInstanceOf[DBSCANConfig]
+      val paramsMap = config.dbscan.get(datasetName).asInstanceOf[util.HashMap[String, Object]]
+      val params = new DBSParams()
+      params.setDataPath(dataPath)
+      params.setDatasetName(datasetName)
+      params.setDatasetCpuName(datasetCpuName)
+      params.setAlgorithmName("DBSCAN")
+      params.setTestcaseType(s"DBSCAN_${datasetName}")
+      params.setEpsilon(paramsMap.get("epsilon").toString.toDouble)
+      params.setMinPoints(paramsMap.get("minPoints").toString.toInt)
+      params.setSampleRate(paramsMap.get("sampleRate").toString.toDouble)
+      params.setNumPartitions(paramsMap.get("numPartitions").toString.toInt)
+
+
+      val conf = new SparkConf().setAppName(s"DBSCAN_${datasetName}_${platformName}")
+      val spark = SparkSession.builder.config(conf).getOrCreate()
+      val dbscan = new DBSCANKernel()
+      val (numTotal, costTime) = dbscan.runJob(spark, params)
+      params.setNumTotal(numTotal)
+      params.setCostTime(costTime)
+
+      Utils.checkDirs("report")
+      val writer = new FileWriter(s"report/${params.testcaseType}_${
+        Utils.getDateStrFromUTC("yyyyMMdd_HHmmss",
+          System.currentTimeMillis())
+      }.yml")
+      yaml.dump(params, writer)
+      println(s"Exec Successful: costTime: ${params.getCostTime}s")
+    } catch {
+      case e: Throwable =>
+        println(s"Exec Failure: ${e.getMessage}")
+        throw e
+    }
+  }
+}
+
 class DBSCANKernel {
   def runJob(spark: SparkSession, params: DBSParams): (util.HashMap[String, Int],Double) = {
     val startTime = System.currentTimeMillis()
-
     val sc = spark.sparkContext
-
     val inputSchema = StructType(
       Seq(
         StructField("features", new VectorUDT, false)
@@ -55,7 +108,7 @@ class DBSCANKernel {
       .setSampleRate(params.sampleRate)
 
     val globalClustersDF = model.fitPredict(data)
-    globalClustersDF.foreachPartition(_ => {})
+    globalClustersDF.foreachPartition((_:Iterator[Row]) => {})
 
     globalClustersDF.cache()
     val pointTypeArr = globalClustersDF.select("prediction").collect().map(_(0)).map(x => x.toString.toInt)
@@ -74,70 +127,7 @@ class DBSCANKernel {
   }
 }
 
-object DBSCANRunner {
 
-  def main(args: Array[String]): Unit = {
-
-    try {
-      val modelConfSplit = args(0).split("-")
-      val (datasetName, platformName) = (modelConfSplit(0), modelConfSplit(1))
-
-      val dataPath = args(1)
-
-      val datasetCpuName = s"${datasetName}_${platformName}"
-      val stream = Utils.getStream("conf/ml/dbscan/dbscan.yml")
-
-      val representer = new Representer
-      representer.addClassTag(classOf[DBSParams], Tag.MAP)
-      val options = new DumperOptions
-      options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK)
-      val yaml = new Yaml(new Constructor(classOf[DBSCANConfig]), representer, options)
-      val description = new TypeDescription(classOf[DBSParams])
-      yaml.addTypeDescription(description)
-
-      val config: DBSCANConfig = yaml.load(stream).asInstanceOf[DBSCANConfig]
-      val paramsMap = config.dbscan.get(datasetName).asInstanceOf[util.HashMap[String, Object]]
-
-      val params = new DBSParams()
-
-      params.setDataPath(dataPath)
-      params.setDatasetName(datasetName)
-      params.setDatasetCpuName(datasetCpuName)
-      params.setAlgorithmName("DBSCAN")
-      params.setTestcaseType(s"DBSCAN_${datasetName}")
-      params.setEpsilon(paramsMap.get("epsilon").toString.toDouble)
-      params.setMinPoints(paramsMap.get("minPoints").toString.toInt)
-      params.setSampleRate(paramsMap.get("sampleRate").toString.toDouble)
-
-      params.setNumPartitions(paramsMap.get("numPartitions").toString.toInt)
-
-
-      val conf = new SparkConf().setAppName(s"DBSCAN_${datasetName}_${platformName}")
-
-      val spark = SparkSession.builder.config(conf).getOrCreate()
-
-      val dbscan = new DBSCANKernel()
-      val tuple = dbscan.runJob(spark, params)
-      params.setNumTotal(tuple._1)
-      params.setCostTime(tuple._2)
-      val folder = new File("report")
-      if (!folder.exists()) {
-        val mkdir = folder.mkdirs()
-        println(s"Create dir report ${mkdir}")
-      }
-      val writer = new FileWriter(s"report/DBSCAN${
-        Utils.getDateStrFromUTC("yyyyMMdd_HHmmss",
-          System.currentTimeMillis())
-      }.yml")
-      yaml.dump(params, writer)
-      println(s"Exec Successful: costTime: ${params.getCostTime}s")
-    } catch {
-      case e: Throwable =>
-        println(s"Exec Failure: ${e.getMessage}")
-        throw e
-    }
-  }
-}
 
 
 

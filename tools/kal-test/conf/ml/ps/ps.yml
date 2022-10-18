@@ -1,111 +1,65 @@
 #PrefixSpan model params
 
 ps:
-  kosarak_aarch64:
-    numPartitions: 280
-    minSupport: 0.001
-    maxPatternLength: 10
-    maxLocalProjDBSize: 100000000
-    localTimeout: 15
-    filterCandidates: true
-    projDBstep: 10
-    redistributeData: true
-    saveDataPath: hdfs:///tmp/ml/result/ps/kosarak
-    verifiedDataPath: None
+  opt:
+    kosarak:
+      numPartitions: 280
+      minSupport: 0.001
+      maxPatternLength: 10
+      maxLocalProjDBSize: 100000000
+      localTimeout: '15'
+      filterCandidates: 'true'
+      projDBstep: '10'
+      redistributeData: true
 
-  IBM10M47_aarch64:
-    numPartitions: 280
-    minSupport: 0.002
-    maxPatternLength: 10
-    maxLocalProjDBSize: 10000000
-    localTimeout: 70
-    filterCandidates: true
-    projDBstep: 10
-    redistributeData: false
-    saveDataPath: hdfs:///tmp/ml/result/ps/IBM10M47
-    verifiedDataPath: None
+    IBM10M47:
+      numPartitions: 280
+      minSupport: 0.002
+      maxPatternLength: 10
+      maxLocalProjDBSize: 10000000
+      localTimeout: '70'
+      filterCandidates: 'true'
+      projDBstep: '10'
+      redistributeData: false
 
-  IBM100M47_aarch64:
-    numPartitions: 280
-    minSupport: 0.0021
-    maxPatternLength: 10
-    maxLocalProjDBSize: 100000000
-    localTimeout: 70
-    filterCandidates: true
-    projDBstep: 10
-    redistributeData: false
-    saveDataPath: hdfs:///tmp/ml/result/ps/IBM100M47
-    verifiedDataPath: None
+    IBM100M47:
+      numPartitions: 280
+      minSupport: 0.0021
+      maxPatternLength: 10
+      maxLocalProjDBSize: 100000000
+      localTimeout: '70'
+      filterCandidates: 'true'
+      projDBstep: '10'
+      redistributeData: false
 
-  kosarak_x86_64:
-    numPartitions: 232
-    minSupport: 0.001
-    maxPatternLength: 10
-    maxLocalProjDBSize: 10000000
-    localTimeout: 15
-    filterCandidates: true
-    projDBstep: 10
-    redistributeData: true
-    saveDataPath: hdfs:///tmp/ml/result/ps/kosarak
-    verifiedDataPath: None
+  raw:
+    kosarak:
+      numPartitions: 232
+      minSupport: 0.001
+      maxPatternLength: 10
+      maxLocalProjDBSize: 10000000
+      localTimeout: None
+      filterCandidates: None
+      projDBstep: None
+      redistributeData: true
 
-  IBM10M47_x86_64:
-    numPartitions: 232
-    minSupport: 0.002
-    maxPatternLength: 10
-    maxLocalProjDBSize: 10000000
-    localTimeout: 150
-    filterCandidates: true
-    projDBstep: 10
-    redistributeData: false
-    saveDataPath: hdfs:///tmp/ml/result/ps/IBM10M47
-    verifiedDataPath: None
+    IBM10M47:
+      numPartitions: 232
+      minSupport: 0.002
+      maxPatternLength: 10
+      maxLocalProjDBSize: 1000000
+      localTimeout: None
+      filterCandidates: None
+      projDBstep: None
+      redistributeData: false
 
-  IBM100M47_x86_64:
-    numPartitions: 232
-    minSupport: 0.0021
-    maxPatternLength: 10
-    maxLocalProjDBSize: 100000000
-    localTimeout: 150
-    filterCandidates: true
-    projDBstep: 1
-    redistributeData: false
-    saveDataPath: hdfs:///tmp/ml/result/ps/IBM100M47
-    verifiedDataPath: None
-
-  kosarak_raw:
-    numPartitions: 232
-    minSupport: 0.001
-    maxPatternLength: 10
-    maxLocalProjDBSize: 10000000
-    localTimeout: None
-    filterCandidates: None
-    projDBstep: None
-    redistributeData: true
-    saveDataPath: None
-    verifiedDataPath: hdfs:///tmp/ml/result/verified/ps/kosarak
-
-  IBM10M47_raw:
-    numPartitions: 232
-    minSupport: 0.002
-    maxPatternLength: 10
-    maxLocalProjDBSize: 1000000
-    localTimeout: None
-    filterCandidates: None
-    projDBstep: None
-    redistributeData: false
-    saveDataPath: None
-    verifiedDataPath: hdfs:///tmp/ml/result/verified/ps/IBM10M47
-
-  IBM100M47_raw:
-    numPartitions: 232
-    minSupport: 0.0021
-    maxPatternLength: 10
-    maxLocalProjDBSize: 10000000
-    localTimeout: None
-    filterCandidates: None
-    projDBstep: None
-    redistributeData: false
-    saveDataPath: None
-    verifiedDataPath: hdfs:///tmp/ml/result/verified/ps/IBM100M47
+    IBM100M47:
+      numPartitions: 232
+      minSupport: 0.0021
+      maxPatternLength: 10
+      maxLocalProjDBSize: 10000000
+      localTimeout: None
+      filterCandidates: None
+      projDBstep: None
+      redistributeData: false
 

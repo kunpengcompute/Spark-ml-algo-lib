@@ -1,33 +1,33 @@
 #!/bin/bash
 set -e
 
-case "$1" in
--h | --help | ?)
+function usage() {
   echo "Usage: <dataset name> <api name> <save or verify> <isRaw>"
   echo "1st argument: name of dataset: higgs/mnist8m"
   echo "2nd argument: name of API: fit/fit1/fit2/fit3"
   echo "3rd argument: save or verify result: save/verify"
   echo "4th argument: optimization algorithm or raw: no/yes"
+}
+
+case "$1" in
+-h | --help | ?)
+  usage
   exit 0
   ;;
 esac
 
 if [ $# -ne 4 ]; then
-  echo "please input 4 arguments: <dataset name> <api name> <save or verify> <isRaw>"
-  echo "1st argument: name of dataset: higgs/mnist8m"
-  echo "2nd argument: name of API: fit/fit1/fit2/fit3"
-  echo "3rd argument: save or verify result: save/verify"
-  echo "4th argument: optimization algorithm or raw: no/yes"
+  usage
   exit 0
 fi
 
+source conf/ml/dtb/dtb_spark.properties
 dataset_name=$1
 api_name=$2
 verify=$3
 is_raw=$4
 cpu_name=$(lscpu | grep Architecture | awk '{print $2}')
 
-source conf/ml/dtb/dtb_spark.properties
 # concatnate strings as a new variable
 num_executors="numExectuors_"${dataset_name}_${cpu_name}
 executor_cores="executorCores_"${dataset_name}_${cpu_name}

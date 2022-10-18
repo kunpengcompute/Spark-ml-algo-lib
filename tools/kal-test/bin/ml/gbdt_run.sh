@@ -1,8 +1,7 @@
 #!/bin/bash
 set -e
 
-case "$1" in
--h | --help | ?)
+function usage() {
   echo "Usage: <algorithm type> <data structure> <dataset name> <api name> <isRaw> <isCheck>"
   echo "1st argument: type of algorithm: [classification/regression]"
   echo "2nd argument: type of data structure: [dataframe/rdd]"
@@ -10,23 +9,21 @@ case "$1" in
   echo "4th argument: name of API: [for dataframe: fit/fit1/fit2/fit3; for rdd: rdd/javardd]"
   echo "5th argument: optimization algorithm or raw: [no/yes]"
   echo "6th argument: Whether to Compare Results [no/yes]"
+}
+
+case "$1" in
+-h | --help | ?)
+  usage
   exit 0
   ;;
 esac
 
 if [ $# -ne 6 ]; then
-  echo "please input 6 arguments: <algorithm type> <data structure> <dataset name> <api name> <isRaw> <isCheck>"
-  echo "1st argument: type of algorithm: [classification/regression]"
-  echo "2nd argument: type of data structure: [dataframe/rdd]"
-  echo "3rd argument: name of dataset: [epsilon/rcv/D10M4096libsvm]"
-  echo "4th argument: name of API: [for dataframe: fit/fit1/fit2/fit3; for rdd: rdd/javardd]"
-  echo "5th argument: optimization algorithm or raw: [no/yes]"
-  echo "6th argument: Whether to Compare Results [no/yes]"
+  usage
   exit 0
 fi
 
 source conf/ml/gbdt/gbdt_spark.properties
-
 algorithm_type=$1
 data_structure=$2
 dataset_name=$3
@@ -34,7 +31,6 @@ api_name=$4
 is_raw=$5
 if_check=$6
 cpu_name=$(lscpu | grep Architecture | awk '{print $2}')
-
 model_conf=${algorithm_type}-${data_structure}-${dataset_name}-${api_name}-${is_raw}-${if_check}
 
 # concatnate strings as a new variable

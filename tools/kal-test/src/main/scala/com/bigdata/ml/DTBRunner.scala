@@ -289,6 +289,7 @@ object DTBRunner {
     } catch {
       case e: Throwable =>
         println(s"Exec Failure: ${e.getMessage}")
+        throw e
     }
   }
 }

@@ -1,86 +1,64 @@
 #simrank model params
 
 simrank:
-  simrank3w-boostkit-aarch64:
-    numPartitions: 284
-    damp: 0.6
-    maxIter: 5
-    saveResult: false
-    savePath: ""
-    
-  simrank5w-boostkit-aarch64:
-    numPartitions: 284
-    damp: 0.6
-    maxIter: 5
-    saveResult: false
-    savePath: ""
+  opt:
+    simrank3w-aarch64:
+      numPartitions: 284
+      damp: 0.6
+      maxIter: 5
 
-  simrank7w-boostkit-aarch64:
-    numPartitions: 284
-    damp: 0.6
-    maxIter: 5
-    saveResult: false
-    savePath: ""
+    simrank5w-aarch64:
+      numPartitions: 284
+      damp: 0.6
+      maxIter: 5
 
-  simrank3w-boostkit-x86_64:
-    numPartitions: 236
-    damp: 0.6
-    maxIter: 5
-    saveResult: false
-    savePath: ""
 
-  simrank5w-boostkit-x86_64:
-    numPartitions: 236
-    damp: 0.6
-    maxIter: 5
-    saveResult: false
-    savePath: ""
+    simrank7w-aarch64:
+      numPartitions: 284
+      damp: 0.6
+      maxIter: 5
 
-  simrank7w-boostkit-x86_64:
-    numPartitions: 236
-    damp: 0.6
-    maxIter: 5
-    saveResult: false
-    savePath: ""
+    simrank3w-x86_64:
+      numPartitions: 236
+      damp: 0.6
+      maxIter: 5
 
-  simrank3w-raw-aarch64:
-    numPartitions: 284
-    damp: 0.6
-    maxIter: 5
-    saveResult: false
-    savePath: ""
+    simrank5w-x86_64:
+      numPartitions: 236
+      damp: 0.6
+      maxIter: 5
 
-  simrank5w-raw-aarch64:
-    numPartitions: 284
-    damp: 0.6
-    maxIter: 5
-    saveResult: false
-    savePath: ""
+    simrank7w-x86_64:
+      numPartitions: 236
+      damp: 0.6
+      maxIter: 5
+  raw:
+    simrank3w-aarch64:
+      numPartitions: 284
+      damp: 0.6
+      maxIter: 5
 
-  simrank7w-raw-aarch64:
-    numPartitions: 284
-    damp: 0.6
-    maxIter: 5
-    saveResult: false
-    savePath: ""
+    simrank5w-aarch64:
+      numPartitions: 284
+      damp: 0.6
+      maxIter: 5
 
-  simrank3w-raw-x86_64:
-    numPartitions: 236
-    damp: 0.6
-    maxIter: 5
-    saveResult: false
-    savePath: ""
+    simrank7w-aarch64:
+      numPartitions: 284
+      damp: 0.6
+      maxIter: 5
 
-  simrank5w-raw-x86_64:
-    numPartitions: 236
-    damp: 0.6
-    maxIter: 5
-    saveResult: false
-    savePath: ""
+    simrank3w-x86_64:
+      numPartitions: 236
+      damp: 0.6
+      maxIter: 5
 
-  simrank7w-raw-x86_64:
-    numPartitions: 236
-    damp: 0.6
-    maxIter: 5
-    saveResult: false
-    savePath: ""
+    simrank5w-x86_64:
+      numPartitions: 236
+      damp: 0.6
+      maxIter: 5
+
+    simrank7w-x86_64:
+      numPartitions: 236
+      damp: 0.6
+      maxIter: 5

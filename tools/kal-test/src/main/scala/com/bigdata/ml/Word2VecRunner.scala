@@ -1,9 +1,8 @@
 package com.bigdata.ml
 
+import com.bigdata.utils.Utils
 import com.bigdata.compare.ml.Word2VecEvaluation
 
-import java.io.{File, FileWriter}
-import java.util
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SparkSession
 import org.yaml.snakeyaml.{DumperOptions, TypeDescription, Yaml}
@@ -11,11 +10,13 @@ import org.yaml.snakeyaml.constructor.Constructor
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
 
-import scala.beans.BeanProperty
-import com.bigdata.utils.Utils
 import org.apache.spark.ml.feature.{Word2Vec, Word2VecModel}
 import org.apache.spark.ml.param.{ParamMap, ParamPair}
 import org.apache.spark.mllib.feature.{Word2VecModel => mllibWord2VecModel}
+
+import java.io.{File, FileWriter}
+import java.util
+import scala.beans.BeanProperty
 
 class Word2VecConfig extends Serializable {
   @BeanProperty var word2vec: util.HashMap[String, util.HashMap[String, util.HashMap[String, util.HashMap[String, Object]]]] = _

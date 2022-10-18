@@ -1,27 +1,31 @@
 #!/bin/bash
 set -e
 
+function usage() {
+  echo "Usage: <dataset name> <isRaw> <isCheck>"
+  echo "1st argument: name of dataset: e.g. D10M1K/D1M10K/MESH/RUCCI"
+  echo "2nd argument: optimization algorithm or raw: [no/yes]"
+  echo "3rd argument: Whether to Compare Results [no/yes]"
+}
+
 case "$1" in
 -h | --help | ?)
-  echo "Usage: <dataset name>"
-  echo "1st argument: name of dataset: e.g. D10M1K"
+  usage
   exit 0
   ;;
 esac
 
-if [ $# -ne 1 ]; then
-  echo "please input 1 argument: <dataset name>"
-  echo "1st argument: name of dataset: e.g. D10M1K"
+if [ $# -ne 3 ]; then
+  usage
   exit 0
 fi
 
-
 source conf/ml/svd/svd_spark.properties
-
 dataset_name=$1
-api_name=$2
+is_raw=$2
+if_check=$3
 cpu_name=$(lscpu | grep Architecture | awk '{print $2}')
-model_conf=${dataset_name}
+model_conf=${dataset_name}-${is_raw}-${if_check}
 
 # concatnate strings as a new variable
 num_executors="numExectuors_"${dataset_name}_${cpu_name}
@@ -35,7 +39,6 @@ master_="master"
 deploy_mode="deployMode"
 compress_="compress"
 
-dataset_output_=${dataset_name}"_output"
 
 num_executors_val=${!num_executors}
 executor_cores_val=${!executor_cores}
@@ -79,22 +82,19 @@ fi
 source conf/ml/ml_datasets.properties
 spark_version=sparkVersion
 spark_version_val=${!spark_version}
-data_path_input=${!dataset_name}
-data_path_output=${!dataset_output_}
-data_path_val=${data_path_input}","${data_path_output}
+kal_version=kalVersion
+kal_version_val=${!kal_version}
+scala_version=scalaVersion
+scala_version_val=${!scala_version}
+save_resultPath=saveResultPath
+save_resultPath_val=${!save_resultPath}
+data_path_val=${!dataset_name}
 echo "${dataset_name} : ${data_path_val}"
-is_raw="no"
-echo "-Is raw? -${is_raw}"
-hdfs dfs -rm -r -f "${data_path_output}_${cpu_name}_${is_raw}/U"
-hdfs dfs -rm -r -f "${data_path_output}_${cpu_name}_${is_raw}/V"
-hdfs dfs -rm -r -f "${data_path_output}_${cpu_name}_${is_raw}/s"
-hdfs dfs -mkdir -p "${data_path_output}_${cpu_name}_${is_raw}"
+
 
 spark_conf=${master_val}_${deploy_mode_val}_${num_executors_val}_${executor_cores_val}_${executor_memory_val}
 
 mkdir -p log
-echo "start to submit spark jobs --- SVD-${model_conf}"
-
 echo "start to clean cache and sleep 30s"
 ssh server1 "echo 3 > /proc/sys/vm/drop_caches"
 ssh agent1 "echo 3 > /proc/sys/vm/drop_caches"
@@ -102,21 +102,46 @@ ssh agent2 "echo 3 > /proc/sys/vm/drop_caches"
 ssh agent3 "echo 3 > /proc/sys/vm/drop_caches"
 sleep 30
 
-spark-submit \
---class com.bigdata.ml.SVDRunner \
---deploy-mode ${deploy_mode_val} \
---driver-cores ${driver_cores_val} \
---driver-memory ${driver_memory_val} \
---num-executors ${num_executors_val} \
---executor-cores ${executor_cores_val} \
---executor-memory ${executor_memory_val} \
---master ${master_val} \
---conf "spark.executor.extraJavaOptions=${extra_java_options_val}" \
---conf "spark.executor.instances=${num_executors_val}" \
---conf "spark.executor.memory_overhead=${memory_overhead_val}" \
---conf "spark.driver.maxResultSize=256G" \
---conf "spark.rdd.compress=${compress_val}" \
---jars "lib/fastutil-8.3.1.jar,lib/boostkit-ml-acc_2.11-1.3.0-${spark_version_val}.jar,lib/boostkit-ml-core_2.11-1.3.0-${spark_version_val}.jar,lib/boostkit-ml-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar" \
---driver-class-path "lib/kal-test_2.11-0.1.jar:lib/fastutil-8.3.1.jar:lib/snakeyaml-1.19.jar:lib/boostkit-ml-acc_2.11-1.3.0-${spark_version_val}.jar:lib/boostkit-ml-core_2.11-1.3.0-${spark_version_val}.jar:lib/boostkit-ml-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar" \
---conf "spark.executor.extraClassPath=fastutil-8.3.1.jar:boostkit-ml-acc_2.11-1.3.0-${spark_version_val}.jar:boostkit-ml-core_2.11-1.3.0-${spark_version_val}.jar:boostkit-ml-kernel-2.11-1.3.0-${spark_version_val}-${cpu_name}.jar" \
-./lib/kal-test_2.11-0.1.jar ${model_conf} ${data_path_val} ${cpu_name} ${is_raw} ${spark_conf} | tee ./log/log
+echo "start to submit spark jobs --- SVD-${model_conf}"
+if [ ${is_raw} == "no" ]; then
+  scp lib/fastutil-8.3.1.jar lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent1:/opt/ml_classpath/
+  scp lib/fastutil-8.3.1.jar lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent2:/opt/ml_classpath/
+  scp lib/fastutil-8.3.1.jar lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent3:/opt/ml_classpath/
+
+
+  spark-submit \
+  --class com.bigdata.ml.SVDRunner \
+  --deploy-mode ${deploy_mode_val} \
+  --driver-cores ${driver_cores_val} \
+  --driver-memory ${driver_memory_val} \
+  --num-executors ${num_executors_val} \
+  --executor-cores ${executor_cores_val} \
+  --executor-memory ${executor_memory_val} \
+  --master ${master_val} \
+  --conf "spark.executor.extraJavaOptions=${extra_java_options_val}" \
+  --conf "spark.executor.instances=${num_executors_val}" \
+  --conf "spark.executor.memory_overhead=${memory_overhead_val}" \
+  --conf "spark.driver.maxResultSize=256G" \
+  --conf "spark.rdd.compress=${compress_val}" \
+  --jars "lib/fastutil-8.3.1.jar,lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar,lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar,lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+  --driver-class-path "lib/kal-test_${scala_version_val}-0.1.jar:lib/fastutil-8.3.1.jar:lib/snakeyaml-1.19.jar:lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+  --conf "spark.executor.extraClassPath=/opt/ml_classpath/fastutil-8.3.1.jar:/opt/ml_classpath/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:/opt/ml_classpath/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:/opt/ml_classpath/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+  ./lib/kal-test_${scala_version_val}-0.1.jar ${model_conf} ${data_path_val} ${cpu_name} ${spark_conf} ${save_resultPath_val}| tee ./log/log
+else
+  spark-submit \
+  --class com.bigdata.ml.SVDRunner \
+  --deploy-mode ${deploy_mode_val} \
+  --driver-cores ${driver_cores_val} \
+  --driver-memory ${driver_memory_val} \
+  --num-executors ${num_executors_val} \
+  --executor-cores ${executor_cores_val} \
+  --executor-memory ${executor_memory_val} \
+  --master ${master_val} \
+  --conf "spark.executor.extraJavaOptions=${extra_java_options_val}" \
+  --conf "spark.executor.instances=${num_executors_val}" \
+  --conf "spark.executor.memory_overhead=${memory_overhead_val}" \
+  --conf "spark.driver.maxResultSize=256G" \
+  --conf "spark.rdd.compress=${compress_val}" \
+  --driver-class-path "lib/snakeyaml-1.19.jar:lib/fastutil-8.3.1.jar" \
+  ./lib/kal-test_${scala_version_val}-0.1.jar ${model_conf} ${data_path_val} ${cpu_name} ${spark_conf} ${save_resultPath_val}| tee ./log/log
+fi

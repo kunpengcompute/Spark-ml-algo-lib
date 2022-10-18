@@ -13,22 +13,22 @@ The Kunpeng algorithm library test tool can be used to test machine learning and
 #### Procedure
 1. Go to the Spark-ml-algo-lib/tools/kal-test directory in the compilation environment.
 2. Install the dependencies.<br/>
-Take spark 2.3.2 as an example, the install command is as follows:<br/>
-&emsp;&emsp;mvn install:install-file -DgroupId=org.apache.spark -DartifactId=boostkit-graph-kernel-client_2.11 -Dversion -Dclassifier=spark2.3.2 -Dfile=boostkit-graph-kernel-client_2.11-2.1.0-spark2.3.2.jar -Dpackaging=jar -DgeneratePom=true<br/>
-&emsp;&emsp;mvn install:install-file -DgroupId=org.apache.spark -DartifactId=boostkit-ml-kernel-client_2.11 -Dversion -Dclassifier=spark2.3.2 -Dfile=boostkit-ml-kernel-client_2.11-2.1.0-spark2.3.2.jar -Dpackaging=jar -DgeneratePom=true
+   Take spark 2.3.2 as an example, the install command is as follows:<br/>
+   &emsp;&emsp;mvn install:install-file -DgroupId=org.apache.spark -DartifactId=boostkit-graph-kernel-client_2.11 -Dversion -Dclassifier=spark2.3.2 -Dfile=boostkit-graph-kernel-client_2.11-2.1.0-spark2.3.2.jar -Dpackaging=jar -DgeneratePom=true<br/>
+   &emsp;&emsp;mvn install:install-file -DgroupId=org.apache.spark -DartifactId=boostkit-ml-kernel-client_2.11 -Dversion -Dclassifier=spark2.3.2 -Dfile=boostkit-ml-kernel-client_2.11-2.1.0-spark2.3.2.jar -Dpackaging=jar -DgeneratePom=true
 3. Run the compile command:<br/>
-    mvn clean install
+   mvn clean install -DskipTests
 4. View the kal-test_2.11-0.1.jar file generated in Spark-ml-algo-lib/tools/kal-test/target.
 
 ### Deployment and Usage Description
 
-1.  Deploy the kal-test folder in the test environment, for example, in the /home/test/boostkit/ directory. If the directory does not exist, create one.<br/>mkdir -p /home/test/boostkit/_**
+1.  Deploy the kal-test folder in the test environment, for example, in the /home/test/boostkit/ directory. If the directory does not exist, create one.<br/>mkdir -p /home/test/boostkit/
 2.  Go to the directory.<br/>
-    cd /home/test/boostkit/kal-test/_**
+    cd /home/test/boostkit/kal-test/
 3.  Save the obtained boostkit-graph-kernel-scala_version-kal_version-spark_version-aarch64.jar, boostkit-graph-acc_scala_version-kal_version-spark_version.jar, and boostkit-graph-core_scala_version-kal_version-spark_version.jar files to /home/test/boostkit/kal-test/lib.
 4.  Go to the /home/test/boostkit/kal-test directory.<br/>
-    cd /home/test/boostkit/kal-test_**
-5.  Run the following command in the /home/test/boostkit/kal-test/ directory (taking the PageRank algorithm as an example):<br/>bash bin/graph/pr_run.sh uk_2002 run_**
+    cd /home/test/boostkit/kal-test
+5.  Run the following command in the /home/test/boostkit/kal-test/ directory (taking the PageRank algorithm as an example):<br/>bash bin/graph/pr_run.sh uk_2002 run no
 6.  Check the algorithm running status.
 
 ### Algorithm and Dataset

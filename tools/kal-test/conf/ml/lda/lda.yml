@@ -1,83 +1,58 @@
 #LDA model params
 
 lda:
-  nytimes_aarch64:
-    numPartitions: 12
-    numPartitionsTest: 276
-    numFeatures: 102660
-    checkpointInterval: -1
-    inputDataType: libsvm
-    maxIter: 100
-    k: 100
+  opt:
+    nytimes:
+      numPartitions: 12
+      numPartitionsTest: 276
+      numFeatures: 102660
+      checkpointInterval: -1
+      inputDataType: libsvm
+      maxIter: 100
+      k: 100
 
-  pubmed_aarch64:
-    numPartitions: 12
-    numPartitionsTest: 276
-    numFeatures: 141043
-    checkpointInterval: -1
-    inputDataType: libsvm
-    maxIter: 100
-    k: 100
+    pubmed:
+      numPartitions: 12
+      numPartitionsTest: 276
+      numFeatures: 141043
+      checkpointInterval: -1
+      inputDataType: libsvm
+      maxIter: 100
+      k: 100
 
-  D20M200K_aarch64:
-    numPartitions: 12
-    numPartitionsTest: 276
-    numFeatures: 200000
-    checkpointInterval: -1
-    inputDataType: obj
-    maxIter: 100
-    k: 100
+    D20M200K:
+      numPartitions: 12
+      numPartitionsTest: 276
+      numFeatures: 200000
+      checkpointInterval: -1
+      inputDataType: obj
+      maxIter: 100
+      k: 100
 
-  nytimes_x86_64:
-    numPartitions: 12
-    numPartitionsTest: 228
-    numFeatures: 102660
-    checkpointInterval: -1
-    inputDataType: libsvm
-    maxIter: 100
-    k: 100
+  raw:
+    nytimes:
+      numPartitions: 96
+      numPartitionsTest: 228
+      numFeatures: 102660
+      checkpointInterval: -1
+      inputDataType: libsvm
+      maxIter: 100
+      k: 100
 
-  pubmed_x86_64:
-    numPartitions: 12
-    numPartitionsTest: 228
-    numFeatures: 141043
-    checkpointInterval: -1
-    inputDataType: libsvm
-    maxIter: 100
-    k: 100
+    pubmed:
+      numPartitions: 216
+      numPartitionsTest: 228
+      numFeatures: 141043
+      checkpointInterval: -1
+      inputDataType: libsvm
+      maxIter: 100
+      k: 100
 
-  D20M200K_x86_64:
-    numPartitions: 12
-    numPartitionsTest: 228
-    numFeatures: 200000
-    checkpointInterval: -1
-    inputDataType: obj
-    maxIter: 100
-    k: 100
-
-  nytimes_raw:
-    numPartitions: 96
-    numPartitionsTest: 228
-    numFeatures: 102660
-    checkpointInterval: -1
-    inputDataType: libsvm
-    maxIter: 100
-    k: 100
-
-  pubmed_raw:
-    numPartitions: 216
-    numPartitionsTest: 228
-    numFeatures: 141043
-    checkpointInterval: -1
-    inputDataType: libsvm
-    maxIter: 100
-    k: 100
-
-  D20M200K_raw:
-    numPartitions: 228
-    numPartitionsTest: 228
-    numFeatures: 200000
-    checkpointInterval: -1
-    inputDataType: obj
-    maxIter: 100
-    k: 100
+    D20M200K:
+      numPartitions: 228
+      numPartitionsTest: 228
+      numFeatures: 200000
+      checkpointInterval: -1
+      inputDataType: obj
+      maxIter: 100
+      k: 100

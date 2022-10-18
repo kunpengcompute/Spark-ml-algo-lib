@@ -1,7 +1,7 @@
 #KNN model params
 
 knn:
-  aarch64:
+  opt:
     glove:
       pt: 280
       k: 100
@@ -30,30 +30,30 @@ knn:
       subTreeLeafSize: 30
 
 
-  x86_64:
+  raw:
     glove:
-      pt: 234
+      pt: 236
       k: 100
       testNum: 50000
       testBatchSize: 5000
       topTreeSizeRate: 10.0
       topTreeLeafSize: 10
-      subTreeLeafSize: 30
+      subTreeLeafSize: 100
 
     gist:
-      pt: 228
+      pt: 232
       k: 100
       testNum: 50000
       testBatchSize: 5000
       topTreeSizeRate: 10.0
       topTreeLeafSize: 10
-      subTreeLeafSize: 30
+      subTreeLeafSize: 1000
 
     deep1b:
-      pt: 234
+      pt: 236
       k: 100
       testNum: 50000
       testBatchSize: 2000
       topTreeSizeRate: 10.0
       topTreeLeafSize: 10
-      subTreeLeafSize: 30
+      subTreeLeafSize: 1000
