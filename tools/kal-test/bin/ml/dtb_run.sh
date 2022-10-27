@@ -88,7 +88,7 @@ scala_version_val=${!scala_version}
 data_path_val=${!dataset_name}
 echo "${dataset_name} : ${data_path_val}"
 
-bucketedResPath="/tmp/ml/res/DTB_ref_bucketedRes/${spark_version_val}/${dataset_name}"
+bucketedResPath="/tmp/ml/res/DTB_ref_bucketedRes/${is_raw}/${spark_version_val}/${dataset_name}"
 hdfs dfs -mkdir -p ${bucketedResPath}
 
 spark_conf=${master_val}_${deploy_mode_val}_${num_executors_val}_${executor_cores_val}_${executor_memory_val}
