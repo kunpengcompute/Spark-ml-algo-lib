@@ -5,7 +5,7 @@ function usage() {
   echo "Usage: <algorithm name> <path0> <path1>"
   echo "1st argument: algorithm name: als kmeans linr svm dtr(dt.regression) gbdtr(gbdt.regression) rfr(rf.regression) xgbtr(xgbt.regression)
                                       lda logr svm dtc(dt.classification) gbdtc(gbdt.classification) rfc(rf.classification) xgbtc(xgbt.classification)
-                                      cov pca pearson spca spearman lda ps svd"
+                                      cov pca pearson spca spearman lda ps svd dtb"
   echo "2st argument: path of opt result: eg [hdfs:///tmp/ml/result/RF/classification_epsilon_dataframe_fit1]"
   echo "3nd argument: path of raw result: eg [hdfs:///tmp/ml/result/RF/classification_epsilon_dataframe_fit1_raw]"
   echo "Applicable to algorithm ALS KMeans LinR SVM GBDT.regression RF.regression XGBT.regression"
@@ -39,6 +39,8 @@ elif [ $alg == "ps" ]; then
   class_name=com.bigdata.compare.ml.PrefixSpanVerify
 elif [ $alg == "svd" ] ; then
   class_name=com.bigdata.compare.ml.SVDVerify
+elif [ $alg == "dtb" ] ; then
+  class_name=com.bigdata.compare.ml.DTBVerify
 else
   alg_usage
   exit 0
