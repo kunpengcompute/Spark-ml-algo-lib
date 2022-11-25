@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2021. Huawei Technologies Co., Ltd.
+* Copyright (C) 2021-2022. Huawei Technologies Co., Ltd.
 * This program is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -84,6 +84,30 @@ private[spark] trait DecisionTreeModel {
 
   /** Convert to spark.mllib DecisionTreeModel (losing some information) */
   private[spark] def toOld: OldDecisionTreeModel
+
+  /**
+   * @return an iterator that traverses (DFS, left to right) the leaves
+   *         in the subtree of this node.
+   */
+  private def leafIterator(node: Node): Iterator[LeafNode] = {
+    node match {
+      case l: LeafNode => Iterator.single(l)
+      case n: InternalNode =>
+        leafIterator(n.leftChild) ++ leafIterator(n.rightChild)
+    }
+  }
+
+  @transient private lazy val leafIndices: Map[LeafNode, Int] = {
+    leafIterator(rootNode).zipWithIndex.toMap
+  }
+
+  /**
+   * @return The index of the leaf corresponding to the feature vector.
+   *         Leaves are indexed in pre-order from 0.
+   */
+  def predictLeaf(features: Vector): Double = {
+    leafIndices(rootNode.predictImpl(features)).toDouble
+  }
 }
 
 /**
@@ -124,6 +148,15 @@ private[ml] trait TreeEnsembleModel[M <: DecisionTreeModel] {
 
   /** Total number of nodes, summed over all trees in the ensemble. */
   lazy val totalNumNodes: Int = trees.map(_.numNodes).sum
+
+  /**
+   * @return The indices of the leaves corresponding to the feature vector.
+   *         Leaves are indexed in pre-order from 0.
+   */
+  def predictLeaf(features: Vector): Vector = {
+    val indices = trees.map(_.predictLeaf(features))
+    Vectors.dense(indices)
+  }
 }
 
 private[ml] object TreeEnsembleModel {

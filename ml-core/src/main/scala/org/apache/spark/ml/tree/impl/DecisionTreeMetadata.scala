@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2021. Huawei Technologies Co., Ltd.
+* Copyright (C) 2021-2022. Huawei Technologies Co., Ltd.
 * This program is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -59,7 +59,8 @@ private[spark] class DecisionTreeMetadata(
     val minInstancesPerNode: Int,
     val minInfoGain: Double,
     val numTrees: Int,
-    val numFeaturesPerNode: Int) extends Serializable {
+    val numFeaturesPerNode: Int,
+    val oneFeaturePerTree: Boolean = false) extends Serializable {
 
   def isUnordered(featureIndex: Int): Boolean = unorderedFeatures.contains(featureIndex)
 
@@ -212,10 +213,17 @@ private[spark] object DecisionTreeMetadata extends Logging {
         }
     }
 
+    val (newNumTrees, oneFeaturePerTree) = if (numTrees > 0) {
+      (numTrees, false)
+    } else {
+      (numFeatures, true)
+
+    }
     new DecisionTreeMetadata(numFeatures, numExamples, numClasses, numBins.max,
       strategy.categoricalFeaturesInfo, unorderedFeatures.toSet, numBins,
       strategy.impurity, strategy.quantileCalculationStrategy, strategy.maxDepth,
-      strategy.minInstancesPerNode, strategy.minInfoGain, numTrees, numFeaturesPerNode)
+      strategy.minInstancesPerNode, strategy.minInfoGain, newNumTrees, numFeaturesPerNode,
+      oneFeaturePerTree)
   }
 
   /**
