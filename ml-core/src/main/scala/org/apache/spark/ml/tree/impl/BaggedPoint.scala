@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2021. Huawei Technologies Co., Ltd.
+* Copyright (C) 2021-2022. Huawei Technologies Co., Ltd.
 * This program is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -70,14 +70,19 @@ private[spark] object BaggedPoint {
       subsamplingRate: Double,
       numSubsamples: Int,
       withReplacement: Boolean,
-      seed: Long = Utils.random.nextLong()): RDD[BaggedPoint[Datum]] = {
-    if (withReplacement) {
-      convertToBaggedRDDSamplingWithReplacement(input, subsamplingRate, numSubsamples, seed)
+      seed: Long = Utils.random.nextLong(),
+      oneFeaturePerTree: Boolean = false): RDD[BaggedPoint[Datum]] = {
+    if (oneFeaturePerTree) {
+      convertToBaggedRDDWithoutSampling(input)
     } else {
-      if (numSubsamples == 1 && subsamplingRate == 1.0) {
-        convertToBaggedRDDWithoutSampling(input)
+      if (withReplacement) {
+        convertToBaggedRDDSamplingWithReplacement(input, subsamplingRate, numSubsamples, seed)
       } else {
-        convertToBaggedRDDSamplingWithoutReplacement(input, subsamplingRate, numSubsamples, seed)
+        if (numSubsamples == 1 && subsamplingRate == 1.0) {
+          convertToBaggedRDDWithoutSampling(input)
+        } else {
+          convertToBaggedRDDSamplingWithoutReplacement(input, subsamplingRate, numSubsamples, seed)
+        }
       }
     }
   }
