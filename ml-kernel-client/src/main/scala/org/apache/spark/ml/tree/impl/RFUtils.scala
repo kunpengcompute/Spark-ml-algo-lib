@@ -1,6 +1,6 @@
 // scalastyle:off header.matches
 /*
-* Copyright (C) 2021. Huawei Technologies Co., Ltd.
+* Copyright (C) 2021-2022. Huawei Technologies Co., Ltd.
 * This program is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -58,6 +58,11 @@ object RFUtils extends Logging {
 
   def isSubSampled(baggedPoint: BaggedPoint[TreePointX],
                   groupInfo: GroupInfo, treeIndex: Int, id: Short): Boolean = {
+    true
+  }
+
+  def isValidSample(baggedPoint: BaggedPoint[TreePointX],
+      groupInfo: GroupInfo, treeIndex: Int, id: Short): Boolean = {
     true
   }
 
