@@ -128,7 +128,7 @@ if [ ${is_raw} == "no" ]; then
   --conf spark.shuffle.spill.compress=true \
   --conf "spark.executor.extraJavaOptions=${extra_java_options_val}" \
   --jars "lib/fastutil-8.3.1.jar,lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar,lib/boostkit-graph-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar" \
-  --driver-class-path "lib/kal-test_${scala_version_val}-0.1.jar:lib/snakeyaml-1.19.jar:lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
+  --driver-class-path "lib/kal-test_${scala_version_val}-0.1.jar:lib/snakeyaml-1.19.jar:lib/boostkit-graph-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
   --conf "spark.executor.extraClassPath=/opt/graph_classpath/fastutil-8.3.1.jar:/opt/graph_classpath/boostkit-graph-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:/opt/graph_classpath/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
   ./lib/kal-test_${scala_version_val}-0.1.jar ${dataset_name} ${api_name} ${num_partitions_val} ${is_raw} ${data_path_val} ${output_path}  | tee ./log/log
 else
