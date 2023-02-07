@@ -1,0 +1,19 @@
+# Degrees dataset parameters
+degree:
+  it_2004:
+    splitGraph: " "
+
+  twitter7:
+    splitGraph: " "
+
+  uk_2007_05:
+    splitGraph: "\t"
+
+  mycielskian20:
+    splitGraph: " "
+
+  gap_kron:
+    splitGraph: " "
+
+  com_friendster:
+    splitGraph: " "

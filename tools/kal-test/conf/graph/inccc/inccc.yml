@@ -1,0 +1,13 @@
+inccc:
+  opt:
+    graph500_26:
+      splitGraph: ","
+      partitions: 240
+
+    com_Friendster:
+      splitGraph: ","
+      partitions: 240
+
+    webbase_2001:
+      splitGraph: ","
+      partitions: 240

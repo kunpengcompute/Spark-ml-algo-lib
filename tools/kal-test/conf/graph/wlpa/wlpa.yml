@@ -1,0 +1,32 @@
+wlpa:
+  opt:
+    enwiki_2018:
+      splitGraph: "\\s+"
+      commputePartition: 282
+      maxIter: 10
+
+    arabic_2005:
+      splitGraph: "\\s+"
+      commputePartition: 282
+      maxIter: 10
+
+    GAP_twitter:
+      splitGraph: "\\s+"
+      commputePartition: 282
+      maxIter: 10
+
+  raw:
+    enwiki_2018:
+      splitGraph: "\\s+"
+      commputePartition: 236
+      maxIter: 10
+
+    arabic_2005:
+      splitGraph: "\\s+"
+      commputePartition: 236
+      maxIter: 10
+
+    GAP_twitter:
+      splitGraph: "\\s+"
+      commputePartition: 236
+      maxIter: 10

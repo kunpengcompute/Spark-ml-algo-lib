@@ -1,0 +1,65 @@
+#PrefixSpan model params
+
+ps:
+  opt:
+    kosarak:
+      numPartitions: 280
+      minSupport: 0.001
+      maxPatternLength: 10
+      maxLocalProjDBSize: 100000000
+      localTimeout: '15'
+      filterCandidates: 'true'
+      projDBstep: '10'
+      redistributeData: true
+
+    IBM10M47:
+      numPartitions: 280
+      minSupport: 0.002
+      maxPatternLength: 10
+      maxLocalProjDBSize: 10000000
+      localTimeout: '70'
+      filterCandidates: 'true'
+      projDBstep: '10'
+      redistributeData: false
+
+    IBM100M47:
+      numPartitions: 280
+      minSupport: 0.0021
+      maxPatternLength: 10
+      maxLocalProjDBSize: 100000000
+      localTimeout: '70'
+      filterCandidates: 'true'
+      projDBstep: '10'
+      redistributeData: false
+
+  raw:
+    kosarak:
+      numPartitions: 232
+      minSupport: 0.001
+      maxPatternLength: 10
+      maxLocalProjDBSize: 10000000
+      localTimeout: None
+      filterCandidates: None
+      projDBstep: None
+      redistributeData: true
+
+    IBM10M47:
+      numPartitions: 232
+      minSupport: 0.002
+      maxPatternLength: 10
+      maxLocalProjDBSize: 1000000
+      localTimeout: None
+      filterCandidates: None
+      projDBstep: None
+      redistributeData: false
+
+    IBM100M47:
+      numPartitions: 232
+      minSupport: 0.0021
+      maxPatternLength: 10
+      maxLocalProjDBSize: 10000000
+      localTimeout: None
+      filterCandidates: None
+      projDBstep: None
+      redistributeData: false
+

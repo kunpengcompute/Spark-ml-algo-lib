@@ -1,0 +1,20 @@
+# PageRank dataset parameters arm
+
+pr:
+  cit_patents:
+    splitGraph: "\t"
+    numIter: 100
+    resetProb: 0.15
+    tolerance: 1e-7
+
+  uk_2002:
+    splitGraph: "\t"
+    numIter: 100
+    resetProb: 0.15
+    tolerance: 1e-7
+
+  arabic_2005:
+    splitGraph: "\t"
+    numIter: 100
+    resetProb: 0.15
+    tolerance: 1e-7

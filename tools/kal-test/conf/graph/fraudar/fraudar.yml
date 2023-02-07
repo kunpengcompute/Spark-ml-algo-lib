@@ -1,0 +1,26 @@
+wlpa:
+  opt:
+    alpha:
+      splitGraph: "\\s+"
+      partitions: 240
+
+    amazon:
+      splitGraph: "\\s+"
+      partitions: 240
+
+    otc:
+      splitGraph: "\\s+"
+      partitions: 240
+
+  raw:
+    alpha:
+      splitGraph: "\\s+"
+      partitions: 240
+
+    amazon:
+      splitGraph: "\\s+"
+      partitions: 240
+
+    otc:
+      splitGraph: "\\s+"
+      partitions: 240

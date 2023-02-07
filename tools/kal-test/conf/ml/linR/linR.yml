@@ -1,0 +1,58 @@
+#Linear Regression model params
+
+linR:
+  opt:
+    mnist8m:
+      pt: 276
+      numFeatures: 784
+      loss: "huber"
+      regParam: 0.01
+      elasticNetParam: 0.0
+      maxIter: 400
+      tolerance: 1E-6
+
+    Twitter:
+      pt: 276
+      numFeatures: 9866
+      loss: "squaredError"
+      regParam: 0.01
+      elasticNetParam: 0.0
+      maxIter: 400
+      tolerance: 1E-6
+
+    rcv:
+      pt: 276
+      numFeatures: 47236
+      loss: "squaredError"
+      regParam: 0.01
+      elasticNetParam: 1.0
+      maxIter: 400
+      tolerance: 1E-6
+
+  raw:
+    mnist8m:
+      pt: 276
+      numFeatures: 784
+      loss: "huber"
+      regParam: 0.01
+      elasticNetParam: 0.0
+      maxIter: 400
+      tolerance: 1E-6
+
+    Twitter:
+      pt: 276
+      numFeatures: 9866
+      loss: "squaredError"
+      regParam: 0.01
+      elasticNetParam: 0.0
+      maxIter: 400
+      tolerance: 1E-6
+
+    rcv:
+      pt: 276
+      numFeatures: 47236
+      loss: "squaredError"
+      regParam: 0.01
+      elasticNetParam: 1.0
+      maxIter: 400
+      tolerance: 1E-6

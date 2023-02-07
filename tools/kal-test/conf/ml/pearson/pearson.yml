@@ -1,0 +1,36 @@
+#Pearson model params
+
+pearson:
+  opt:
+    dataframe:
+      CP10M1K:
+        pt: 280
+      CP2M5K:
+        pt: 280
+      CP1M10K:
+        pt: 280
+
+    rdd:
+      CP10M1K:
+        pt: 280
+      CP2M5K:
+        pt: 280
+      CP1M10K:
+        pt: 280
+
+  raw:
+    dataframe:
+      CP10M1K:
+        pt: 234
+      CP2M5K:
+        pt: 234
+      CP1M10K:
+        pt: 234
+
+    rdd:
+      CP10M1K:
+        pt: 234
+      CP2M5K:
+        pt: 234
+      CP1M10K:
+        pt: 234

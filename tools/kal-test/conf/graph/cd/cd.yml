@@ -1,0 +1,18 @@
+partition:
+  simulate1_x86_64_yes: 228
+  simulate1_x86_64_no: 236
+  simulate1_aarch64_no: 284
+  simulate2_x86_64_yes: 232
+  simulate2_x86_64_no: 236
+  simulate2_aarch64_no: 284
+  usaRoad_x86_64_yes: 228
+  usaRoad_x86_64_no: 228
+  usaRoad_aarch64_no: 282
+split:
+  simulate1: ","
+  simulate2: ","
+  usaRoad: " "
+minLoopLen: 3
+maxLoopLen: 10
+minRate: 0.8
+maxRate: 1.2

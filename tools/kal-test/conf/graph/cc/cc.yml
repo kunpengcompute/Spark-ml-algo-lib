@@ -1,0 +1,14 @@
+partition:
+  liveJournal_x86_64_yes: 210
+  liveJournal_x86_64_no: 78
+  liveJournal_aarch64_no: 78
+  graph500_25_x86_64_yes: 210
+  graph500_25_x86_64_no: 210
+  graph500_25_aarch64_no: 210
+  graph500_26_x86_64_yes: 210
+  graph500_26_x86_64_no: 210
+  graph500_26_aarch64_no: 210
+split:
+  liveJournal: "\t"
+  graph500_25: " "
+  graph500_26: " "

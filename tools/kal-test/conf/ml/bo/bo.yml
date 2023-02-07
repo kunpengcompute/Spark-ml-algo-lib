@@ -1,0 +1,22 @@
+#BayesianOptimization model params
+
+bo:
+  opt:
+    BostonHousing:
+      partitionNum: 1
+
+    TitanicRf:
+      partitionNum: 1
+
+    TitanicGBT:
+      partitionNum: 1
+
+  raw:
+    BostonHousing:
+      partitionNum: 1
+
+    TitanicRf:
+      partitionNum: 1
+
+    TitanicGBT:
+      partitionNum: 1

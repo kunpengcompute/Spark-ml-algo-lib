@@ -1,0 +1,75 @@
+#SPCA model params
+
+spca:
+  opt:
+    Kemelmacher:
+      pt: 284
+      k: 500
+      sep: " "
+      dataFormat: "coo"
+      numCols: 9694
+      pcPath: "pc_boostkit_Kemelmacher.txt"
+      sigmaPath: "sigma_boostkit_Kemelmacher"
+
+    mesh_deform:
+      pt: 284
+      k: 500
+      sep: " "
+      dataFormat: "coo"
+      numCols: 9394
+      pcPath: "pc_boostkit_Mesh.txt"
+      sigmaPath: "sigma_boostkit_Mesh"
+
+    wathen100:
+      pt: 284
+      k: 500
+      sep: " "
+      dataFormat: "coo"
+      numCols: 30402
+      pcPath: "pc_boostkit_wathen.txt"
+      sigmaPath: "sigma_boostkit_wathen"
+
+    MOLIERE:
+      pt: 284
+      k: 10
+      sep: " "
+      dataFormat: "coo"
+      numCols: 30239688
+      pcPath: "pc_boostkit_MOLIERE.txt"
+      sigmaPath: "sigma_boostkit_MOLIERE"
+  raw:
+    Kemelmacher:
+      pt: 236
+      k: 500
+      sep: " "
+      dataFormat: "coo"
+      numCols: 9694
+      pcPath: "pc_baseline_Kemelmacher.txt"
+      sigmaPath: "sigma_baseline_Kemelmacher"
+
+    mesh_deform:
+      pt: 236
+      k: 500
+      sep: " "
+      dataFormat: "coo"
+      numCols: 9394
+      pcPath: "pc_baseline_Mesh.txt"
+      sigmaPath: "sigma_baseline_Mesh"
+
+    wathen100:
+      pt: 236
+      k: 500
+      sep: " "
+      dataFormat: "coo"
+      numCols: 30402
+      pcPath: "pc_baseline_wathen.txt"
+      sigmaPath: "sigma_baseline_wathen"
+
+    MOLIERE:
+      pt: 236
+      k: 10
+      sep: " "
+      dataFormat: "coo"
+      numCols: 30239688
+      pcPath: "pc_baseline_MOLIERE.txt"
+      sigmaPath: "sigma_baseline_MOLIERE"

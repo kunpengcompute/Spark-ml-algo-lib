@@ -1,0 +1,64 @@
+#simrank model params
+
+simrank:
+  opt:
+    simrank3w-aarch64:
+      numPartitions: 284
+      damp: 0.6
+      maxIter: 5
+
+    simrank5w-aarch64:
+      numPartitions: 284
+      damp: 0.6
+      maxIter: 5
+
+
+    simrank7w-aarch64:
+      numPartitions: 284
+      damp: 0.6
+      maxIter: 5
+
+    simrank3w-x86_64:
+      numPartitions: 236
+      damp: 0.6
+      maxIter: 5
+
+    simrank5w-x86_64:
+      numPartitions: 236
+      damp: 0.6
+      maxIter: 5
+
+    simrank7w-x86_64:
+      numPartitions: 236
+      damp: 0.6
+      maxIter: 5
+  raw:
+    simrank3w-aarch64:
+      numPartitions: 284
+      damp: 0.6
+      maxIter: 5
+
+    simrank5w-aarch64:
+      numPartitions: 284
+      damp: 0.6
+      maxIter: 5
+
+    simrank7w-aarch64:
+      numPartitions: 284
+      damp: 0.6
+      maxIter: 5
+
+    simrank3w-x86_64:
+      numPartitions: 236
+      damp: 0.6
+      maxIter: 5
+
+    simrank5w-x86_64:
+      numPartitions: 236
+      damp: 0.6
+      maxIter: 5
+
+    simrank7w-x86_64:
+      numPartitions: 236
+      damp: 0.6
+      maxIter: 5

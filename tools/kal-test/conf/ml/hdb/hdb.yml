@@ -1,0 +1,28 @@
+#encoder model params
+
+hdb:
+  opt:
+    Hibench1m_100:
+      pt: 100
+      mstPartitionNum: 16
+      seed: 23
+      saurfangThreshold: 0.65
+
+    Hibench1m_200:
+      pt: 100
+      mstPartitionNum: 16
+      seed: 23
+      saurfangThreshold: 0.65
+
+  raw:
+    Hibench1m_100:
+      pt: 100
+      mstPartitionNum: 16
+      seed: 23
+      saurfangThreshold: 0.65
+
+    Hibench1m_200:
+      pt: 100
+      mstPartitionNum: 16
+      seed: 23
+      saurfangThreshold: 0.65

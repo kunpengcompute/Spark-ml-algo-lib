@@ -1,0 +1,76 @@
+#Logistic Regression model params
+
+logR:
+  opt:
+    mnist8m:
+      numPartitions: 276
+      numLabels: 10
+      numFeatures: 784
+      regParam: 0.01
+      elasticNetParam: 0.0
+      maxIter: 400
+      tolerance: 1E-6
+      isSetBound: true
+      coefficientLowerBound: -1E32
+      coefficientUpperBound: 1E32
+
+    Twitter:
+      numPartitions: 276
+      numLabels: 1
+      numFeatures: 9866
+      regParam: 0.01
+      elasticNetParam: 0.0
+      maxIter: 400
+      tolerance: 1E-6
+      isSetBound: false
+      coefficientLowerBound: -1E32
+      coefficientUpperBound: 1E32
+
+    rcv:
+      numPartitions: 276
+      numLabels: 1
+      numFeatures: 47236
+      regParam: 0.01
+      elasticNetParam: 1.0
+      maxIter: 400
+      tolerance: 1E-6
+      isSetBound: false
+      coefficientLowerBound: -1E32
+      coefficientUpperBound: 1E32
+
+  raw:
+    mnist8m:
+      numPartitions: 276
+      numLabels: 10
+      numFeatures: 784
+      regParam: 0.01
+      elasticNetParam: 0.0
+      maxIter: 400
+      tolerance: 1E-6
+      isSetBound: true
+      coefficientLowerBound: -1E32
+      coefficientUpperBound: 1E32
+
+    Twitter:
+      numPartitions: 276
+      numLabels: 1
+      numFeatures: 9866
+      regParam: 0.01
+      elasticNetParam: 0.0
+      maxIter: 400
+      tolerance: 1E-6
+      isSetBound: false
+      coefficientLowerBound: -1E32
+      coefficientUpperBound: 1E32
+
+    rcv:
+      numPartitions: 276
+      numLabels: 1
+      numFeatures: 47236
+      regParam: 0.01
+      elasticNetParam: 1.0
+      maxIter: 400
+      tolerance: 1E-6
+      isSetBound: false
+      coefficientLowerBound: -1E32
+      coefficientUpperBound: 1E32

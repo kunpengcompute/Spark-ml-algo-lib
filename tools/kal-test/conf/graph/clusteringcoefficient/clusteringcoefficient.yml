@@ -1,0 +1,38 @@
+clusteringCoefficient:
+  opt:
+    cit_patents:
+      splitGraph: "\t"
+      isDirect: true
+
+    uk_2002:
+      splitGraph: "\t"
+      isDirect: true
+
+    arabic_2005:
+      splitGraph: "\t"
+      isDirect: true
+
+    graph500_22:
+      splitGraph: " "
+      isDirect: false
+
+    graph500_23:
+      splitGraph: " "
+      isDirect: false
+
+    graph500_24:
+      splitGraph: " "
+      isDirect: false
+
+    graph500_25:
+      splitGraph: " "
+      isDirect: false
+
+  raw:
+    graph500_22:
+      splitGraph: " "
+      isDirect: false
+
+    graph500_23:
+      splitGraph: " "
+      isDirect: false

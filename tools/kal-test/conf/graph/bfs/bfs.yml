@@ -1,0 +1,32 @@
+# BFS dataset parameters
+
+bfs:
+  cit_patents:
+    splitGraph: "\t"
+    isDirect: true
+    depthLimit: 10
+
+  enwiki_2018:
+    splitGraph: "\t"
+    isDirect: true
+    depthLimit: 10
+
+  arabic_2005:
+    splitGraph: "\t"
+    isDirect: true
+    depthLimit: 10
+
+  graph500_22:
+    splitGraph: " "
+    isDirect: false
+    depthLimit: 10
+
+  graph500_23:
+    splitGraph: " "
+    isDirect: false
+    depthLimit: 10
+
+  graph500_25:
+    splitGraph: " "
+    isDirect: false
+    depthLimit: 10

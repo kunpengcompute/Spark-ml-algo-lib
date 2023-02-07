@@ -1,0 +1,52 @@
+#nmf model params
+
+nmf:
+  opt:
+    MT:
+      userCol: "user"
+      itemCol: "item"
+      ratingCol: "rating"
+      pt: 250
+      rank: 100
+      maxIter: 50
+
+    CSJ:
+      userCol: "user"
+      itemCol: "item"
+      ratingCol: "rating"
+      pt: 250
+      rank: 100
+      maxIter: 50
+
+    Books:
+      userCol: "user"
+      itemCol: "item"
+      ratingCol: "rating"
+      pt: 250
+      rank: 100
+      maxIter: 50
+
+  raw:
+    MT:
+      userCol: "user"
+      itemCol: "item"
+      ratingCol: "rating"
+      pt: 250
+      rank: 100
+      maxIter: 50
+
+    CSJ:
+      userCol: "user"
+      itemCol: "item"
+      ratingCol: "rating"
+      pt: 250
+      rank: 100
+      maxIter: 50
+
+    Books:
+      userCol: "user"
+      itemCol: "item"
+      ratingCol: "rating"
+      pt: 250
+      rank: 100
+      maxIter: 50

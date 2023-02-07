@@ -1,0 +1,61 @@
+#TargetEncoder model params
+
+te:
+  opt:
+    movielens:
+      numPartitions: 280
+      problemType: "classification"
+      targetColName: "target"
+      blendedAvgSmoothing: 20
+      blendedAvgInflectionPoint: 10
+
+    taobao:
+      numPartitions: 280
+      problemType: "classification"
+      targetColName: "target"
+      blendedAvgSmoothing: 20
+      blendedAvgInflectionPoint: 10
+
+    criteo40m:
+      numPartitions: 280
+      problemType: "classification"
+      targetColName: "target"
+      blendedAvgSmoothing: 20
+      blendedAvgInflectionPoint: 10
+
+    criteo150m:
+      numPartitions: 280
+      problemType: "classification"
+      targetColName: "target"
+      blendedAvgSmoothing: 20
+      blendedAvgInflectionPoint: 10
+
+
+  raw:
+    movielens:
+      numPartitions: 228
+      problemType: "classification"
+      targetColName: "target"
+      blendedAvgSmoothing: 20
+      blendedAvgInflectionPoint: 10
+
+    taobao:
+      numPartitions: 228
+      problemType: "classification"
+      targetColName: "target"
+      blendedAvgSmoothing: 20
+      blendedAvgInflectionPoint: 10
+
+    criteo40m:
+      numPartitions: 228
+      problemType: "classification"
+      targetColName: "target"
+      blendedAvgSmoothing: 20
+      blendedAvgInflectionPoint: 10
+
+    criteo150m:
+      numPartitions: 228
+      problemType: "classification"
+      targetColName: "target"
+      blendedAvgSmoothing: 20
+      blendedAvgInflectionPoint: 10

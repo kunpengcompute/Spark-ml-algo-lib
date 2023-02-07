@@ -1,0 +1,8 @@
+# incPageRank dataset parameters arm
+
+incpr:
+  twitter_2010:
+    splitGraph: "\t"
+    numIter: 100
+    resetProb: 0.15
+    partNum: 273

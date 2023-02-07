@@ -1,0 +1,53 @@
+#pca model params
+
+pca:
+  opt:
+    D10M1K:
+      numPartitions: 280
+      k: 500
+      numCols: 0
+      numRows: 0
+      dataFormat: dense
+      sep: ","
+
+    D1M10K:
+      numPartitions: 285
+      k: 500
+      numCols: 0
+      numRows: 0
+      dataFormat: dense
+      sep: ","
+
+    MESH:
+      numPartitions: 285
+      k: 500
+      numCols: 9394
+      numRows: 0
+      dataFormat: coo
+      sep: " "
+
+  raw:
+    D10M1K:
+      numPartitions: 236
+      k: 500
+      numCols: 0
+      numRows: 0
+      dataFormat: dense
+      sep: ","
+
+    D1M10K:
+      numPartitions: 234
+      k: 500
+      numCols: 0
+      numRows: 0
+      dataFormat: dense
+      sep: ","
+
+    MESH:
+      numPartitions: 234
+      k: 500
+      numCols: 9394
+      numRows: 0
+      dataFormat: coo
+      sep: " "
+

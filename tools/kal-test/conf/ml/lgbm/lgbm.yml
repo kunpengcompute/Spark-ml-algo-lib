@@ -1,0 +1,294 @@
+#LightGBM model params
+lgbm:
+  opt:
+    classification:
+      mnist8m:
+        objective: "binary"
+        labelCol: "label"
+        featuresCol: "features"
+        verbosity: 0
+        eta: 0.1
+        max_depth: 6
+        max_bin: 16
+        num_round: 500
+        num_tasks: 60
+        min_gain_to_split: 1.0
+        lambda_l2: 1.0
+        num_leaves: 64
+        min_child_weight: 1.0
+        min_data_in_leaf: 1
+        bagging: 1.0
+        bagging_freq: 1
+        num_threads: 4
+        network_compression: 1
+        hist_synch_algo: 2
+        logloss_apx: 0
+        logloss_apx_eps: 0.0
+        loading_balance: "true"
+
+      higgs:
+        objective: "binary"
+        labelCol: "label"
+        featuresCol: "features"
+        verbosity: 0
+        eta: 0.1
+        max_depth: 6
+        max_bin: 16
+        num_round: 500
+        num_tasks: 60
+        min_gain_to_split: 1.0
+        lambda_l2: 1.0
+        num_leaves: 64
+        min_child_weight: 1.0
+        min_data_in_leaf: 1
+        bagging: 1.0
+        bagging_freq: 1
+        num_threads: 4
+        network_compression: 0
+        hist_synch_algo: 2
+        logloss_apx: 0
+        logloss_apx_eps: 0.0
+        loading_balance: "false"
+
+      criteo:
+        objective: "binary"
+        labelCol: "label"
+        featuresCol: "features"
+        verbosity: 0
+        eta: 0.1
+        max_depth: 6
+        max_bin: 16
+        num_round: 500
+        num_tasks: 78
+        min_gain_to_split: 1.0
+        lambda_l2: 1.0
+        num_leaves: 64
+        min_child_weight: 1.0
+        min_data_in_leaf: 1
+        bagging: 1.0
+        bagging_freq: 1
+        num_threads: 3
+        network_compression: 0
+        hist_synch_algo: 2
+        logloss_apx: 0
+        logloss_apx_eps: 0.03
+        loading_balance: "false"
+
+    regression:
+      mnist8m:
+        objective: "binary"
+        labelCol: "label"
+        featuresCol: "features"
+        verbosity: 0
+        eta: 0.1
+        max_depth: 6
+        max_bin: 16
+        num_round: 500
+        num_tasks: 60
+        min_gain_to_split: 1.0
+        lambda_l2: 1.0
+        num_leaves: 64
+        min_child_weight: 1.0
+        min_data_in_leaf: 1
+        bagging: 1.0
+        bagging_freq: 1
+        num_threads: 4
+        network_compression: 1
+        hist_synch_algo: 2
+        logloss_apx: 0
+        logloss_apx_eps: 0.0
+        loading_balance: "true"
+
+      higgs:
+        objective: "binary"
+        labelCol: "label"
+        featuresCol: "features"
+        verbosity: 0
+        eta: 0.1
+        max_depth: 6
+        max_bin: 16
+        num_round: 500
+        num_tasks: 60
+        min_gain_to_split: 1.0
+        lambda_l2: 1.0
+        num_leaves: 64
+        min_child_weight: 1.0
+        min_data_in_leaf: 1
+        bagging: 1.0
+        bagging_freq: 1
+        num_threads: 4
+        network_compression: 0
+        hist_synch_algo: 2
+        logloss_apx: 0
+        logloss_apx_eps: 0.0
+        loading_balance: "false"
+
+      criteo:
+        objective: "binary"
+        labelCol: "label"
+        featuresCol: "features"
+        verbosity: 0
+        eta: 0.1
+        max_depth: 6
+        max_bin: 16
+        num_round: 500
+        num_tasks: 78
+        min_gain_to_split: 1.0
+        lambda_l2: 1.0
+        num_leaves: 64
+        min_child_weight: 1.0
+        min_data_in_leaf: 1
+        bagging: 1.0
+        bagging_freq: 1
+        num_threads: 3
+        network_compression: 0
+        hist_synch_algo: 2
+        logloss_apx: 0
+        logloss_apx_eps: 0.03
+        loading_balance: "false"
+  raw:
+    classification:
+      mnist8m:
+        objective: "binary"
+        labelCol: "label"
+        featuresCol: "features"
+        verbosity: 0
+        eta: 0.1
+        max_depth: 6
+        max_bin: 16
+        num_round: 500
+        num_tasks: 59
+        min_gain_to_split: 1.0
+        lambda_l2: 1.0
+        num_leaves: 64
+        min_child_weight: 1.0
+        min_data_in_leaf: 1
+        bagging: 1.0
+        bagging_freq: 1
+        num_threads:
+        network_compression:
+        hist_synch_algo:
+        logloss_apx:
+        logloss_apx_eps:
+        loading_balance:
+
+      higgs:
+        objective: "binary"
+        labelCol: "label"
+        featuresCol: "features"
+        verbosity: 0
+        eta: 0.1
+        max_depth: 6
+        max_bin: 16
+        num_round: 500
+        num_tasks: 59
+        min_gain_to_split: 1.0
+        lambda_l2: 1.0
+        num_leaves: 64
+        min_child_weight: 1.0
+        min_data_in_leaf: 1
+        bagging: 1.0
+        bagging_freq: 1
+        num_threads:
+        network_compression:
+        hist_synch_algo:
+        logloss_apx:
+        logloss_apx_eps:
+        loading_balance:
+
+      criteo:
+        objective: "binary"
+        labelCol: "label"
+        featuresCol: "features"
+        verbosity: 0
+        eta: 0.1
+        max_depth: 6
+        max_bin: 16
+        num_round: 500
+        num_tasks: 59
+        min_gain_to_split: 1.0
+        lambda_l2: 1.0
+        num_leaves: 64
+        min_child_weight: 1.0
+        min_data_in_leaf: 1
+        bagging: 1.0
+        bagging_freq: 1
+        num_threads:
+        network_compression:
+        hist_synch_algo:
+        logloss_apx:
+        logloss_apx_eps:
+        loading_balance:
+
+    regression:
+      mnist8m:
+        objective: "binary"
+        labelCol: "label"
+        featuresCol: "features"
+        verbosity: 0
+        eta: 0.1
+        max_depth: 6
+        max_bin: 16
+        num_round: 500
+        num_tasks: 59
+        min_gain_to_split: 1.0
+        lambda_l2: 1.0
+        num_leaves: 64
+        min_child_weight: 1.0
+        min_data_in_leaf: 1
+        bagging: 1.0
+        bagging_freq: 1
+        num_threads:
+        network_compression:
+        hist_synch_algo:
+        logloss_apx:
+        logloss_apx_eps:
+        loading_balance:
+
+      higgs:
+        objective: "binary"
+        labelCol: "label"
+        featuresCol: "features"
+        verbosity: 0
+        eta: 0.1
+        max_depth: 6
+        max_bin: 16
+        num_round: 500
+        num_tasks: 59
+        min_gain_to_split: 1.0
+        lambda_l2: 1.0
+        num_leaves: 64
+        min_child_weight: 1.0
+        min_data_in_leaf: 1
+        bagging: 1.0
+        bagging_freq: 1
+        num_threads:
+        network_compression:
+        hist_synch_algo:
+        logloss_apx:
+        logloss_apx_eps:
+        loading_balance:
+
+      criteo:
+        objective: "binary"
+        labelCol: "label"
+        featuresCol: "features"
+        verbosity: 0
+        eta: 0.1
+        max_depth: 6
+        max_bin: 16
+        num_round: 500
+        num_tasks: 59
+        min_gain_to_split: 1.0
+        lambda_l2: 1.0
+        num_leaves: 64
+        min_child_weight: 1.0
+        min_data_in_leaf: 1
+        bagging: 1.0
+        bagging_freq: 1
+        num_threads:
+        network_compression:
+        hist_synch_algo:
+        logloss_apx:
+        logloss_apx_eps:
+        loading_balance:

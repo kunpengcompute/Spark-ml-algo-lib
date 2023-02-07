@@ -1,0 +1,127 @@
+#ALS model params
+
+als:
+  opt:
+    dataframe:
+      als:
+        pt: 276
+        numIterations: 200
+        nonnegative: false
+        implicitPrefs: false
+        numItemBlocks: 228
+        numUserBlocks: 228
+        regParam: 0.0
+        alpha: 1.0
+
+      alsbs:
+        pt: 276
+        numIterations: 200
+        nonnegative: false
+        implicitPrefs: false
+        numItemBlocks: 228
+        numUserBlocks: 228
+        regParam: 0.0
+        alpha: 1.0
+
+      alsh:
+        pt: 276
+        numIterations: 200
+        nonnegative: false
+        implicitPrefs: false
+        numItemBlocks: 228
+        numUserBlocks: 228
+        regParam: 0.0
+        alpha: 1.0
+
+    rdd:
+      als:
+        pt: 276
+        numIterations: 200
+        nonnegative: false
+        implicitPrefs: false
+        numItemBlocks: 228
+        numUserBlocks: 228
+        regParam: 0.0
+        alpha: 1.0
+
+      alsbs:
+        pt: 276
+        numIterations: 200
+        nonnegative: false
+        implicitPrefs: false
+        numItemBlocks: 228
+        numUserBlocks: 228
+        regParam: 0.0
+        alpha: 1.0
+
+      alsh:
+        pt: 276
+        numIterations: 200
+        nonnegative: false
+        implicitPrefs: false
+        numItemBlocks: 228
+        numUserBlocks: 228
+        regParam: 0.0
+        alpha: 1.0
+  raw:
+    dataframe:
+      als:
+        pt: 228
+        numIterations: 200
+        nonnegative: false
+        implicitPrefs: false
+        numItemBlocks: 228
+        numUserBlocks: 228
+        regParam: 0.0
+        alpha: 1.0
+
+      alsbs:
+        pt: 228
+        numIterations: 200
+        nonnegative: false
+        implicitPrefs: false
+        numItemBlocks: 228
+        numUserBlocks: 228
+        regParam: 0.0
+        alpha: 1.0
+
+      alsh:
+        pt: 228
+        numIterations: 200
+        nonnegative: false
+        implicitPrefs: false
+        numItemBlocks: 228
+        numUserBlocks: 228
+        regParam: 0.0
+        alpha: 1.0
+
+      rdd:
+        als:
+          pt: 228
+          numIterations: 200
+          nonnegative: false
+          implicitPrefs: false
+          numItemBlocks: 228
+          numUserBlocks: 228
+          regParam: 0.0
+          alpha: 1.0
+
+        alsbs:
+          pt: 228
+          numIterations: 200
+          nonnegative: false
+          implicitPrefs: false
+          numItemBlocks: 228
+          numUserBlocks: 228
+          regParam: 0.0
+          alpha: 1.0
+
+        alsh:
+          pt: 228
+          numIterations: 200
+          nonnegative: false
+          implicitPrefs: false
+          numItemBlocks: 228
+          numUserBlocks: 228
+          regParam: 0.0
+          alpha: 1.0

@@ -1,0 +1,182 @@
+word2vec:
+  opt:
+    scala2.11:
+      cate:
+        eval: "alibaba"
+        learningRate: 0.025
+        numPartitions: 276
+        vectorSize: 100
+        minCount: 5
+        window: 10
+        regularization: 0.05
+        repetition: 0
+        numIterations: 3
+
+      item:
+        eval: "alibaba"
+        learningRate: 0.025
+        numPartitions: 282
+        vectorSize: 100
+        minCount: 5
+        window: 10
+        regularization: 0.05
+        repetition: 0
+        numIterations: 1
+
+      node:
+        eval: "alibaba"
+        learningRate: 0.025
+        numPartitions: 276
+        vectorSize: 100
+        minCount: 5
+        window: 10
+        regularization: 0.05
+        repetition: 0
+        numIterations: 3
+
+      taobao:
+        eval: "taobao"
+        learningRate: 0.025
+        numPartitions: 276
+        vectorSize: 100
+        minCount: 5
+        window: 10
+        regularization: 0.05
+        repetition: 7
+        numIterations: 1
+
+    scala2.12:
+      cate:
+        eval: "alibaba"
+        learningRate: 0.025
+        numPartitions: 276
+        vectorSize: 100
+        minCount: 5
+        window: 10
+        regularization: 0.05
+        repetition: 0
+        numIterations: 3
+
+      item:
+        eval: "alibaba"
+        learningRate: 0.025
+        numPartitions: 282
+        vectorSize: 100
+        minCount: 5
+        window: 10
+        regularization: 0.05
+        repetition: 0
+        numIterations: 1
+
+      node:
+        eval: "alibaba"
+        learningRate: 0.025
+        numPartitions: 276
+        vectorSize: 100
+        minCount: 5
+        window: 10
+        regularization: 0.05
+        repetition: 3
+        numIterations: 7
+
+      taobao:
+        eval: "taobao"
+        learningRate: 0.025
+        numPartitions: 276
+        vectorSize: 100
+        minCount: 5
+        window: 10
+        regularization: 0.05
+        repetition: 7
+        numIterations: 5
+
+  raw:
+    scala2.11:
+      cate:
+        eval: "alibaba"
+        learningRate: 0.025
+        numPartitions: 228
+        vectorSize: 500
+        minCount: 5
+        window: 10
+        regularization: 0
+        repetition: 0
+        numIterations: 1
+
+      item:
+        eval: "alibaba"
+        learningRate: 0.025
+        numPartitions: 228
+        vectorSize: 100
+        minCount: 5
+        window: 10
+        regularization: 0
+        repetition: 0
+        numIterations: 1
+
+      node:
+        eval: "alibaba"
+        learningRate: 0.025
+        numPartitions: 228
+        vectorSize: 400
+        minCount: 5
+        window: 10
+        regularization: 0
+        repetition: 0
+        numIterations: 1
+
+      taobao:
+        eval: "taobao"
+        learningRate: 0.025
+        numPartitions: 228
+        vectorSize: 500
+        minCount: 5
+        window: 10
+        regularization: 0
+        repetition: 0
+        numIterations: 1
+
+    scala2.12:
+      cate:
+        eval: "alibaba"
+        learningRate: 0.025
+        numPartitions: 228
+        vectorSize: 100
+        minCount: 5
+        window: 10
+        regularization: 0
+        repetition: 0
+        numIterations: 3
+
+      item:
+        eval: "alibaba"
+        learningRate: 0.025
+        numPartitions: 228
+        vectorSize: 100
+        minCount: 5
+        window: 10
+        regularization: 0
+        repetition: 0
+        numIterations: 1
+
+      node:
+        eval: "alibaba"
+        learningRate: 0.025
+        numPartitions: 228
+        vectorSize: 100
+        minCount: 5
+        window: 10
+        regularization: 0
+        repetition: 0
+        numIterations: 30
+
+      taobao:
+        eval: "taobao"
+        learningRate: 0.025
+        numPartitions: 228
+        vectorSize: 100
+        minCount: 5
+        window: 10
+        regularization: 0
+        repetition: 0
+        numIterations: 100

@@ -1,0 +1,20 @@
+# WCE dataset parameters
+
+wce:
+  graph500_24:
+    splitGraph: " "
+    maxIterations: 1000
+    maxDegree: 2000
+    numPartitions: 284
+
+  graph500_25:
+    splitGraph: " "
+    maxIterations: 1000
+    maxDegree: 2000
+    numPartitions: 284
+
+  graph500_26:
+    splitGraph: " "
+    maxIterations: 1000
+    maxDegree: 2000
+    numPartitions: 284

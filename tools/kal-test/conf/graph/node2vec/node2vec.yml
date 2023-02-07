@@ -1,0 +1,41 @@
+# Node2vec dataset parameters arm
+
+node2vec:
+  cit_patents:
+    partitions: 240
+    directed: true
+    weighted: false
+    walkLength: 20
+    numWalks: 5
+    p: 1.0
+    q: 1.0
+    iteration: 10
+    dimension: 128
+    windowSize: 20
+    splitGraph: "\t"
+
+  soc_liveJournal:
+    partitions: 240
+    directed: true
+    weighted: false
+    walkLength: 5
+    numWalks: 5
+    p: 1.0
+    q: 1.0
+    iteration: 10
+    dimension: 128
+    windowSize: 20
+    splitGraph: "\t"
+
+  uk_2002:
+    partitions: 240
+    directed: true
+    weighted: false
+    walkLength: 5
+    numWalks: 1
+    p: 1.0
+    q: 1.0
+    iteration: 10
+    dimension: 128
+    windowSize: 20
+    splitGraph: "\t"

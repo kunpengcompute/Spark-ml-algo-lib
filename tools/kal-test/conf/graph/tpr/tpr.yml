@@ -1,0 +1,23 @@
+tpr:
+  twitter_tpr:
+    opt:
+      splitGraph: ","
+      numIter: 100
+      numPartitions: 273
+      resetProb: 0.15
+      isOnlySrc: false
+
+    raw:
+      splitGraph: ","
+      numIter: 100
+      numPartitions: 236
+      resetProb: 0.15
+      isOnlySrc: false
+
+  twitter_2010:
+    opt:
+      splitGraph: "\t"
+      numIter: 100
+      numPartitions: 273
+      resetProb: 0.15
+      isOnlySrc: false

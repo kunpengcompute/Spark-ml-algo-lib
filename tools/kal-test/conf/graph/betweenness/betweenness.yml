@@ -1,0 +1,17 @@
+# Betweenness dataset parameters arm
+
+betweenness:
+  cit_patents:
+    splitGraph: "\t"
+    p: 0.156
+    k: 10000
+
+  enwiki_2018:
+    splitGraph: "\t"
+    p: 0.005
+    k: 10000
+
+  uk_2002:
+    splitGraph: "\t"
+    p: 0.0014
+    k: 10000

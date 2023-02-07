@@ -1,0 +1,22 @@
+#Spearman model params
+
+spearman:
+  opt:
+    CP10M1K:
+      numPartitions: 284
+
+    CP2M5K:
+      numPartitions: 284
+
+    CP1M10K:
+      numPartitions: 280
+
+  raw:
+    CP10M1K:
+      numPartitions: 2360
+
+    CP2M5K:
+      numPartitions: 2360
+
+    CP1M10K:
+      numPartitions: 2320

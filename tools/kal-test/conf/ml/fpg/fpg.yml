@@ -1,0 +1,57 @@
+#fpg model params
+
+fpg:
+  opt:
+    Kosarak:
+      pt: 284
+      itemsCol: "items"
+      minSupport: 0.00085
+      minConfidence: 0.8
+      optLevel: 2
+      timeLimit1: "0.5"
+      timeLimit2: "0.1"
+
+    Kosarak25:
+      pt: 236
+      itemsCol: "items"
+      minSupport: 0.001
+      minConfidence: 0.8
+      optLevel: 2
+      timeLimit1: "1.0"
+      timeLimit2: "0.2"
+    IBM700:
+      pt: 236
+      itemsCol: "items"
+      minSupport: 0.001
+      minConfidence: 0.8
+      optLevel: 1
+      timeLimit1: "0.25"
+      timeLimit2: ""
+
+
+  raw:
+    Kosarak:
+      pt: 284
+      itemsCol: "items"
+      minSupport: 0.00085
+      minConfidence: 0.8
+      optLevel: 0
+      timeLimit1: ""
+      timeLimit2: ""
+    Kosarak25:
+      pt: 236
+      itemsCol: "items"
+      minSupport: 0.001
+      minConfidence: 0.8
+      optLevel: 0
+      timeLimit1: ""
+      timeLimit2: ""
+    IBM700:
+      pt: 236
+      itemsCol: "items"
+      minSupport: 0.001
+      minConfidence: 0.8
+      optLevel: 0
+      timeLimit1: ""
+      timeLimit2: ""
+

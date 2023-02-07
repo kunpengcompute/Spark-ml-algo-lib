@@ -1,0 +1,52 @@
+#IF model params
+
+IF:
+  opt:
+    if_40M_1K:
+      pt: 280
+      numTrees: 100
+      bootstrap: false
+      maxInstances: 256
+      maxFea: 1.0
+      featuresCol: "features"
+      predictionCol: "predictedLabel"
+      scoreCol: "anomalyScore"
+      contamination: 0.1
+      randomSeed: 11
+
+    if_1M_1K:
+      pt: 280
+      numTrees: 100
+      bootstrap: false
+      maxInstances: 256
+      maxFea: 1.0
+      featuresCol: "features"
+      predictionCol: "predictedLabel"
+      scoreCol: "anomalyScore"
+      contamination: 0.1
+      randomSeed: 11
+
+  raw:
+    if_40M_1K:
+      pt: 280
+      numTrees: 100
+      bootstrap: false
+      maxInstances: 256
+      maxFea: 1.0
+      featuresCol: "features"
+      predictionCol: "predictedLabel"
+      scoreCol: "anomalyScore"
+      contamination: 0.1
+      randomSeed: 1
+
+    if_1M_1K:
+      pt: 280
+      numTrees: 100
+      bootstrap: false
+      maxInstances: 256
+      maxFea: 1.0
+      featuresCol: "features"
+      predictionCol: "predictedLabel"
+      scoreCol: "anomalyScore"
+      contamination: 0.1
+      randomSeed: 1

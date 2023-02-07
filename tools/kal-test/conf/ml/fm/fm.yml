@@ -1,0 +1,136 @@
+#FM model params
+
+fm:
+  opt:
+    classification:
+      higgs:
+        pt: 276
+        numFeatures: 28
+        sparseOrDense: "dense"
+        regParam: 0.0
+        numIterations: 5000
+        tolerance: 1E-6
+
+      epsilon:
+        pt: 276
+        numFeatures: 2000
+        sparseOrDense: "dense"
+        regParam: 0.0
+        numIterations: 5000
+        tolerance: 1E-6
+
+      avazu:
+        pt: 276
+        numFeatures: 1000000
+        sparseOrDense: "sparse"
+        regParam: 0.0
+        numIterations: 5000
+        tolerance: 1E-6
+
+      kdda:
+        pt: 276
+        numFeatures: 20216830
+        sparseOrDense: "sparse"
+        regParam: 0.0
+        numIterations: 5000
+        tolerance: 1E-6
+
+    regression:
+      higgs:
+        pt: 276
+        numFeatures: 28
+        sparseOrDense: "dense"
+        regParam: 0.0
+        numIterations: 5000
+        tolerance: 1E-6
+
+      epsilon:
+        pt: 276
+        numFeatures: 2000
+        sparseOrDense: "dense"
+        regParam: 0.0
+        numIterations: 5000
+        tolerance: 1E-6
+
+      avazu:
+        pt: 276
+        numFeatures: 1000000
+        sparseOrDense: "sparse"
+        regParam: 0.0
+        numIterations: 5000
+        tolerance: 1E-6
+
+      kdda:
+        pt: 276
+        numFeatures: 20216830
+        sparseOrDense: "sparse"
+        regParam: 0.0
+        numIterations: 5000
+        tolerance: 1E-6
+
+  raw:
+    classification:
+      higgs:
+        pt: 276
+        numFeatures: 28
+        sparseOrDense: "dense"
+        regParam: 0.0
+        numIterations: 5000
+        tolerance: 1E-6
+
+      epsilon:
+        pt: 276
+        numFeatures: 2000
+        sparseOrDense: "dense"
+        regParam: 0.0
+        numIterations: 5000
+        tolerance: 1E-6
+
+      avazu:
+        pt: 276
+        numFeatures: 1000000
+        sparseOrDense: "sparse"
+        regParam: 0.0
+        numIterations: 5000
+        tolerance: 1E-6
+
+      kdda:
+        pt: 276
+        numFeatures: 20216830
+        sparseOrDense: "sparse"
+        regParam: 0.0
+        numIterations: 5000
+        tolerance: 1E-6
+
+    regression:
+      higgs:
+        pt: 276
+        numFeatures: 28
+        sparseOrDense: "dense"
+        regParam: 0.0
+        numIterations: 5000
+        tolerance: 1E-6
+
+      epsilon:
+        pt: 276
+        numFeatures: 2000
+        sparseOrDense: "dense"
+        regParam: 0.0
+        numIterations: 5000
+        tolerance: 1E-6
+
+      avazu:
+        pt: 276
+        numFeatures: 1000000
+        sparseOrDense: "sparse"
+        regParam: 0.0
+        numIterations: 5000
+        tolerance: 1E-6
+
+      kdda:
+        pt: 276
+        numFeatures: 20216830
+        sparseOrDense: "sparse"
+        regParam: 0.0
+        numIterations: 5000
+        tolerance: 1E-6

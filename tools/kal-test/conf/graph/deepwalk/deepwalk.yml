@@ -1,0 +1,56 @@
+deepwalk:
+  cit_patents:
+    opt:
+      splitGraph: ","
+      partitions: 240
+      walkLength: 10
+      numWalks: 2
+      iteration: 1
+      dimension: 128
+      windowSize: 10
+      negativeSample: 5
+
+    raw:
+      splitGraph: ","
+      numIter: 100
+      partitions: 236
+      resetProb: 0.15
+      isOnlySrc: false
+
+  soc_LiveJournal:
+    opt:
+      splitGraph: "\t"
+      partitions: 240
+      walkLength: 8
+      numWalks: 3
+      iteration: 3
+      dimension: 128
+      windowSize: 5
+      negativeSample: 3
+
+    raw:
+      splitGraph: ","
+      numIter: 100
+      partitions: 236
+      resetProb: 0.15
+      isOnlySrc: false
+
+  uk_2002:
+    opt:
+      splitGraph: ","
+      partitions: 240
+      walkLength: 8
+      numWalks: 2
+      iteration: 1
+      dimension: 128
+      windowSize: 5
+      negativeSample: 1
+
+    raw:
+      splitGraph: ","
+      numIter: 100
+      partitions: 236
+      resetProb: 0.15
+      isOnlySrc: false
+
+

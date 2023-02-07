@@ -1,0 +1,10 @@
+partition:
+  graph500_23: 284
+  graph500_24: 284
+  graph500_25: 568
+minK: 3
+maxDegree: 2000
+split:
+  graph500_23: " "
+  graph500_24: " "
+  graph500_25: " "

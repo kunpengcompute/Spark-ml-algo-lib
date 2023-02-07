@@ -1,0 +1,30 @@
+# PageRank dataset parameters arm
+
+wpr:
+  static:
+    cage14:
+      partitionNum: 60
+      numIter: 100
+      tolerance: 0
+    GAP_road:
+      partitionNum: 102
+      numIter: 100
+      tolerance: 0
+    GAP_twitter:
+      partitionNum: 120
+      numIter: 100
+      tolerance: 0
+
+  convergence:
+    cage14:
+      partitionNum: 60
+      numIter: 200
+      tolerance: 1e-7
+    GAP_road:
+      partitionNum: 120
+      numIter: 200
+      tolerance: 1e-7
+    GAP_twitter:
+      partitionNum: 180
+      numIter: 200
+      tolerance: 1e-7

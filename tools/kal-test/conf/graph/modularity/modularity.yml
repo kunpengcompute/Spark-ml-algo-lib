@@ -1,0 +1,44 @@
+# WCE dataset parameters
+
+modularity:
+  graph500_23:
+    splitGraph: " "
+    splitCommunity: " "
+    isWeighted: false
+    isDirected: false
+    numPartitions: 200
+
+  graph500_25:
+    splitGraph: " "
+    splitCommunity: ","
+    isWeighted: false
+    isDirected: false
+    numPartitions: 500
+
+  graph500_26:
+    splitGraph: " "
+    splitCommunity: " "
+    isWeighted: false
+    isDirected: false
+    numPartitions: 500
+
+  uk_2002:
+    splitGraph: "\t"
+    splitCommunity: ","
+    isWeighted: false
+    isDirected: true
+    numPartitions: 500
+
+  arabic_2005:
+    splitGraph: "\t"
+    splitCommunity: ","
+    isWeighted: false
+    isDirected: true
+    numPartitions: 500
+
+  twitter:
+    splitGraph: "\t"
+    splitCommunity: ","
+    isWeighted: false
+    isDirected: true
+    numPartitions: 1000

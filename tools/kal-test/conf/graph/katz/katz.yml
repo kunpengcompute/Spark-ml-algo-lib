@@ -1,0 +1,26 @@
+katz:
+  opt:
+    cit_patents:
+      splitGraph: ","
+      partitions: 40
+      isWeight: false
+      tol: 1e-7
+      maxIter: 100000
+      normalized: true
+
+    uk_2002:
+      splitGraph: "\t"
+      partitions: 245
+      isWeight: false
+      tol: 1e-7
+      maxIter: 100000
+      normalized: true
+
+    arabic_2005:
+      splitGraph: "\t"
+      partitions: 245
+      isWeight: false
+      tol: 1e-7
+      maxIter: 100000
+      normalized: true
+
