@@ -142,12 +142,12 @@ else
   hdfs dfs -mkdir -p ${hdfsJarPath}
   hdfs dfs -ls ${hdfsJarPath}
   if [ $? -eq 0 ];then
-    hdfs dfs -rm -r -f ${hdfsJarPath}/alitouka_dbscan_2.11-0.1.jar
-    hdfs dfs -put ./lib/alitouka_dbscan_2.11-0.1.jar ${hdfsJarPath}
+    hdfs dfs -rm -r -f ${hdfsJarPath}/alitouka_dbscan_${scala_version_val}-0.1.jar
+    hdfs dfs -put ./lib/alitouka_dbscan_${scala_version_val}-0.1.jar ${hdfsJarPath}
   fi
 
   spark-submit \
-  --jars "lib/scopt_2.11-3.5.0.jar" \
+  --jars "lib/scopt_${scala_version_val}-3.5.0.jar" \
   --class org.alitouka.spark.dbscan.DbscanDriver \
   --deploy-mode ${deploy_mode_val} \
   --name "alitouka_DBSCAN_${model_conf}" \
@@ -159,7 +159,7 @@ else
   --master ${master_val} \
   --conf "spark.executor.extraJavaOptions=${extra_java_options_val}" \
   --conf "spark.driver.maxResultSize=${driver_max_result_size_val}" \
-  ${hdfsJarPath}/alitouka_dbscan_2.11-0.1.jar --ds-master ${master_val} --ds-jar ${hdfsJarPath}/alitouka_dbscan_${scala_version_val}-0.1.jar --ds-input ${data_path_val} --ds-output ${outputPath} --eps ${epsilon_val} --numPts ${min_points_val} >dbscan_tmp.log
+  ${hdfsJarPath}/alitouka_dbscan_${scala_version_val}-0.1.jar --ds-master ${master_val} --ds-jar ${hdfsJarPath}/alitouka_dbscan_${scala_version_val}-0.1.jar --ds-input ${data_path_val} --ds-output ${outputPath} --eps ${epsilon_val} --numPts ${min_points_val} >dbscan_tmp.log
   CostTime=$(cat dbscan_tmp.log | grep "train total" | awk '{print $3}')
   currentTime=$(date "+%Y%m%d_%H%M%S")
   rm -rf dbscan_tmp.log

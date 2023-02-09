@@ -140,7 +140,7 @@ else
   --conf spark.shuffle.manager=SORT \
   --conf spark.shuffle.blockTransferService=nio \
   --conf spark.locality.wait.node=0 \
-  ./lib/louvain_2.11-0.1.0_open_sourced.jar yarn ${data_path_val} ${community_output} ${modularity_output} " " ${num_partitions_val} 2000 > louvain_temp.log
+  ./lib/louvain_2.12-0.1.0_open_sourced.jar yarn ${data_path_val} ${community_output} ${modularity_output} " " ${num_partitions_val} > louvain_temp.log
   costTime=$(cat louvain_temp.log |grep "cost_time:" | awk '{print $2}')
   modularity=$(cat louvain_temp.log |grep "modularity:" | awk '{print $2}')
   currentTime=$(date "+%Y%m%d_H%M%S")
