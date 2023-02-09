@@ -160,6 +160,7 @@ if [ ${is_raw} == "no" ]; then
   ./lib/kal-test_${scala_version_val}-0.1.jar ${dataset_name} ${is_raw} ${num_partitions_val} ${data_path_val} ${is_check} ${output_path} ${gt_path_val}  | tee ./log/log
 else
   spark-submit \
+  --class org.opensource.betweenness_open.Program \
   --master yarn \
   --deploy-mode ${deploy_mode_val} \
   --name "Betweenness_${dataset_name}_opensource" \
@@ -176,20 +177,12 @@ else
   --conf spark.network.timeout=1000000s \
   --conf spark.executor.heartbeatInterval=100000s \
   --conf spark.rpc.message.maxSize=1000 \
-  --jars "./lib/scopt_2.11-3.2.0.jar" \
-  ./lib/hbse_2.11-0.1.jar \
-  -m yarn \
-  -s ${graph_split_val} \
-  -n ${num_partitions_val} \
-  -i ${data_path_val} \
-  -o ${output_path} \
-  -g ${gt_path_val} \
-  -p ${pivots_val} \
-  -b ${iteration_val} > betweenness_temp.log
-  CostTime=$(cat betweenness_temp.log |grep "CostTime of Top-K" | awk '{print $6}')
-  Accuracy=$(cat betweenness_temp.log |grep "Accuracy of Top-K" | awk '{print $6}')
+  --jars "./lib/scopt_2.12-3.5.0.jar" \
+  ./lib/betweenness_open-1.0-spark3.3.0.jar bnc yarn ${graph_split_val} ${data_path_val} ${output_path} ${gt_path_val} 10000 ${num_partitions_val} ${pivots_val} ${iteration_val} 10000 | tee ./log/betweenness_temp.log
+  CostTime=$(cat betweenness_temp.log |grep "finished. costTime =" | awk '{print $5}')
+  Accuracy=$(cat betweenness_temp.log |grep "finished. costTime =" | awk '{print $8}')
   currentTime=$(date "+%Y%m%d_H%M%S")
-  rm -rf betweenness_temp.log
+#  rm -rf ./log/betweenness_temp.log
   echo -e "algorithmName: Betweenness\ncostTime: $CostTime\ndatasetName: ${dataset_name}\nisRaw: 'yes'\nAccuracy: ${Accuracy}\ntestcaseType: Betweenness_opensource_${dataset_name}\n" > ./report/"Betweenness_${currentTime}.yml"
   echo "Exec Successful: end." > ./log/log
 fi

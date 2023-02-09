@@ -140,10 +140,10 @@ do
     --conf "spark.executor.extraJavaOptions=${extra_java_options_val}" \
     --conf "spark.driver.extraJavaOptions=-Xms80g" \
     --conf spark.locality.wait.node=0 \
-    --jars "lib/scopt_2.10-3.5.0.jar" \
-    --driver-class-path "lib/scopt_2.10-3.5.0.jar" \
-    --conf "spark.executor.extraClassPath=scopt_2.10-3.5.0.jar" \
-    ./lib/bfs_2.10-0.1.2.jar \
+    --jars "lib/scopt_${scala_version_val}-3.5.0.jar" \
+    --driver-class-path "lib/scopt_${scala_version_val}-3.5.0.jar" \
+    --conf "spark.executor.extraClassPath=scopt_${scala_version_val}-3.5.0.jar" \
+    ./lib/xinjiang_Poc-0.1.0.jar \
     -g 'EdgeList' \
     -p 'EdgePartition2D' \
     -n ${num_partitions_val} \

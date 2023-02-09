@@ -38,7 +38,7 @@ class KCoreRawParams extends Serializable {
     @BeanProperty var testcaseType: String = _
 }
 
-object KCore {
+object KCore extends Serializable {
 
     val initialMsg = "-10"
     def mergeMsg(msg1: String, msg2: String): String = msg1 + ":" + msg2
