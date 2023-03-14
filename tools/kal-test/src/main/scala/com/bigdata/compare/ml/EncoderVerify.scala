@@ -46,10 +46,10 @@ object EncoderVerify {
     val diff = rdd1.subtract(rdd2).count()
     println(s"Exec Successful: different count: ${diff}")
     if (diff == 0) {
-      return "false"
+      return "true"
     }
     else {
-      return "true"
+      return "false"
     }
 
   }

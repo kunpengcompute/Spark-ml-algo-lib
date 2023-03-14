@@ -142,7 +142,7 @@ else
   --conf "spark.executor.extraJavaOptions=${extra_java_options_val}" \
   --conf "spark.executor.instances=${num_executors_val}" \
   --conf "spark.taskmaxFailures=${max_failures_val}" \
-  --jars "lib/snakeyaml-1.19.jar,lib/boostkit-ml-kernel-client-${scala_version_val}-${kal_version_val}-${spark_version_val}.jar" \
+  --jars "lib/snakeyaml-1.19.jar,lib/boostkit-ml-kernel-client_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar" \
   --driver-class-path "lib/kal-test_${scala_version_val}-0.1.jar:lib/fastutil-8.3.1.jar:lib/snakeyaml-1.19.jar" \
   ./lib/kal-test_${scala_version_val}-0.1.jar ${model_conf} ${data_path_val} ${cpu_name} ${is_raw} ${spark_conf} | tee ./log/log
 fi

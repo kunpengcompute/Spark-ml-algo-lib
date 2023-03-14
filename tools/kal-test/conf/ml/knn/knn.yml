@@ -3,7 +3,7 @@
 knn:
   opt:
     glove:
-      pt: 280
+      pt: 188
       k: 100
       testNum: 50000
       testBatchSize: 5000
@@ -12,19 +12,19 @@ knn:
       subTreeLeafSize: 30
 
     gist:
-      pt: 280
+      pt: 188
       k: 100
       testNum: 50000
-      testBatchSize: 5000
+      testBatchSize: 1000
       topTreeSizeRate: 10.0
       topTreeLeafSize: 10
       subTreeLeafSize: 30
 
     deep1b:
-      pt: 280
+      pt: 188
       k: 100
       testNum: 50000
-      testBatchSize: 2000
+      testBatchSize: 1000
       topTreeSizeRate: 10.0
       topTreeLeafSize: 10
       subTreeLeafSize: 30

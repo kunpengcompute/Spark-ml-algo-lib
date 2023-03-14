@@ -66,7 +66,8 @@ object FraudarRunner {
       params.setPartitions(paramsMap.get("partitions").toString.toInt)
       params.setDatasetName(datasetName)
       params.setDataPath(dataPath)
-      params.setOutputPath(outputPath)
+      params.setJSetOutPath(jSetOutPath)
+      params.setISetOutPath(iSetOutPath)
       params.setIsRaw(isRaw)
       params.setAlgorithmName("Fraudar")
       params.setTestcaseType(s"${params.algorithmName}_${datasetName}_${isRaw}")
@@ -121,6 +122,7 @@ class FraudarKernel {
     sc.setLogLevel("WARN")
     val startTime = System.currentTimeMillis()
     val bipartGraph = Util.readUndirectDataFromHDFS(sc, params.dataPath, params.splitGraph, params.partitions)
+      .map(f => (f._1.toLong, f._2.toLong))
       .persist(StorageLevel.MEMORY_AND_DISK_SER)
     bipartGraph.foreachPartition(f => {})
 

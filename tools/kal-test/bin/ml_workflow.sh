@@ -69,6 +69,11 @@ bash bin/ml/cov_run.sh CP10M1K ${is_raw} ${if_check} 2>&1 | tee -a logs/cov_CP10
 bash bin/ml/cov_run.sh CP2M5K ${is_raw} ${if_check} 2>&1 | tee -a logs/cov_CP2M5K_${type}.log
 bash bin/ml/cov_run.sh CP1M10K ${is_raw} ${if_check} 2>&1 | tee -a logs/cov_CP1M10K_${type}.log
 
+#CRF
+bash bin/ml/crf_run.sh cityu ${is_raw} ${if_check} 2>&1 | tee -a logs/crf_cityu_${type}.log
+bash bin/ml/crf_run.sh msr ${is_raw} ${if_check} 2>&1 | tee -a logs/crf_msr_${type}.log
+bash bin/ml/crf_run.sh as ${is_raw} ${if_check} 2>&1 | tee -a logs/crf_as_${type}.log
+
 #DBSCAN
 bash bin/ml/dbscan_run.sh bremenSmall ${is_raw} 2>&1 | tee -a logs/dbscan_bremenSmall_${type}.log
 bash bin/ml/dbscan_run.sh farm ${is_raw} 2>&1 | tee -a logs/dbscan_farm_${type}.log
@@ -121,14 +126,10 @@ bash bin/ml/encoder_run.sh encoder_400m ${is_raw} ${if_check} 2>&1 | tee -a logs
 bash bin/ml/encoder_run.sh encoder_800m ${is_raw} ${if_check} 2>&1 | tee -a logs/encoder_encoder_800m_${type}.log
 
 #fm
-bash bin/ml/fm_run.sh classification epsilon fit ${is_raw} ${if_check} 2>&1 | tee -a logs/fmc_epsilon_${type}.log
-bash bin/ml/fm_run.sh regression epsilon fit ${is_raw} ${if_check} 2>&1 | tee -a logs/fmr_epsilon_${type}.log
 bash bin/ml/fm_run.sh classification higgs fit ${is_raw} ${if_check} 2>&1 | tee -a logs/fmc_higgs_${type}.log
 bash bin/ml/fm_run.sh regression higgs fit ${is_raw} ${if_check} 2>&1 | tee -a logs/fmr_higgs_${type}.log
 bash bin/ml/fm_run.sh classification avazu fit ${is_raw} ${if_check} 2>&1 | tee -a logs/fmc_avazu_${type}.log
 bash bin/ml/fm_run.sh regression avazu fit ${is_raw} ${if_check} 2>&1 | tee -a logs/fmr_avazu_${type}.log
-bash bin/ml/fm_run.sh classification kdda fit ${is_raw} ${if_check} 2>&1 | tee -a logs/fmc_kdda_${type}.log
-bash bin/ml/fm_run.sh regression kdda fit ${is_raw} ${if_check} 2>&1 | tee -a logs/fmr_kdda_${type}.log
 
 #fpg
 bash bin/ml/fpg_run.sh Kosarak ${is_raw} ${if_check} 2>&1 | tee -a logs/fpg_Kosarak_${type}.log
@@ -175,8 +176,8 @@ bash bin/ml/idf_run.sh D10m200m ${is_raw} ${if_check} 2>&1 | tee -a logs/idf_D10
 bash bin/ml/idf_run.sh D2g250m ${is_raw} ${if_check} 2>&1 | tee -a logs/idf_D2g250m_${type}.log
 
 #if
-bash bin/ml/if_run.sh if_40M_1k ${is_raw} ${if_check} 2>&1 | tee -a logs/if_if_40M_1k_${type}.log
-bash bin/ml/if_run.sh if_1M_1k ${is_raw} ${if_check} 2>&1 | tee -a logs/if_if_1M_1k_${type}.log
+bash bin/ml/if_run.sh if_40M_1K ${is_raw} ${if_check} 2>&1 | tee -a logs/if_if_40M_1K_${type}.log
+bash bin/ml/if_run.sh if_1M_1K ${is_raw} ${if_check} 2>&1 | tee -a logs/if_if_1M_1K_${type}.log
 
 # KMEANS
 bash bin/ml/kmeans_run.sh dataframe D1200M20 fit  ${is_raw} ${if_check} 2>&1 | tee -a logs/kmeans_D1200M20_fit_${type}.log

@@ -2,38 +2,38 @@
 svm:
   opt:
     ECBDL14:
-      numPartitions: 180
+      numPartitions: 276
       regParam: 0.01
       maxIter: 1000
       tolerance: 1E-6
 
     epsilon:
-      numPartitions: 180
+      numPartitions: 276
       regParam: 0.01
       maxIter: 1000
       tolerance: 1E-6
 
     rcv:
-      numPartitions: 180
+      numPartitions: 276
       regParam: 0.01
       maxIter: 1000
       tolerance: 1E-6
 
   raw:
     ECBDL14:
-      numPartitions: 284
+      numPartitions: 228
       regParam: 0.01
       maxIter: 1000
       tolerance: 1E-6
 
     epsilon:
-      numPartitions: 284
+      numPartitions: 228
       regParam: 0.01
       maxIter: 1000
       tolerance: 1E-6
 
     rcv:
-      numPartitions: 284
+      numPartitions: 228
       regParam: 0.01
       maxIter: 1000
       tolerance: 1E-6

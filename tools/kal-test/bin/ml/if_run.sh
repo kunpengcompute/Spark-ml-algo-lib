@@ -3,7 +3,7 @@ set -e
 
 function usage() {
   echo "Usage:  <dataset name> <isRaw> <isCheck>"
-  echo "1rd argument: name of dataset: [if_40M_1k/if_1M_1k]"
+  echo "1rd argument: name of dataset: [if_40M_1K/if_1M_1K]"
   echo "2th argument: optimization algorithm or raw: [no/yes]"
   echo "3th argument: Whether to Compare Results [no/yes]"
 }
@@ -98,7 +98,7 @@ if [ ${is_raw} == "no" ]; then
   --master ${master} \
   --driver-java-options "-Xms15g -Dlog4j.configuration=file:./log4j.properties" \
   --conf "spark.driver.maxResultSize=2g" \
-  --conf "spark.sophon.isolationForest.parLevel=100" \
+  --conf "spark.boostkit.isolationForest.parLevel=100" \
   --jars "lib/isolation-forest_3.1.1_2.12-2.0.8.jar,lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar,lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar,lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
   --driver-class-path "lib/isolation-forest_3.1.1_2.12-2.0.8.jar:lib/fastutil-8.3.1.jar:lib/snakeyaml-1.19.jar:lib/kal-test_${scala_version_val}-0.1.jar:lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
   --conf "spark.executor.extraClassPath=/opt/ml_classpath/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:/opt/ml_classpath/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:/opt/ml_classpath/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
@@ -116,6 +116,6 @@ else
   --driver-java-options "-Xms15g -Dlog4j.configuration=file:./log4j.properties" \
   --conf "spark.driver.maxResultSize=2g" \
   --driver-class-path "lib/isolation-forest_3.1.1_2.12-2.0.8.jar:lib/fastutil-8.3.1.jar:lib/snakeyaml-1.19.jar" \
-  --jars "lib/isolation-forest_3.1.1_2.12-2.0.8.jar,lib/boostkit-ml-kernel-client-${scala_version_val}-${kal_version_val}-${spark_version_val}.jar" \
+  --jars "lib/isolation-forest_3.1.1_2.12-2.0.8.jar,lib/boostkit-ml-kernel-client_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar" \
   ./lib/kal-test_${scala_version_val}-0.1.jar ${model_conf} ${data_path} ${cpu_name} ${save_resultPath_val} | tee ./log/log
 fi

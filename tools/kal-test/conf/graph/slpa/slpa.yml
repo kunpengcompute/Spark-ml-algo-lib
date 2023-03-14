@@ -1,0 +1,35 @@
+slpa:
+  opt:
+    comlj:
+      splitGraph: "\t"
+      partitions: 284
+      iterNum: 100
+      threshold: 0.2
+      isWeighted: false
+      isDirected: false
+
+    orkut:
+      splitGraph: "\t"
+      partitions: 284
+      iterNum: 100
+      threshold: 0.2
+      isWeighted: false
+      isDirected: false
+
+    uk_2002:
+      splitGraph: "\t"
+      partitions: 284
+      iterNum: 100
+      threshold: 0.2
+      isWeighted: false
+      isDirected: true
+
+    arabic_2005:
+      splitGraph: "\t"
+      partitions: 284
+      iterNum: 100
+      threshold: 0.2
+      isWeighted: false
+      isDirected: true
+
+

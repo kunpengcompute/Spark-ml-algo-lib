@@ -123,6 +123,6 @@ else
   --master ${master} \
   --conf "spark.executor.extraJavaOptions=${executor_extra_java_options_val} -Xss512m" \
   --driver-class-path "lib/snakeyaml-1.19.jar" \
-  --jars "lib/boostkit-ml-kernel-client-${scala_version_val}-${kal_version_val}-${spark_version_val}.jar" \
+  --jars "lib/boostkit-ml-kernel-client_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar.jar" \
   ./lib/kal-test_${scala_version_val}-0.1.jar ${model_conf} ${data_path} ${cpu_name} ${save_resultPath_val} | tee ./log/log
 fi

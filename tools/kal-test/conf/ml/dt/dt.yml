@@ -6,8 +6,8 @@ dt:
       dataframe:
         higgs:
           genericPt: 300
-          maxMemoryInMB: 5120
-          pt: 36
+          maxMemoryInMB: 3072
+          pt: 22
           numCopiesInput: 7
           maxDepth: 17
           maxBins: 512
@@ -17,11 +17,11 @@ dt:
           bcVariables: false
           featuresType: "array"
           copyStrategy: "normal"
-          useDFCollPtner: "true"
+          useDFCollPtner: "false"
         mnist8m:
           genericPt: 300
           maxMemoryInMB: 4096
-          pt: 36
+          pt: 22
           numCopiesInput: 7
           maxDepth: 14
           maxBins: 128
@@ -31,11 +31,11 @@ dt:
           bcVariables: false
           featuresType: "array"
           copyStrategy: "normal"
-          useDFCollPtner: "true"
+          useDFCollPtner: "false"
         epsilon:
           genericPt: 300
           maxMemoryInMB: 4096
-          pt: 36
+          pt: 22
           numCopiesInput: 7
           maxDepth: 14
           maxBins: 128
@@ -45,12 +45,12 @@ dt:
           bcVariables: false
           featuresType: "array"
           copyStrategy: "normal"
-          useDFCollPtner: "true"
+          useDFCollPtner: "false"
       rdd:
         higgs:
           genericPt: 300
-          maxMemoryInMB: 5120
-          pt: 36
+          maxMemoryInMB: 3072
+          pt: 22
           numCopiesInput: 7
           maxDepth: 17
           maxBins: 512
@@ -60,11 +60,11 @@ dt:
           bcVariables: false
           featuresType: "array"
           copyStrategy: "normal"
-          useDFCollPtner: "true"
+          useDFCollPtner: "false"
         mnist8m:
           genericPt: 300
           maxMemoryInMB: 4096
-          pt: 36
+          pt: 22
           numCopiesInput: 7
           maxDepth: 14
           maxBins: 128
@@ -74,11 +74,11 @@ dt:
           bcVariables: false
           featuresType: "array"
           copyStrategy: "normal"
-          useDFCollPtner: "true"
+          useDFCollPtner: "false"
         epsilon:
           genericPt: 300
           maxMemoryInMB: 4096
-          pt: 36
+          pt: 22
           numCopiesInput: 7
           maxDepth: 14
           maxBins: 128
@@ -88,13 +88,13 @@ dt:
           bcVariables: false
           featuresType: "array"
           copyStrategy: "normal"
-          useDFCollPtner: "true"
+          useDFCollPtner: "false"
     regression:
       dataframe:
         higgs:
           genericPt: 300
-          maxMemoryInMB: 4096
-          pt: 36
+          maxMemoryInMB: 3072
+          pt: 22
           numCopiesInput: 7
           maxDepth: 17
           maxBins: 512
@@ -104,11 +104,11 @@ dt:
           bcVariables: false
           featuresType: "array"
           copyStrategy: "normal"
-          useDFCollPtner: "true"
+          useDFCollPtner: "false"
         mnist8m:
           genericPt: 300
           maxMemoryInMB: 4096
-          pt: 36
+          pt: 22
           numCopiesInput: 7
           maxDepth: 15
           maxBins: 128
@@ -118,11 +118,11 @@ dt:
           bcVariables: false
           featuresType: "array"
           copyStrategy: "normal"
-          useDFCollPtner: "true"
+          useDFCollPtner: "false"
         epsilon:
           genericPt: 300
           maxMemoryInMB: 4096
-          pt: 36
+          pt: 22
           numCopiesInput: 7
           maxDepth: 13
           maxBins: 128
@@ -132,12 +132,12 @@ dt:
           bcVariables: false
           featuresType: "array"
           copyStrategy: "normal"
-          useDFCollPtner: "true"
+          useDFCollPtner: "false"
       rdd:
         higgs:
           genericPt: 300
-          maxMemoryInMB: 4096
-          pt: 36
+          maxMemoryInMB: 3072
+          pt: 22
           numCopiesInput: 7
           maxDepth: 17
           maxBins: 512
@@ -147,11 +147,11 @@ dt:
           bcVariables: false
           featuresType: "array"
           copyStrategy: "normal"
-          useDFCollPtner: "true"
+          useDFCollPtner: "false"
         mnist8m:
           genericPt: 300
           maxMemoryInMB: 4096
-          pt: 36
+          pt: 22
           numCopiesInput: 7
           maxDepth: 15
           maxBins: 128
@@ -161,11 +161,11 @@ dt:
           bcVariables: false
           featuresType: "array"
           copyStrategy: "normal"
-          useDFCollPtner: "true"
+          useDFCollPtner: "false"
         epsilon:
           genericPt: 300
           maxMemoryInMB: 4096
-          pt: 36
+          pt: 22
           numCopiesInput: 7
           maxDepth: 13
           maxBins: 128
@@ -175,7 +175,7 @@ dt:
           bcVariables: false
           featuresType: "array"
           copyStrategy: "normal"
-          useDFCollPtner: "true"
+          useDFCollPtner: "false"
 
   raw:
     classification:

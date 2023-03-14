@@ -3,7 +3,7 @@ package com.bigdata.compare.graph
 
 import org.apache.spark.{SparkConf, SparkContext}
 
-object CDDegreeVerify {
+object DegreeVerify {
   def main(args: Array[String]): Unit = {
     val path0 = args(0)
     val path1 = args(1)

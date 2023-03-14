@@ -1,4 +1,3 @@
-/*
 // scalastyle:off
 
 package com.bigdata.compare.graph
@@ -152,5 +151,3 @@ object DeepWalkVerify {
     }
   }
 }
-
- */

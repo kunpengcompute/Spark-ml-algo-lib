@@ -137,7 +137,7 @@ else
   --executor-cores ${executor_cores_val} \
   --executor-memory ${executor_memory_val} \
   --master ${master_val} \
-  --jars "lib/snakeyaml-1.19.jar,lib/boostkit-ml-kernel-client-${scala_version_val}-${kal_version_val}-${spark_version_val}.jar" \
+  --jars "lib/snakeyaml-1.19.jar,lib/boostkit-ml-kernel-client_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar" \
   --conf "spark.executor.extraJavaOptions=${extra_java_options_val}" \
   --conf "spark.executor.instances=${num_executors_val}" \
   --conf "spark.executor.memory_overhead=${memory_overhead_val}" \

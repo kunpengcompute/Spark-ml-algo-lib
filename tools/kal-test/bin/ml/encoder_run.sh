@@ -108,7 +108,7 @@ if [ ${is_raw} == "no" ]; then
   --conf spark.eventLog.enabled=true \
   --conf spark.driver.maxResultSize=40g \
   --conf spark.network.timeout=60s \
-  --conf "spark.driver.extraJavaOptions=-Xss5g -Dlog4j.configuration=file:./log4j.properties" \
+  --conf "spark.driver.extraJavaOptions=-Xss5g" \
   --driver-java-options "-Xms15g" \
   --driver-class-path "lib/fastutil-8.3.1.jar:lib/snakeyaml-1.19.jar:lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar:lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \
   --jars "lib/boostkit-ml-acc_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar,lib/boostkit-ml-core_${scala_version_val}-${kal_version_val}-${spark_version_val}.jar,lib/boostkit-ml-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar" \

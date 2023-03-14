@@ -1,8 +1,8 @@
 dtb:
   opt:
     higgs:
-      genericPt: 276
-      pt: 276
+      genericPt: 184
+      pt: 184
       maxDepth: 5
       maxBins: 10000
       maxMemoryInMB: 256
@@ -13,8 +13,8 @@ dtb:
       bcVariables: false
 
     mnist8m:
-      genericPt: 276
-      pt: 276
+      genericPt: 184
+      pt: 184
       maxDepth: 5
       maxBins: 10000
       maxMemoryInMB: 256
@@ -26,8 +26,8 @@ dtb:
 
   raw:
     higgs:
-      genericPt: 232
-      pt: 116
+      genericPt: 280
+      pt: 280
       maxDepth: 5
       maxBins: 10000
       maxMemoryInMB: 256
@@ -38,8 +38,8 @@ dtb:
       bcVariables: false
 
     mnist8m:
-      genericPt: 232
-      pt: 232
+      genericPt: 280
+      pt: 280
       maxDepth: 5
       maxBins: 10000
       maxMemoryInMB: 256

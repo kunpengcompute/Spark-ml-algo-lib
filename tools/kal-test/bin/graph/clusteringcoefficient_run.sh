@@ -128,7 +128,7 @@ else
   scp lib/lcc_kaiyuan.jar root@agent3:/opt/graph_classpath/
 
   spark-submit \
-  --class com.bigdata.graph.ClusteringCoefficientRunner \
+  --class com.bigdata.graph.ClusteringCoefficientRawRunner \
   --master yarn \
   --deploy-mode ${deploy_mode_val} \
   --name "clusteringcoefficient_${dataset_name}_${api_name}" \
@@ -150,8 +150,6 @@ else
   --conf spark.core.connection.ack.wait.timeout=60000s \
   --conf spark.executor.extraJavaOptions="-Xms35g" \
   --conf spark.rdd.compress=true \
-  --jars "lib/lcc_kaiyuan.jar" \
-  --driver-class-path "lib/kal-test_${scala_version_val}-0.1.jar:lib/snakeyaml-1.19.jar:lib/lcc_kaiyuan.jar" \
-  --conf "spark.executor.extraClassPath=/opt/graph_classpath/lcc_kaiyuan.jar" \
+  --driver-class-path "lib/kal-test_${scala_version_val}-0.1.jar:lib/snakeyaml-1.19.jar" \
   ./lib/kal-test_${scala_version_val}-0.1.jar ${dataset_name} ${num_partitions_val} ${weight} ${is_raw} ${data_path_val} ${api_name} ${output_path} | tee ./log/log
 fi

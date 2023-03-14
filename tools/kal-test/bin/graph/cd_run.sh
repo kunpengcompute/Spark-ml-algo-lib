@@ -19,6 +19,7 @@ if [ $# -ne 1 ];then
 fi
 
 dataset_name=$1
+is_raw="no"
 if [ $dataset_name != 'simulate1' ] && [ $dataset_name != 'simulate2' ] && [ $dataset_name != 'usaRoad' ];
 then
   echo 'invalid dataset'
@@ -67,15 +68,11 @@ scala_version=scalaVersion
 scala_version_val=${!scala_version}
 
 input_path=${!dataset_name}
-output_path="${output_path_prefix}/cd/${dataset_name}"
+output_path="/tmp/graph/result/cd/${is_raw}/${dataset_name}"
 echo "${dataset_name}: ${input_path},${output_path}"
 
 echo "start to clean exist output"
 hdfs dfs -rm -r -f -skipTrash ${output_path}
-
-scp lib/fastutil-8.3.1.jar lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent1:/opt/graph_classpath/
-scp lib/fastutil-8.3.1.jar lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent2:/opt/graph_classpath/
-scp lib/fastutil-8.3.1.jar lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent3:/opt/graph_classpath/
 
 echo "start to clean cache and sleep 30s"
 ssh server1 "echo 3 > /proc/sys/vm/drop_caches"
@@ -85,6 +82,11 @@ ssh agent3 "echo 3 > /proc/sys/vm/drop_caches"
 sleep 30
 
 echo "start to submit spark jobs -- cd-${dataset_name}"
+
+scp lib/fastutil-8.3.1.jar lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent1:/opt/graph_classpath/
+scp lib/fastutil-8.3.1.jar lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent2:/opt/graph_classpath/
+scp lib/fastutil-8.3.1.jar lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent3:/opt/graph_classpath/
+
 spark-submit \
 --class com.bigdata.graph.CycleDetectionWithConstrainsRunner \
 --deploy-mode ${deploy_mode} \

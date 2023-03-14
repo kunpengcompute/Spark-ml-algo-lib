@@ -79,7 +79,7 @@ object IDFRunner{
       params.setVerifiedDataPath(s"${params.saveDataPath}_raw")
       var appName = s"${params.algorithmName}_${datasetName}"
       if (isRaw.equals("yes")){
-        var appName = s"${params.algorithmName}_${datasetName}_raw"
+        appName = s"${params.algorithmName}_${datasetName}_raw"
         params.setVerifiedDataPath(params.saveDataPath)
         params.setSaveDataPath(s"${params.saveDataPath}_raw")
       }
@@ -88,9 +88,9 @@ object IDFRunner{
       val conf = new SparkConf().setAppName(appName)
       conf.set("spark.driver.maxResultSize", "256G")
       if (isRaw.equals("no")){
-        conf.set("spark.sophon.ml.idf.combineStrategy",
+        conf.set("spark.boostkit.ml.idf.combineStrategy",
           paramsMap.get("combineStrategy").asInstanceOf[String])
-        conf.set("spark.sophon.ml.idf.fetchMethod",
+        conf.set("spark.boostkit.ml.idf.fetchMethod",
           paramsMap.get("fetchMethod").asInstanceOf[String])
       }
       val spark = SparkSession.builder().config(conf).getOrCreate()

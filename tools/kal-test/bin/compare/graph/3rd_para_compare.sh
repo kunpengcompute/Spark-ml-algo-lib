@@ -3,7 +3,7 @@ set -e
 
 function alg_usage() {
   echo "Usage: <algorithm name> <path0> <path1>"
-  echo "1st argument: algorithm name: betweenness, bfs, closeness, clusteringcoefficient, cc, cd, degree, kcore, mce, mssp, pr, scc, tc, tpr, tr, wce, wpr"
+  echo "1st argument: algorithm name: betweenness, bfs, closeness, clusteringcoefficient, cc, cd, degree, kcore, mssp, pr, scc, tc, tpr, tr, wce, wpr"
   echo "2nd argument: path of baseline result"
   echo "3rd argument: path of algorithm result"
 }
@@ -32,11 +32,13 @@ elif [ $alg == "clusteringcoefficient" ] || [ $alg == "tc" ]; then
   class_name=com.bigdata.compare.graph.ClusteringCoefficientTCVerify
 elif [ $alg == "cc" ]; then
   class_name=com.bigdata.compare.graph.CCVerify
-elif [ $alg == "cd" ] || [ $alg == "degree" ]; then
-  class_name=com.bigdata.compare.graph.CDDegreeVerify
+elif [ $alg == "degree" ]; then
+  class_name=com.bigdata.compare.graph.DegreeVerify
+elif [ $alg == "cd" ]; then
+  class_name=com.bigdata.compare.graph.CDVerify
 elif [ $alg == "kcore" ]; then
   class_name=com.bigdata.compare.graph.KCoreVerify
-elif [ $alg == "mce" ] || [ $alg == "wce" ]; then
+elif [ $alg == "wce" ]; then
   class_name=com.bigdata.compare.graph.MceWceVerify
 elif [ $alg == "mssp" ]; then
   class_name=com.bigdata.compare.graph.MsspVerify

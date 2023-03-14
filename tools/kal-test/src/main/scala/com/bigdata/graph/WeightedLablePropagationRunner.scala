@@ -25,6 +25,7 @@ class WLPAParams extends Serializable {
   @BeanProperty var splitGraph: String = _
   @BeanProperty var commputePartition: Int = _
   @BeanProperty var maxIter: Int = _
+  @BeanProperty var partitions: Int = _
 
   @BeanProperty var outputPath: String = _
   @BeanProperty var dataPath: String = _

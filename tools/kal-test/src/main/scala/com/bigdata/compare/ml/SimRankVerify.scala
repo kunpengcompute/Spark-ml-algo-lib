@@ -7,7 +7,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 import java.io.FileWriter
 
-object SimRankVerify {
+object SimRankVerify extends Serializable {
   val EPS = 1e-7
 
   def main(args: Array[String]): Unit = {

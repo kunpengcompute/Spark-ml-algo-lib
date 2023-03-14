@@ -4,8 +4,8 @@ set -e
 function usage() {
   echo "Usage: <algorithm type> <data structure> <dataset name> <api name> <isRaw> <isCheck>"
   echo "1st argument: type of algorithm: [classification/regression]"
-  echo "2nd argument: name of dataset: [epsilon/higgs/avazu/kdda]"
-  echo "3rd argument: name of API: [fit/fit1/fit2/fit3]"
+  echo "2nd argument: name of dataset: [higgs/avazu]"
+  echo "3rd argument: name of API: [fit]"
   echo "4th argument: optimization algorithm or raw: [no/yes]"
   echo "5th argument: Whether to Compare Results [no/yes]"
 }

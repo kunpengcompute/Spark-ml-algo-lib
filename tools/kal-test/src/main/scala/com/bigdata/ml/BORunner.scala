@@ -2,6 +2,7 @@ package com.bigdata.ml
 
 import com.bigdata.utils.Utils
 import com.bigdata.compare.ml.UpEvaluationVerify
+import com.bigdata.compare.ml.DownEvaluationVerify
 
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.classification.{GBTClassifier, RandomForestClassifier}
@@ -117,7 +118,12 @@ object BORunner {
 
       Utils.checkDirs("report")
       if (ifCheck.equals("yes")) {
-        params.setIsCorrect(UpEvaluationVerify.compareRes(params.saveDataPath, params.verifiedDataPath, spark))
+        val isCorrect = params.datasetName match {
+          case "BostonHousing" => DownEvaluationVerify.compareRes(params.saveDataPath, params.verifiedDataPath, spark)
+          case "TitanicRf" => UpEvaluationVerify.compareRes(params.saveDataPath, params.verifiedDataPath, spark)
+          case "TitanicGBT" => UpEvaluationVerify.compareRes(params.saveDataPath, params.verifiedDataPath, spark)
+        }
+        params.setIsCorrect(isCorrect)
         val writerIsCorrect = new FileWriter(s"report/ml_isCorrect.txt", true)
         writerIsCorrect.write(s"${params.testcaseType} ${params.isCorrect} \n")
         writerIsCorrect.close()

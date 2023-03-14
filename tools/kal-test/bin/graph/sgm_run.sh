@@ -227,7 +227,7 @@ else
   --conf spark.shuffle.memoryFraction=${shuffle_memoryFraction_val} \
   --conf spark.rdd.compress=${rdd_compress_val} \
   --conf spark.memory.useLegacyMode=${memory_useLegacyMode_val} \
-  ./lib/pegasus-spark_2.11-0.1.0-SNAPSHOT_openSource.jar yarn ${data_path_val} ${output_path} ${queryGraph_path_val} ${num_colors_val} 232 "," ${graph_split_val} 10000 > sgm_temp.log
+  ./lib/pegasus-spark_${scala_version_val}-0.1.0-SNAPSHOT.jar yarn ${data_path_val} ${output_path} ${queryGraph_path_val} ${num_colors_val} 232 "," ${graph_split_val} 10000 > sgm_temp.log
   num_subgraphs=$(cat sgm_temp.log | grep "number of matched subgraphs" | awk -F '[\t]' '{print $2}')
   costTime=$(cat sgm_temp.log | grep "cost time" | awk -F '[\t]' '{print $2}')
   currentTime=$(date "+%Y%m%d_H%M%S")

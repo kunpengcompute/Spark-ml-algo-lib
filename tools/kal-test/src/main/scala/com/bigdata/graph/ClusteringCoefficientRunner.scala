@@ -88,7 +88,7 @@ object ClusteringCoefficientRunner {
       println("inputPath:" + inputPath)
       println("outputPath:" + outputPath)
 
-      val appName = s"ClusteringCoefficient_${api}_${isWeight}_${datsetName}"
+      val appName = s"${params.testcaseType}"
 
       val sparkConf = new SparkConf()
         .setAppName(appName)
@@ -127,7 +127,7 @@ object ClusteringCoefficientRunner {
 
       Utils.checkDirs("report")
       val writer = new FileWriter(
-        s"report/ClusteringCoefficient_${Utils.getDateStrFromUTC("yyyyMMdd_HHmmss", System.currentTimeMillis())}.yml")
+        s"report/${params.testcaseType}_${Utils.getDateStrFromUTC("yyyyMMdd_HHmmss", System.currentTimeMillis())}.yml")
       yaml.dump(params, writer)
 
       sc.stop()

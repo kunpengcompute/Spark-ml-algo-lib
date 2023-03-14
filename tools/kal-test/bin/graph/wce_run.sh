@@ -19,6 +19,7 @@ if [ $# -ne 1 ];then
 fi
 
 dataset_name=$1
+is_raw=no
 
 source conf/graph/wce/wce_spark.properties
 
@@ -57,7 +58,7 @@ scala_version=scalaVersion
 scala_version_val=${!scala_version}
 
 data_path_val=${!dataset_name}
-output_path="${output_path_prefix}/wce/${dataset_name}"
+output_path="/tmp/graph/result/wce/${is_raw}/${dataset_name}"
 echo "${dataset_name} : ${data_path_val}"
 echo "output_path : ${output_path}"
 hdfs dfs -rm -r -f ${output_path}
@@ -69,11 +70,12 @@ ssh agent2 "echo 3 > /proc/sys/vm/drop_caches"
 ssh agent3 "echo 3 > /proc/sys/vm/drop_caches"
 sleep 30
 
+echo "start to submit spark jobs -- wce-${dataset_name}"
+
 scp lib/fastutil-8.3.1.jar lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent1:/opt/graph_classpath/
 scp lib/fastutil-8.3.1.jar lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent2:/opt/graph_classpath/
 scp lib/fastutil-8.3.1.jar lib/boostkit-graph-kernel-${scala_version_val}-${kal_version_val}-${spark_version_val}-${cpu_name}.jar root@agent3:/opt/graph_classpath/
 
-echo "start to submit spark jobs -- wce-${dataset_name}"
 spark-submit \
 --class com.bigdata.graph.WCERunner \
 --driver-memory 80g \

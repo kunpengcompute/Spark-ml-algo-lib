@@ -4,7 +4,7 @@ set -e
 function usage() {
   echo "Usage:  <dataset name> <isRaw> <isCheck>"
   echo "1st argument: type of algorithm: [classification/regression]"
-  echo "2nd argument: name of dataset:mnist8m, higgs,criteo "
+  echo "2nd argument: name of dataset:mnist8m, higgs "
   echo "3rd argument: optimization algorithm or raw: [no/yes]"
   echo "4th argument: Whether to Compare Results [no/yes]"
 }
@@ -93,9 +93,9 @@ sleep 30
 
 echo "start to submit spark jobs --- lgbm-${model_conf}"
 if [ ${is_raw} == "no" ]; then
-  scp lib/lightgbmlib.jar lib/mmlspark_${scala_version_val}_spark3.1.2-0.0.0+79-09152193.jar lib/boostkit-lightgbm-kernel_${scala_version_val}-1.3.0.jar lib/fastutil-8.3.1.jar root@agent1:/opt/ml_classpath/
-  scp lib/lightgbmlib.jar lib/mmlspark_${scala_version_val}_spark3.1.2-0.0.0+79-09152193.jar lib/boostkit-lightgbm-kernel_${scala_version_val}-1.3.0.jar lib/fastutil-8.3.1.jar root@agent2:/opt/ml_classpath/
-  scp lib/lightgbmlib.jar lib/mmlspark_${scala_version_val}_spark3.1.2-0.0.0+79-09152193.jar lib/boostkit-lightgbm-kernel_${scala_version_val}-1.3.0.jar lib/fastutil-8.3.1.jar root@agent3:/opt/ml_classpath/
+  scp lib/boostkit-lightgbmlib-${kal_version_val}.jar lib/boostkit-mmlspark-${scala_version_val}-${spark_version_val}-${kal_version_val}.jar lib/boostkit-lightgbm-kernel-${scala_version_val}-${spark_version_val}-${kal_version_val}.jar lib/fastutil-8.3.1.jar root@agent1:/opt/ml_classpath/
+  scp lib/boostkit-lightgbmlib-${kal_version_val}.jar lib/boostkit-mmlspark-${scala_version_val}-${spark_version_val}-${kal_version_val}.jar lib/boostkit-lightgbm-kernel-${scala_version_val}-${spark_version_val}-${kal_version_val}.jar lib/fastutil-8.3.1.jar root@agent2:/opt/ml_classpath/
+  scp lib/boostkit-lightgbmlib-${kal_version_val}.jar lib/boostkit-mmlspark-${scala_version_val}-${spark_version_val}-${kal_version_val}.jar lib/boostkit-lightgbm-kernel-${scala_version_val}-${spark_version_val}-${kal_version_val}.jar lib/fastutil-8.3.1.jar root@agent3:/opt/ml_classpath/
 
   spark-submit \
   --class com.bigdata.ml.LightGBMRunner \
@@ -107,15 +107,19 @@ if [ ${is_raw} == "no" ]; then
   --executor-memory ${executor_memory_val} \
   --conf "spark.executor.memoryOverhead=${executor_memory_overhead_val}" \
   --master ${master} \
-  --files=lib/lib_lightgbm_close.so  \
+  --files=lib/libboostkit_lightgbm_close.so  \
   --conf "spark.executor.extraJavaOptions=${executor_extra_java_options_val}" \
-  --jars "lib/lightgbmlib.jar,lib/fastutil-8.3.1.jar,lib/mmlspark_${scala_version_val}_spark3.1.2-0.0.0+79-09152193.jar,lib/boostkit-lightgbm-kernel_${scala_version_val}-1.3.0.jar" \
-  --driver-class-path "lib/lightgbmlib.jar:lib/mmlspark_${scala_version_val}_spark3.1.2-0.0.0+79-09152193.jar:lib/boostkit-lightgbm-kernel_${scala_version_val}-1.3.0.jar:lib/kal-test_${scala_version_val}-0.1.jar:lib/fastutil-8.3.1.jar:lib/snakeyaml-1.19.jar" \
-  --conf "spark.executor.extraClassPath=/opt/ml_classpath/lightgbmlib.jar:/opt/ml_classpath/mmlspark_${scala_version_val}_spark3.1.2-0.0.0+79-09152193.jar:/opt/ml_classpath/boostkit-lightgbm-kernel_${scala_version_val}-1.3.0.jar:/opt/ml_classpath/fastutil-8.3.1.jar" \
+  --jars "lib/boostkit-lightgbmlib-${kal_version_val}.jar,lib/fastutil-8.3.1.jar,lib/boostkit-mmlspark-${scala_version_val}-${spark_version_val}-${kal_version_val}.jar,lib/boostkit-lightgbm-kernel-${scala_version_val}-${spark_version_val}-${kal_version_val}.jar" \
+  --driver-class-path "lib/boostkit-lightgbmlib-${kal_version_val}.jar:lib/boostkit-mmlspark-${scala_version_val}-${spark_version_val}-${kal_version_val}.jar:lib/boostkit-lightgbm-kernel-${scala_version_val}-${spark_version_val}-${kal_version_val}.jar:lib/kal-test_${scala_version_val}-0.1.jar:lib/fastutil-8.3.1.jar:lib/snakeyaml-1.19.jar" \
+  --conf "spark.executor.extraClassPath=/opt/ml_classpath/boostkit-lightgbmlib-${kal_version_val}.jar:/opt/ml_classpath/boostkit-mmlspark-${scala_version_val}-${spark_version_val}-${kal_version_val}.jar:/opt/ml_classpath/boostkit-lightgbm-kernel-${scala_version_val}-${spark_version_val}-${kal_version_val}.jar:/opt/ml_classpath/fastutil-8.3.1.jar" \
   ./lib/kal-test_${scala_version_val}-0.1.jar ${model_conf} ${data_path} ${cpu_name} ${save_resultPath_val} | tee ./log/log
 else
+  scp lib/boostkit-lightgbmlib-${kal_version_val}.jar lib/mmlspark_2.12_spark3.1.2-0.0.0+79-09152193.jar lib/fastutil-8.3.1.jar root@agent1:/opt/ml_classpath/
+  scp lib/boostkit-lightgbmlib-${kal_version_val}.jar lib/mmlspark_2.12_spark3.1.2-0.0.0+79-09152193.jar lib/fastutil-8.3.1.jar root@agent2:/opt/ml_classpath/
+  scp lib/boostkit-lightgbmlib-${kal_version_val}.jar lib/mmlspark_2.12_spark3.1.2-0.0.0+79-09152193.jar lib/fastutil-8.3.1.jar root@agent3:/opt/ml_classpath/
+
   spark-submit \
-  --class com.bigdata.ml.LightGBMRunner \
+  --class com.bigdata.ml.LightGBMRawRunner \
   --deploy-mode ${deployMode} \
   --driver-cores ${driver_cores_val} \
   --driver-memory ${driver_memory_val} \
@@ -123,9 +127,9 @@ else
   --executor-cores ${executor_cores_val} \
   --executor-memory ${executor_memory_val} \
   --master ${master} \
-  --jars "lib/lightgbmlib.jar,lib/snakeyaml-1.19.jar,lib/fastutil-8.3.1.jar,lib/mmlspark_${scala_version_val}_spark3.1.2-0.0.0+79-09152193.jar" \
+  --jars "lib/lightgbmlib.jar,lib/snakeyaml-1.19.jar,lib/fastutil-8.3.1.jar,lib/mmlspark_2.12_spark3.1.2-0.0.0+79-09152193.jar" \
   --conf "spark.executor.extraJavaOptions=${executor_extra_java_options_val}" \
-  --driver-class-path "lib/lightgbmlib.jar,lib/snakeyaml-1.19.jar,lib/mmlspark_${scala_version_val}_spark3.1.2-0.0.0+79-09152193.jar" \
-  --conf "spark.executor.extraClassPath=/opt/ml_classpath/lightgbmlib.jar:/opt/ml_classpath/mmlspark_${scala_version_val}_spark3.1.2-0.0.0+79-09152193.jar:/opt/ml_classpath/fastutil-8.3.1.jar" \
+  --driver-class-path "lib/lightgbmlib.jar,lib/snakeyaml-1.19.jar,lib/mmlspark_2.12_spark3.1.2-0.0.0+79-09152193.jar" \
+  --conf "spark.executor.extraClassPath=/opt/ml_classpath/lightgbmlib.jar:/opt/ml_classpath/mmlspark_2.12_spark3.1.2-0.0.0+79-09152193.jar:/opt/ml_classpath/fastutil-8.3.1.jar" \
   ./lib/kal-test_${scala_version_val}-0.1.jar ${model_conf} ${data_path} ${cpu_name} ${save_resultPath_val} | tee ./log/log
 fi

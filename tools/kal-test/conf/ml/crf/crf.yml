@@ -1,0 +1,67 @@
+#crf model params
+
+crf:
+  opt:
+    cityu:
+      pt: 30
+      maxIter: 300
+      regParam: 0.01
+      freq: 15
+      compLevel: 1
+      nThread: 6
+      tol: 0.001
+      calAcc: true
+      templatePath: "/tmp/ml/dataset/CRF/template"
+    msr:
+      pt: 60
+      maxIter: 300
+      regParam: 0.01
+      freq: 20
+      compLevel: 1
+      nThread: 3
+      tol: 0.001
+      calAcc: true
+      templatePath: "/tmp/ml/dataset/CRF/template"
+    as:
+      pt: 3
+      maxIter: 300
+      regParam: 0.01
+      freq: 40
+      compLevel: 1
+      nThread: 62
+      tol: 0.001
+      calAcc: true
+      templatePath: "/tmp/ml/dataset/CRF/template"
+
+
+  raw:
+    cityu:
+      pt: 35
+      maxIter: 300
+      regParam: 0.01
+      freq: 15
+      tol: 0.001
+      calAcc: true
+      templatePath: "/tmp/ml/dataset/CRF/template"
+      compLevel:
+      nThread:
+    msr:
+      pt: 35
+      maxIter: 300
+      regParam: 0.01
+      freq: 20
+      tol: 0.001
+      calAcc: true
+      templatePath: "/tmp/ml/dataset/CRF/template"
+      compLevel:
+      nThread:
+    as:
+      pt: 70
+      maxIter: 300
+      regParam: 0.01
+      freq: 40
+      tol: 0.001
+      calAcc: true
+      templatePath: "/tmp/ml/dataset/CRF/template"
+      compLevel:
+      nThread:
