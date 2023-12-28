@@ -326,12 +326,20 @@ final class OnlineLDAOptimizer extends LDAOptimizer with Logging {
 
     timer.stop("docs-mapPartitions")
 
-    val elementWiseSum = (
+    def elementWiseSum(
         u: (BDM[Double], Option[BDV[Double]], Long),
-        v: (BDM[Double], Option[BDV[Double]], Long)) => {
-      u._1 += v._1
+        v: (BDM[Double], Option[BDV[Double]], Long)): (BDM[Double], Option[BDV[Double]], Long) = {
+      val vec =
+        if (u._1 == null) {
+          v._1
+        } else if (v._1 == null) {
+          u._1
+        } else {
+          u._1 += v._1
+          u._1
+        }
       u._2.foreach(_ += v._2.get)
-      (u._1, u._2, u._3 + v._3)
+      (vec, u._2, u._3 + v._3)
     }
 
     timer.start("stats-treeAggregate")
@@ -340,7 +348,7 @@ final class OnlineLDAOptimizer extends LDAOptimizer with Logging {
         LDAUtilsXOpt.optimizedAggregateStats(stats)
       } else {
         stats
-          .treeAggregate((BDM.zeros[Double](k, vocabSize), logphatPartOptionBase(), 0L))(
+          .treeAggregate((null.asInstanceOf[BDM[Double]], logphatPartOptionBase(), 0L))(
             elementWiseSum, elementWiseSum
           )
       }

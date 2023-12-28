@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.spark</groupId>
   <artifactId>boostkit-ml</artifactId>
-  <version>2.2.0</version>
+  <version>3.0.0</version>
   <name>${project.artifactId}</name>
   <description>Spark ml algo</description>
   <inceptionYear>2020</inceptionYear>
@@ -12,7 +12,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <encoding>UTF-8</encoding>
-    <spark.version>spark3.1.1</spark.version>
+    <spark.version>spark3.3.1</spark.version>
   </properties>
   <modules>
     <module>ml-kernel-client-core</module>
@@ -24,17 +24,20 @@
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-mllib_2.12</artifactId>
-      <version>3.1.1</version>
+      <version>3.3.1</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>it.unimi.dsi</groupId>
       <artifactId>fastutil</artifactId>
       <version>8.3.1</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_2.12</artifactId>
       <version>3.2.0</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
   <build>
@@ -62,7 +65,7 @@
             </goals>
           </execution>
         </executions>
-      </plugin> 
+      </plugin>
       </plugins>
      </pluginManagement>
   </build>

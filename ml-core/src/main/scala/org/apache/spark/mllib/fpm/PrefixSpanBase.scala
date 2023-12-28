@@ -137,7 +137,7 @@ import scala.collection.mutable
         }
         i += 1
       }
-      prefixes.toIterator
+      prefixes.iterator
     }
 
     /**
@@ -180,7 +180,7 @@ import scala.collection.mutable
         }
         i += 1
       }
-      prefixes.toIterator
+      prefixes.iterator
     }
 
     /** Tests whether this postfix is non-empty. */
