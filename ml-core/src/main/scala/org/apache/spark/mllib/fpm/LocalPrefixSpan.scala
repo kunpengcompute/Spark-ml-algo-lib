@@ -67,7 +67,7 @@ private[fpm] class LocalPrefixSpan(
       count >= minCount
     }.sorted
     // project and recursively call genFreqPatterns
-    freqItems.toIterator.flatMap { case (item, count) =>
+    freqItems.iterator.flatMap { case (item, count) =>
       val newPrefix = prefix :+ item
       val (stat, continue) =
         LocalPrefixSpanUtils.getLocalPrefixStat(newPrefix, count, maxPatternLength, target)

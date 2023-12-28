@@ -2,12 +2,12 @@
   <parent>
      <groupId>org.apache.spark</groupId>
      <artifactId>boostkit-ml</artifactId>
-     <version>2.2.0</version>
+     <version>3.0.0</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>boostkit-ml-kernel-client_2.12</artifactId>
-  <version>2.2.0</version>
+  <version>3.0.0</version>
   <name>${project.artifactId}</name>
   <description>Spark ml core</description>
 
@@ -17,6 +17,7 @@
       <artifactId>boostkit-ml-core_2.12</artifactId>
       <version>${project.version}</version>
       <classifier>${spark.version}</classifier>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 
@@ -35,6 +36,9 @@
             </goals>
             <configuration>
               <args>
+                <arg>-unchecked</arg>
+                <arg>-deprecation</arg>
+                <arg>-feature</arg>
                 <arg>-dependencyfile</arg>
                 <arg>${project.build.directory}/.scala_dependencies</arg>
               </args>
