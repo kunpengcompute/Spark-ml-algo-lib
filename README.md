@@ -1,45 +1,20 @@
-# Spark-ml-algo-lib
+# 机器学习算法库
 
+#### 介绍
+鲲鹏BoostKit机器学习算法加速库  （以下简称为机器学习算法加速库/机器学习算法库）是经过优化的算法库，兼容Spark开源版本API，对机器学习算法进行了性能优化，大幅提升了大数据算法场景的计算性能，该库支持鲲鹏处理器的体系架构，目前提供的机器学习算法如下：
 
+- SVM（Support Vector Machines，支持向量机）
+- DBSCAN（Density-Based Spatial Clustering of Applications with Noise，具有噪声的基于密度的聚类方法）
+- DTB（Decision Tree Bucket，决策树分箱）
+- Word2Vec（词向量）
 
-Introduction
-============
+#### 操作系统
+openEuler 22.03 LTS SP1
 
-The machine learning algorithm library running on Kunpeng processors is an acceleration library that provides a rich set of high-level tools for machine learning algorithms. It is based on the original APIs of Apache [Spark 2.3.2](https://github.com/apache/spark/tree/v2.3.2), [breeze 0.13.1](https://github.com/scalanlp/breeze/tree/releases/v0.13.1) and [xgboost 1.1.0](https://github.com/dmlc/xgboost/tree/release_1.0.0). The acceleration library for greatly improves the computing power in big data scenarios.
+#### 使用说明
+用户指南链接：
+https://www.hikunpeng.com/document/detail/zh/kunpengbds/appAccelFeatures/algorithmaccelf_ml/kunpengbdssparkml_20_0002.html
 
-The library provides 23 machine learning algorithms: support vector machine (SVM), random forest classifier (RFC), gradient boosting decision tree (GBDT), decision tree (DT), K-means clustering, linear regression, logistic regression algorithm, principal component analysis (PCA), principal component analysis for Sparse Matrix(SPCA), singular value decomposition (SVD), latent dirichlet allocation (LDA), prefix-projected pattern prowth (Prefix-Span), alternating least squares (ALS), K-nearest neighbors (KNN), Covariance, Density-based spatial clustering of applicaitons with noise (DBSCAN), Pearson, Spearman, XGboost, Inverse Document Frequency(IDF), SimRank, Decision Tree Bucket(DTB) and Word2Vec. You can find the latest documentation on the project web page. This README file contains only basic setup instructions.
-You can find the latest documentation, including a programming guide, on the project web page. This README file only contains basic setup instructions.
-
-
-
-
-
-Building And Packageing
-====================
-
-(1) Build the project under the "Spark-ml-algo-lib" directory:
-
-    mvn clean package
-
-(2) Build XGBoost project under the "Spark-ml-algo-lib/ml-xgboost/jvm-packages" directory:
-
-    mvn clean package
-
-(3) Obtain "boostkit-ml-core_2.11-2.2.0-spark2.3.2.jar" under the "Spark-ml-algo-lib/ml-core/target" directory.
-
-   Obtain "boostkit-ml-acc_2.11-2.2.0-spark2.3.2.jar" under the "Spark-ml-algo-lib/ml-accelerator/target" directory.
-
-   Obtain "boostkit-xgboost4j_2.11-2.2.0.jar" under the "Spark-ml-algo-lib/ml-xgboost/jvm-packages/boostkit-xgboost4j/target" directory.
-
-   Obtain "boostkit-xgboost4j-spark2.3.2_2.11-2.2.0.jar" under the "Spark-ml-algo-lib/ml-xgboost/jvm-packages/boostkit-xgboost4j-spark/target" directory.
-
-
-Contribution Guidelines
-========
-
-Track the bugs and feature requests via GitHub [issues](https://github.com/kunpengcompute/Spark-ml-algo-lib/issues).
-
-More Information
-========
-
-For further assistance, send an email to kunpengcompute@huawei.com.
+#### 参与贡献
+    如果您想为本仓库贡献代码，请向本仓库任意maintainer发送邮件
+    如果您找到产品中的任何Bug，欢迎您提出ISSUE
